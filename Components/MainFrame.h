@@ -15,6 +15,7 @@ class MainFrame : public MainFrameWx {
    public:
     MainFrame(wxWindow* parent);
     ~MainFrame();
+    void OpenFile(const wxString& filePath);
 };
 
 #endif  // __MainFrame__
