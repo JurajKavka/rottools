@@ -37,9 +37,6 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     this->SetDropTarget(new FileDropTarget([this](const wxString& filePath) {
         this->OpenFile(filePath);
     }));
-    m_webViewPanel->SetDropTarget(new FileDropTarget([this](const wxString& filePath) {
-        this->OpenFile(filePath);
-    }));
 }
 
 MainFrame::~MainFrame() {}

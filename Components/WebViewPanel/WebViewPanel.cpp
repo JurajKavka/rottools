@@ -9,6 +9,7 @@ WebViewPanel::WebViewPanel(wxWindow* parent) : WebViewPanelWx(parent), m_webView
 
     // 2. Apply the sizer to the panel
     SetSizer(mainSizer);
+
     Layout();
 };
 
@@ -16,19 +17,12 @@ WebViewPanel::~WebViewPanel() {};
 
 void WebViewPanel::LoadHtml(const wxString& html) {
     if (!m_webView) {
-        // 1. Instantiate the wxWebView
+        // 3. Instantiate the wxWebView
         m_webView = wxWebView::New(this, wxID_ANY);
-        if (m_webView) {
-            // 2. Add it to the sizer, expanding to fill the panel
-            wxSizer* mainSizer = GetSizer();
-            if (mainSizer) {
-                mainSizer->Add(m_webView, 1, wxEXPAND | wxALL, 0);
-                Layout();
-            }
-        }
+        wxSizer* mainSizer = GetSizer();
+        // 4. Add it to the sizer, expanding to fill the panel
+        mainSizer->Add(m_webView, 1, wxEXPAND | wxALL, 0);
+        Layout();
     }
-
-    if (m_webView) {
-        m_webView->SetPage(html, ""); // Toto vyrenderuje HTML string
-    }
+    m_webView->SetPage(html, "");  
 }
