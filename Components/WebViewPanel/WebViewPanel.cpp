@@ -24,5 +24,5 @@ void WebViewPanel::LoadHtml(const wxString& html) {
         mainSizer->Add(m_webView, 1, wxEXPAND | wxALL, 0);
         Layout();
     }
-    m_webView->SetPage(html, "");  
+    m_webView->SetPage(html, "");
 }

@@ -8,24 +8,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(md4c)
 
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    project(BackendApp)
+add_library(Backend STATIC 
+     MarkdownToHtmlAsync/MarkdownToHtmlAsync.cpp
+)
 
-    # Pull in HelperFunctions from the parent directory for standalone
-    add_subdirectory(../HelperFunctions helper_build)
-endif()
+target_include_directories(Backend PUBLIC MarkdownToHtmlAsync)
+target_link_libraries(Backend PUBLIC md4c-html)
 
-add_library(Backend INTERFACE)
 
-target_include_directories(Backend INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(Backend INTERFACE md4c-html HelperFunctions)
-
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    find_package(wxWidgets REQUIRED)
-    include(${wxWidgets_USE_FILE})
-
-    add_executable(BackendApp main.cpp)
-
-    target_link_libraries(BackendApp PRIVATE Backend ${wxWidgets_LIBRARIES})
-endif()

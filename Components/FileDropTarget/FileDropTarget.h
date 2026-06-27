@@ -1,6 +1,7 @@
 #pragma once
 
 #include <wx/dnd.h>
+
 #include <functional>
 
 class FileDropTarget : public wxFileDropTarget {

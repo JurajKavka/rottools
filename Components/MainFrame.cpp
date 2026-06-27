@@ -1,16 +1,15 @@
 #include "MainFrame.h"
 
+#include <wx/dnd.h>      // Required for wxFileDropTarget
 #include <wx/filedlg.h>  // Required for wxFileDialog
 #include <wx/msgdlg.h>   // Required for wxMessageBox
-#include <wx/dnd.h>      // Required for wxFileDropTarget
 
 #include <fstream>  // For opening the file
 #include <sstream>  // For reading the file content
 
-#include "HelperFunctions.h"
-#include "MarkdownToHtml.h"
-#include "WebViewPanel/WebViewPanel.h"
 #include "FileDropTarget/FileDropTarget.h"
+#include "HelperFunctions.h"
+#include "WebViewPanel/WebViewPanel.h"
 
 //-----------------------------------------------------------------------------
 // MainFrame implementation
@@ -19,6 +18,11 @@
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, fileOpenTool->GetId());
+
+    Bind(EVT_MARKDOWN_READY, &MainFrame::OnMarkdownReady, this);
+    Bind(EVT_MARKDOWN_ERROR, &MainFrame::OnMarkdownError, this);
+
+    m_parserThread = std::make_shared<MarkdownToHtmlAsync>(this);
 
     // 1. Instantiate the WebViewPanel, setting this frame as its parent
     m_webViewPanel = new WebViewPanel(this);
@@ -34,36 +38,10 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Layout();
 
     // 4. Register drag and drop targets
-    this->SetDropTarget(new FileDropTarget([this](const wxString& filePath) {
-        this->OpenFile(filePath);
-    }));
+    this->SetDropTarget(new FileDropTarget([this](const wxString& filePath) { m_parserThread->ParseFile(filePath); }));
 }
 
 MainFrame::~MainFrame() {}
-
-void MainFrame::OpenFile(const wxString& filePath) {
-    std::ifstream file(filePath.ToStdString());
-    if (!file.is_open()) {
-        wxMessageBox("Could not open the selected file.", "Error", wxICON_ERROR);
-        return;
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string markdownStr = buffer.str();
-
-    wxString rawMarkdown = wxString::FromUTF8(markdownStr);
-
-    wxString htmlContent = ConvertMarkdownToHtml(rawMarkdown);
-
-    if (m_webViewPanel) {
-        m_webViewPanel->LoadHtml(htmlContent);
-    }
-
-    if (statusBar) {
-        statusBar->SetStatusText(filePath);
-    }
-}
 
 void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
     printLog("Click open file");
@@ -81,5 +59,25 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
         return;
     }
 
-    OpenFile(openFileDialog.GetPath());
+    if (statusBar) {
+        statusBar->SetStatusText(wxString("Loading ..."));
+    }
+
+    m_parserThread->ParseFile(openFileDialog.GetPath());
+}
+
+void MainFrame::OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
+    if (m_webViewPanel) {
+        m_webViewPanel->LoadHtml(event.html);
+    }
+    if (statusBar) {
+        statusBar->SetStatusText(event.filePath);
+    }
+}
+
+void MainFrame::OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
+    wxMessageBox("Error parsing markdown!", "Error", wxICON_ERROR);
+    if (statusBar) {
+        statusBar->SetStatusText(wxString(""));
+    }
 }
