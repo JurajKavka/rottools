@@ -12,8 +12,7 @@ wxIMPLEMENT_APP(FileBrowserTreePanelApp);
 bool FileBrowserTreePanelApp::OnInit() {
     // 1. Create a Top-Level Window (Frame) to hold your panel
     // We pass 'nullptr' because this frame has no parent; it is the main app window.
-    wxFrame* mainFrame =
-        new wxFrame(nullptr, wxID_ANY, "Test: File Browser", wxDefaultPosition, wxSize(400, 600));
+    wxFrame* mainFrame = new wxFrame(nullptr, wxID_ANY, "Test: File Browser", wxDefaultPosition, wxSize(400, 600));
 
     // 2. Instantiate your custom panel, passing the mainFrame as its parent!
     FileBrowserTreePanel* treePanel = new FileBrowserTreePanel(mainFrame);
@@ -26,6 +25,9 @@ bool FileBrowserTreePanelApp::OnInit() {
 
     // 3. Show the frame (which automatically shows the child panel)
     mainFrame->Show(true);
+
+    std::filesystem::path currentDir = std::filesystem::current_path();
+    treePanel->ListDir(currentDir);
 
     return true;
 }
