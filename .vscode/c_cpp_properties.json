@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/homebrew/lib/wx/include/osx_cocoa-unicode-3.2",
+                "/opt/homebrew/include/wx-3.2"
+            ],
+            "defines": [
+                "__WXOSX_COCOA__",
+                "WXUSINGDLL",
+                "_FILE_OFFSET_BITS=64"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "macos-clang-arm64"
+        }
+    ],
+    "version": 4
+}

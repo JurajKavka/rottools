@@ -20,7 +20,7 @@ bool DirectoryScanner::IsScanning() const {
     return m_isScanning;
 }
 
-void DirectoryScanner::StartScan(const fs::path& rootPath, const std::vector<std::string>& extensions) {
+void DirectoryScanner::StartScan(const fs::path& rootPath, const std::vector<std::string>& extensions, wxEvtHandler* eventTarget) {
     CancelScan();
     if (m_workerThread.joinable()) {
         m_workerThread.join();
@@ -30,14 +30,14 @@ void DirectoryScanner::StartScan(const fs::path& rootPath, const std::vector<std
     std::unordered_set<std::string> extSet(extensions.begin(), extensions.end());
     std::weak_ptr<DirectoryScanner> weakThis = weak_from_this();
 
-    m_workerThread = std::jthread([weakThis, rootPath, extSet](std::stop_token stoken) {
+    m_workerThread = std::jthread([weakThis, rootPath, extSet, eventTarget](std::stop_token stoken) {
         if (auto sharedThis = weakThis.lock()) {
-            sharedThis->ScanThreadLogic(stoken, rootPath, extSet);
+            sharedThis->ScanThreadLogic(stoken, rootPath, extSet, eventTarget);
         }
     });
 }
 
-void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, fs::path rootPath, std::unordered_set<std::string> extSet) {
+void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, fs::path rootPath, std::unordered_set<std::string> extSet, wxEvtHandler* eventTarget) {
     std::vector<FileEntry> results;
 
     try {
@@ -73,8 +73,7 @@ void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, fs::path rootPath
         // Safely copy our std::vector into the wxWidgets event payload
         event->SetPayload(results);
 
-        // Queue it to wxTheApp. This makes it a GLOBAL broadcast.
-        wxQueueEvent(wxTheApp, event);
+        wxQueueEvent(eventTarget, event);
     }
 
     m_isScanning = false;

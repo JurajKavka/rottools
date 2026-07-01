@@ -6,7 +6,7 @@
 #include <algorithm>
 
 FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent) : FileBrowserTreePanelWx(parent) {
-    wxTheApp->Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
+    Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
 
     m_directoryScanner = std::make_shared<DirectoryScanner>();
 
@@ -27,7 +27,7 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent) : FileBrowserTreePa
 };
 
 FileBrowserTreePanel::~FileBrowserTreePanel() {
-    wxTheApp->Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
+    Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
 };
 
 std::vector<FileEntry> FileBrowserTreePanel::SortEntries(const std::vector<FileEntry>& entries) const {
@@ -57,6 +57,8 @@ void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
 
     wxDataViewItem root;
 
+    m_dataViewTreeCtrl1->AppendItem(root, "..", 0);
+
     for (const auto& entry : sortedData) {
         m_dataViewTreeCtrl1->AppendItem(root, entry.name, entry.isDirectory ? 0 : 1);
     }
@@ -65,7 +67,7 @@ void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
 void FileBrowserTreePanel::ListDir(const fs::path& filePath) {
     std::vector<std::string> noFilters = {};
 
-    m_directoryScanner->StartScan(filePath, noFilters);
+    m_directoryScanner->StartScan(filePath, noFilters, this);
 }
 
 void FileBrowserTreePanel::OnDirectoryScanComplete(wxThreadEvent& event) {

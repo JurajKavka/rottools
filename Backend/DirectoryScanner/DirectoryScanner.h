@@ -31,13 +31,13 @@ class DirectoryScanner : public std::enable_shared_from_this<DirectoryScanner> {
     ~DirectoryScanner();
 
     // The callback parameter is gone. It now just takes the path and filters.
-    void StartScan(const fs::path& rootPath, const std::vector<std::string>& extensions);
+    void StartScan(const fs::path& rootPath, const std::vector<std::string>& extensions, wxEvtHandler* eventTarget);
 
     void CancelScan();
     bool IsScanning() const;
 
    private:
-    void ScanThreadLogic(std::stop_token stoken, fs::path rootPath, std::unordered_set<std::string> extSet);
+    void ScanThreadLogic(std::stop_token stoken, fs::path rootPath, std::unordered_set<std::string> extSet, wxEvtHandler* eventTarget);
 
     std::jthread m_workerThread;
     std::atomic<bool> m_isScanning{false};

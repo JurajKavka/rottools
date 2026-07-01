@@ -8,12 +8,12 @@ public:
     ScanReceiver() {
         // 4. Bind to the GLOBAL app object.
         // Because wxTheApp is broadcasting, ANY class can use this exact bind line to listen.
-        wxTheApp->Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScanReceiver::OnScanComplete, this);
+        Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScanReceiver::OnScanComplete, this);
     }
 
     ~ScanReceiver() {
         // Always unbind custom event handlers in destructors to prevent crashes
-        wxTheApp->Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScanReceiver::OnScanComplete, this);
+        Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScanReceiver::OnScanComplete, this);
     }
 
     // 5. The Event Handler
@@ -48,7 +48,7 @@ public:
         std::cout << "[Main Thread] Launching Async Scan of: " << currentDir << "...\n";
 
         // 6. Just call start. The event loop handles the rest.
-        m_scanner->StartScan(currentDir, noFilters);
+        m_scanner->StartScan(currentDir, noFilters, m_receiver);
 
         return true;  
     }
