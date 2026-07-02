@@ -1,3 +1,4 @@
+#include <wx/utils.h>
 #include <wx/wx.h>
 
 #include "FileBrowserTreePanel.h"
@@ -26,8 +27,10 @@ bool FileBrowserTreePanelApp::OnInit() {
     // 3. Show the frame (which automatically shows the child panel)
     mainFrame->Show(true);
 
-    std::filesystem::path currentDir = std::filesystem::current_path();
-    treePanel->ListDir(currentDir);
+    wxFileName myPath;
+    myPath.AssignHomeDir();
+
+    treePanel->ListDir(myPath);
 
     return true;
 }

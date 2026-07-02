@@ -8,6 +8,10 @@ void printLog(const wxString& msg) {
     std::cout << msg.ToStdString() << std::endl;
 }
 
+void printError(const wxString& msg) {
+    std::cerr << msg.ToStdString() << std::endl;
+}
+
 std::string trimToStdString(const wxString& str) {
     wxString copy = str;
     return copy.Trim(true).Trim(false).ToStdString();

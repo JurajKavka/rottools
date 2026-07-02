@@ -16,9 +16,9 @@ include(${wxWidgets_USE_FILE})
 
 add_library(DirectoryScanner STATIC DirectoryScanner.cpp)
 
-target_include_directories(DirectoryScanner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_features(DirectoryScanner PRIVATE cxx_std_20)
-target_link_libraries(DirectoryScanner PRIVATE ${wxWidgets_LIBRARIES} HelperFunctions)
+target_include_directories(DirectoryScanner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_features(DirectoryScanner PUBLIC cxx_std_20)
+target_link_libraries(DirectoryScanner PUBLIC ${wxWidgets_LIBRARIES} HelperFunctions)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     add_executable(DirectoryScannerApp main.cpp)

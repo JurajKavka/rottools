@@ -1,66 +1,60 @@
 #include <wx/wx.h>
-#include <iostream>
+
 #include <filesystem>
+#include <iostream>
+
 #include "DirectoryScanner.h"
+#include "HelperFunctions.h"
 
-class ScanReceiver : public wxEvtHandler {
-public:
-    ScanReceiver() {
-        // 4. Bind to the GLOBAL app object.
-        // Because wxTheApp is broadcasting, ANY class can use this exact bind line to listen.
-        Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScanReceiver::OnScanComplete, this);
+class MyApp : public wxApp {
+   public:
+    bool OnInit() override {
+        Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &MyApp::OnScanComplete, this);
+
+        m_directoryScanner = std::make_shared<DirectoryScanner>();
+
+        std::filesystem::path currentDir = std::filesystem::current_path();
+        ScanOptions scanOptions;
+        scanOptions.extensions = {};
+        scanOptions.showHiddenFiles = true;
+
+        wxFileName rootDir("/Users/jurajkavka/Documents/crossuite");
+       // rootDir.AssignHomeDir();
+
+        printLog("[Main Thread] Launching Async Scan of: {}", rootDir.GetFullPath().ToStdString());
+
+        // 6. Just call start. The event loop handles the rest.
+        m_directoryScanner->StartScan(rootDir, scanOptions, this);
+
+        return true;
     }
 
-    ~ScanReceiver() {
-        // Always unbind custom event handlers in destructors to prevent crashes
-        Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScanReceiver::OnScanComplete, this);
+    int OnExit() override {
+        Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &MyApp::OnScanComplete, this);
+        return wxApp::OnExit();
     }
 
-    // 5. The Event Handler
+   private:
+    std::shared_ptr<DirectoryScanner> m_directoryScanner;
     void OnScanComplete(wxThreadEvent& event) {
-        std::cout << "\n[Main Thread] Scan Complete Event Received!\n";
+        printLog("[Main Thread] Scan Complete Event Received!");
 
         // Extract the custom data from the event payload
         auto files = event.GetPayload<std::vector<FileEntry>>();
 
-        std::cout << "Found " << files.size() << " items.\n";
-        for (const auto& file : files) {
+        auto sortedData = m_directoryScanner->SortEntries(files);
+
+        printLog("Found {} items.", sortedData.size());
+        for (const auto& file : sortedData) {
             if (file.isDirectory) {
-                std::cout << "[DIR]  " << file.name << "\n";
+                printLog("d {}", file.name);
             } else {
-                std::cout << "[FILE] " << file.name << " (" << file.size << " bytes)\n";
+                printLog("f {} ({} bytes)", file.name, file.size);
             }
         }
 
         wxTheApp->ExitMainLoop();
     }
-};
-
-class MyApp : public wxApp {
-public:
-    bool OnInit() override {
-        m_receiver = new ScanReceiver();
-        m_scanner = std::make_shared<DirectoryScanner>();
-
-        std::filesystem::path currentDir = std::filesystem::current_path();
-        std::vector<std::string> noFilters = {}; 
-
-        std::cout << "[Main Thread] Launching Async Scan of: " << currentDir << "...\n";
-
-        // 6. Just call start. The event loop handles the rest.
-        m_scanner->StartScan(currentDir, noFilters, m_receiver);
-
-        return true;  
-    }
-
-    int OnExit() override {
-        delete m_receiver;
-        return wxApp::OnExit();
-    }
-
-private:
-    ScanReceiver* m_receiver;
-    std::shared_ptr<DirectoryScanner> m_scanner;
 };
 
 wxIMPLEMENT_APP(MyApp);

@@ -1,20 +1,27 @@
 #pragma once
 
+#include "DirectoryScanner.h"
 #include "FileBrowserTreePanelWx.h"
 #include "HelperFunctions.h"
-#include "DirectoryScanner.h"
 
 class DirectoryScanner;
 
 class FileBrowserTreePanel : public FileBrowserTreePanelWx {
+   public:
+    using FileOpenedCallback = std::function<void(const wxFileName&)>;
+    explicit FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened = nullptr);
+    ~FileBrowserTreePanel();
+    void ListDir(const wxFileName fileName);
+
    private:
     std::shared_ptr<DirectoryScanner> m_directoryScanner;
-    std::vector<FileEntry> SortEntries(const std::vector<FileEntry>& entries) const;
+    ScanOptions m_scanOptions;
+    wxFileName m_currentPath;
+
+    FileOpenedCallback m_onFileOpened;
+
     void UpdateTree(const std::vector<FileEntry>& entries);
     void OnDirectoryScanComplete(wxThreadEvent& event);
-
-   public:
-    explicit FileBrowserTreePanel(wxWindow* parent);
-    ~FileBrowserTreePanel();
-    void ListDir(const fs::path& filePath);
+    void OnHiddenFilesCheckbox(wxCommandEvent& event);
+    void OnItemActivated(wxDataViewEvent& event);
 };

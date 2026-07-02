@@ -1,7 +1,7 @@
 #pragma once
 
-#include <wx/wx.h>  // Required for wxThreadEvent and Event Macros
-
+#include <wx/wx.h>  
+#include <wx/filename.h>
 #include <atomic>
 #include <filesystem>
 #include <memory>
@@ -10,11 +10,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "HelperFunctions.h"
+// #include "HelperFunctions.h"
 
 namespace fs = std::filesystem;
 
-// Structure to hold data
 struct FileEntry {
     fs::path path;
     std::string name;
@@ -22,23 +21,25 @@ struct FileEntry {
     uintmax_t size;
 };
 
-// 1. Declare the custom event type so the rest of your app can see it
+struct ScanOptions {
+    std::vector<std::string> extensions;
+    bool showHiddenFiles = false;
+};
+
 wxDECLARE_EVENT(wxEVT_DIRECTORY_SCAN_COMPLETE, wxThreadEvent);
 
 class DirectoryScanner : public std::enable_shared_from_this<DirectoryScanner> {
    public:
     DirectoryScanner();
     ~DirectoryScanner();
-
-    // The callback parameter is gone. It now just takes the path and filters.
-    void StartScan(const fs::path& rootPath, const std::vector<std::string>& extensions, wxEvtHandler* eventTarget);
-
+    void StartScan(const wxFileName fileName, const ScanOptions& options, wxEvtHandler* eventTarget);
     void CancelScan();
     bool IsScanning() const;
+    std::vector<FileEntry> SortEntries(const std::vector<FileEntry>& entries) const;
 
    private:
-    void ScanThreadLogic(std::stop_token stoken, fs::path rootPath, std::unordered_set<std::string> extSet, wxEvtHandler* eventTarget);
-
     std::jthread m_workerThread;
     std::atomic<bool> m_isScanning{false};
+    void ScanThreadLogic(std::stop_token stoken, fs::path rootPath, ScanOptions options,
+                         wxEvtHandler* eventTarget);
 };

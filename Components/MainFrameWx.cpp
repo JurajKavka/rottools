@@ -26,7 +26,7 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	this->SetMenuBar( MenuBar );
 
 	wxBoxSizer* MainFrameSizer;
-	MainFrameSizer = new wxBoxSizer( wxVERTICAL );
+	MainFrameSizer = new wxBoxSizer( wxHORIZONTAL );
 
 
 	this->SetSizer( MainFrameSizer );

@@ -5,8 +5,14 @@
 
 #include <algorithm>
 
-FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent) : FileBrowserTreePanelWx(parent) {
+FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened)
+    : FileBrowserTreePanelWx(parent), m_onFileOpened(onFileOpened) {
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
+    m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::OnHiddenFilesCheckbox, this);
+    m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::OnItemActivated, this);
+
+    m_scanOptions.extensions = {".md"};
+    m_scanOptions.showHiddenFiles = m_hiddenFilesCheckbox->IsChecked();
 
     m_directoryScanner = std::make_shared<DirectoryScanner>();
 
@@ -30,29 +36,9 @@ FileBrowserTreePanel::~FileBrowserTreePanel() {
     Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
 };
 
-std::vector<FileEntry> FileBrowserTreePanel::SortEntries(const std::vector<FileEntry>& entries) const {
-    // 1. Create a copy so we don't destroy the original data
-    // mozem pouzit std::move a zahodit povodne data
-    std::vector<FileEntry> sorted = entries;
-
-    std::sort(sorted.begin(), sorted.end(), [](const FileEntry& a, const FileEntry& b) {
-        // Tier 1: Group Directories at the top
-        if (a.isDirectory != b.isDirectory) {
-            return a.isDirectory > b.isDirectory;
-        }
-        // Tier 2: Alphabetical sort
-        return a.name < b.name;
-    });
-
-    // 3. Return the sorted vector by value
-    // C++11 and later use "Move Semantics," so this is very efficient!
-    return sorted;
-}
-
 void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
-    // 2. Call your private helper
-    auto sortedData = SortEntries(entries);
-    // 3. Populate the UI
+    auto sortedData = m_directoryScanner->SortEntries(entries);
+
     m_dataViewTreeCtrl1->DeleteAllItems();
 
     wxDataViewItem root;
@@ -64,14 +50,69 @@ void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
     }
 }
 
-void FileBrowserTreePanel::ListDir(const fs::path& filePath) {
-    std::vector<std::string> noFilters = {};
+void FileBrowserTreePanel::ListDir(const wxFileName fileName) {
+    // Force the path to interpret its entire string structure as a directory.
+    // It is probably not needed when working with `wxFileName` API ...
+    m_currentPath = wxFileName::DirName(fileName.GetFullPath());
 
-    m_directoryScanner->StartScan(filePath, noFilters, this);
+    m_directoryScanner->StartScan(fileName, m_scanOptions, this);
 }
 
 void FileBrowserTreePanel::OnDirectoryScanComplete(wxThreadEvent& event) {
     auto files = event.GetPayload<std::vector<FileEntry>>();
 
     UpdateTree(files);
+}
+
+void FileBrowserTreePanel::OnHiddenFilesCheckbox(wxCommandEvent& event) {
+    // 1. Update the configuration state with the checkbox value
+    m_scanOptions.showHiddenFiles = event.IsChecked();
+
+    // 2. If a valid directory is currently being shown, re-scan it immediately
+    // with the updated configuration layout
+    if (m_currentPath.IsOk()) {
+        ListDir(m_currentPath);
+    }
+}
+
+void FileBrowserTreePanel::OnItemActivated(wxDataViewEvent& event) {
+    wxDataViewItem item = event.GetItem();
+    if (!item.IsOk()) {
+        return;
+    }
+
+    // Extract the string label of the row that was clicked
+    wxString itemText = m_dataViewTreeCtrl1->GetItemText(item);
+
+    // Case 1: Going up a level ("..")
+    if (itemText == "..") {
+        wxFileName parentPath = m_currentPath;
+
+        // wxFileName::Up() cleanly pops the last directory component off the path stack
+        if (parentPath.GetDirCount() > 0) {
+            parentPath.RemoveLastDir();
+        }
+
+        ListDir(parentPath);
+    }
+    // Case 2: Attempting to go down into a folder
+    else {
+        // Construct the combined prospective target path purely using the wxFileName API
+        wxFileName targetPath = m_currentPath;
+        targetPath.AppendDir(itemText);
+
+        // Only trigger a re-scan if the clicked item is actually an accessible folder
+        if (targetPath.DirExists()) {
+            ListDir(targetPath);
+        } else {
+            wxFileName filePath = m_currentPath;
+            filePath.SetFullName(itemText);
+
+            if (filePath.FileExists()) {
+                if (m_onFileOpened) {
+                    m_onFileOpened(filePath);
+                }
+            }
+        }
+    }
 }

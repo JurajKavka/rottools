@@ -7,6 +7,10 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../HelperFunctions ${CMAKE_CURRENT_BINARY_DIR}/HelperFunctions)
+endif()
+
 include(FetchContent)
 FetchContent_Declare(
     md4c
@@ -22,11 +26,11 @@ add_library(MarkdownToHtmlAsync STATIC MarkdownToHtmlAsync.cpp)
 
 target_include_directories(MarkdownToHtmlAsync PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(MarkdownToHtmlAsync PRIVATE cxx_std_20)
-target_link_libraries(MarkdownToHtmlAsync PRIVATE md4c-html ${wxWidgets_LIBRARIES})
+target_link_libraries(MarkdownToHtmlAsync PRIVATE md4c-html ${wxWidgets_LIBRARIES} HelperFunctions)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     add_executable(MarkdownToHtmlAsyncApp main.cpp)
-    target_link_libraries(MarkdownToHtmlAsyncApp PRIVATE MarkdownToHtmlAsync)
+    target_link_libraries(MarkdownToHtmlAsyncApp PRIVATE MarkdownToHtmlAsync HelperFunctions)
 endif()
 
 

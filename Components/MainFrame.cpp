@@ -25,27 +25,38 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_parserThread = std::make_shared<MarkdownToHtmlAsync>(this);
 
     // 1. Instantiate the WebViewPanel, setting this frame as its parent
-    m_webViewPanel = new WebViewPanel(this);
+    m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
+    m_fileBrowserPanel = new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::HandleFileOpened, this));
+    m_webViewPanel = new WebViewPanel(m_mainSplitter);
+
+    m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_webViewPanel, 300);
+    m_mainSplitter->SetMinimumPaneSize(120);  // Prevents hiding the sidebar entirely
 
     // 2. Vypýtame si od okna ten sizer, ktorý vygeneroval wxFormBuilder (s tlačidlom)
     wxSizer* mainSizer = this->GetSizer();
 
     // 3. Bezpečne pridáme WebViewPanel do tohto sizeru
     if (mainSizer) {
+        wxBoxSizer* horizontalSizer = new wxBoxSizer(wxHORIZONTAL);
         // Zabezpečíme, že WebView vyplní zvyšný priestor (proporcia 1, wxEXPAND)
-        mainSizer->Add(m_webViewPanel, 1, wxEXPAND | wxALL, 0);
+        mainSizer->Add(m_mainSplitter, 1, wxEXPAND | wxALL, 0);
+
+        // inital directory list
+        wxFileName initialDirectory;
+        initialDirectory.AssignHomeDir();
+
+        m_fileBrowserPanel->ListDir(initialDirectory);
     }
     Layout();
 
     // 4. Register drag and drop targets
-    this->SetDropTarget(new FileDropTarget([this](const wxString& filePath) { m_parserThread->ParseFile(filePath); }));
+    this->SetDropTarget(
+        new FileDropTarget([this](const wxFileName& filePath) { m_parserThread->ParseFile(filePath); }));
 }
 
 MainFrame::~MainFrame() {}
 
 void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
-    printLog("Click open file");
-
     wxFileDialog openFileDialog(
         this,                  // Parent window
         "Open Markdown File",  // Dialog Title
@@ -71,8 +82,9 @@ void MainFrame::OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
         m_webViewPanel->LoadHtml(event.html);
     }
     if (statusBar) {
-        statusBar->SetStatusText(event.filePath);
+        statusBar->SetStatusText(event.filePath.GetAbsolutePath());
     }
+    m_fileBrowserPanel->ListDir(event.filePath.GetPath());
 }
 
 void MainFrame::OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
@@ -80,4 +92,8 @@ void MainFrame::OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
     if (statusBar) {
         statusBar->SetStatusText(wxString(""));
     }
+}
+
+void MainFrame::HandleFileOpened(const wxFileName& filePath) {
+    m_parserThread->ParseFile(filePath);
 }

@@ -13,7 +13,7 @@ class MarkdownToHtmlAsync : public std::enable_shared_from_this<MarkdownToHtmlAs
    public:
     explicit MarkdownToHtmlAsync(wxEvtHandler* parent);
 
-    void ParseFile(const wxString& filePath);
+    void ParseFile(const wxFileName& filePath);
     void AbortParseFile();  // New method to trigger cancellation
 
    private:

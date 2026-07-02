@@ -36,9 +36,12 @@ wxString MarkdownToHtmlAsync::ConvertMarkdownToHtml(const wxString& markdownCont
     return wxString::FromUTF8(htmlOutputBuffer);
 };
 
-void MarkdownToHtmlAsync::ParseFile(const wxString& filePath) {
+void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
     std::weak_ptr<MarkdownToHtmlAsync> weakSelf = shared_from_this();
-    m_workerThread = std::jthread([weakSelf, filePath]() {
+
+    std::filesystem::path path = filePath.GetFullPath().ToStdWstring();
+
+    m_workerThread = std::jthread([weakSelf, path, filePath]() {
         auto self = weakSelf.lock();
         if (!self) {
             return;
@@ -47,10 +50,11 @@ void MarkdownToHtmlAsync::ParseFile(const wxString& filePath) {
         // TODO: You can check st.stop_requested() here if you implement
         // a way to cancel the thread!
 
-        std::ifstream file(filePath.ToStdString());
+        std::ifstream file(path);
         if (!file.is_open()) {
-            wxThreadEvent* event = new wxThreadEvent(EVT_MARKDOWN_ERROR);
-            event->SetString(wxString("File open error!"));
+            MarkdownToHtmlAsyncEvent* event = new MarkdownToHtmlAsyncEvent(EVT_MARKDOWN_ERROR, wxID_ANY);
+            event->error = wxString("File open error!");
+            event->filePath = filePath;
             wxQueueEvent(self->m_parent, event);
             return;
         }

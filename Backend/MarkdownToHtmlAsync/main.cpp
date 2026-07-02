@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "MarkdownToHtmlAsync.h"  // Your parser class
+#include "HelperFunctions.h"
 
 // Custom Event Definition
 
@@ -13,17 +14,18 @@ class ConsoleReceiver : public wxEvtHandler {
         Bind(EVT_MARKDOWN_ERROR, &ConsoleReceiver::OnMarkdownError, this);
     }
 
-    void OnMarkdownReady(wxThreadEvent& event) {
-        std::cout << "[Main Thread] Event Received!" << std::endl;
-        std::cout << "Content: " << event.GetString().ToStdString() << std::endl;
+    void OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
+        printLog("[Main Thread] Event Received!");
+        printLog("Filename dir: {}",event.filePath.GetAbsolutePath());
+        std::cout << "Content: " << event.html.ToStdString() << std::endl;
 
         // Stop the app after receiving the event
         wxTheApp->ExitMainLoop();
     }
 
-    void OnMarkdownError(wxThreadEvent& event) {
+    void OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
         std::cout << "[Main Thread] Event Received ERROR!" << std::endl;
-        std::cout << "Content: " << event.GetString().ToStdString() << std::endl;
+        std::cout << "Content: " << event.error.ToStdString() << std::endl;
 
         // Stop the app after receiving the event
         wxTheApp->ExitMainLoop();
@@ -36,7 +38,9 @@ class MyApp : public wxApp {
         m_receiver = new ConsoleReceiver();
         m_parser = std::make_shared<MarkdownToHtmlAsync>(m_receiver);
         std::cout << "[Main Thread] Launching Async Parse..." << std::endl;
-        m_parser->ParseFile("test_file.md");
+        m_parser->ParseFile(wxFileName("test_file.md"));
+       // /Users/jurajkavka/Work/juraj.kavka/mdreader/Backend/MarkdownToHtmlAsync/test_file.md
+       //m_parser->ParseFile("/Users/jurajkavka/Work/juraj.kavka/mdreader/Backend/MarkdownToHtmlAsync/test_file.md");
         return true;  // Start the main loop
     }
 

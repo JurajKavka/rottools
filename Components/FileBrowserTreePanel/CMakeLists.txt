@@ -12,7 +12,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../Backend ${CMAKE_CURRENT_BINARY_DIR}/Backend)
 endif()
 
-add_library(FileBrowserTreePanel FileBrowserTreePanel.cpp FileBrowserTreePanelWx.cpp)
+add_library(FileBrowserTreePanel STATIC FileBrowserTreePanel.cpp FileBrowserTreePanelWx.cpp)
 
 target_include_directories(FileBrowserTreePanel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(FileBrowserTreePanel PUBLIC cxx_std_20)
