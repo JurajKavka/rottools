@@ -9,7 +9,7 @@
 wxDECLARE_EVENT(EVT_MARKDOWN_READY, MarkdownToHtmlAsyncEvent);
 wxDECLARE_EVENT(EVT_MARKDOWN_ERROR, MarkdownToHtmlAsyncEvent);
 
-class MarkdownToHtmlAsync : public std::enable_shared_from_this<MarkdownToHtmlAsync> {
+class MarkdownToHtmlAsync {
    public:
     explicit MarkdownToHtmlAsync(wxEvtHandler* parent);
 

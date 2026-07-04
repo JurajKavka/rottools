@@ -36,7 +36,6 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback 
 
 FileBrowserTreePanel::~FileBrowserTreePanel() {
     Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
-    Unbind(wxEVT_FSWATCHER, &FileBrowserTreePanel::OnFileSystemEvent, this);
 };
 
 void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
@@ -139,17 +138,7 @@ void FileBrowserTreePanel::OnItemActivated(wxDataViewEvent& event) {
     }
 }
 
-void FileBrowserTreePanel::OnFileSystemEvent(wxFileSystemWatcherEvent& event) {
-    int changeType = event.GetChangeType();
-
-    if (changeType == wxFSW_EVENT_CREATE || changeType == wxFSW_EVENT_DELETE || changeType == wxFSW_EVENT_RENAME) {
-        if (m_currentPath.IsOk() && m_currentPath.DirExists()) {
-            ListDir(m_currentPath);
-        }
-    }
-}
-
-const void FileBrowserTreePanel::ReloadCurrentDir() {
+void FileBrowserTreePanel::ReloadCurrentDir() {
     if (m_currentPath.IsOk() && m_currentPath.DirExists()) {
         ListDir(m_currentPath);
     }

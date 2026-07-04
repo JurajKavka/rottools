@@ -37,38 +37,50 @@ wxString MarkdownToHtmlAsync::ConvertMarkdownToHtml(const wxString& markdownCont
 };
 
 void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
-    std::weak_ptr<MarkdownToHtmlAsync> weakSelf = shared_from_this();
-
     std::filesystem::path path = filePath.GetFullPath().ToStdWstring();
 
-    m_workerThread = std::jthread([weakSelf, path, filePath]() {
-        auto self = weakSelf.lock();
-        if (!self) {
-            return;
-        }
+    // Capture a raw `this` rather than extending our own lifetime via a shared_ptr.
+    // The parser is owned by the MainFrame; ~MarkdownToHtmlAsync (running on the
+    // owner's thread) requests stop and joins this thread before we are destroyed,
+    // so the worker can never end up destroying/joining itself.
+    m_workerThread = std::jthread([this, path, filePath](std::stop_token stoken) {
+        // An exception escaping a jthread calls std::terminate, so guard the body
+        try {
+            std::ifstream file(path);
+            if (!file.is_open()) {
+                MarkdownToHtmlAsyncEvent* event = new MarkdownToHtmlAsyncEvent(EVT_MARKDOWN_ERROR, wxID_ANY);
+                event->error = wxString("Could not open file: ") + filePath.GetFullPath();
+                event->filePath = filePath;
+                wxQueueEvent(m_parent, event);
+                return;
+            }
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            std::string markdownStr = buffer.str();
 
-        // TODO: You can check st.stop_requested() here if you implement
-        // a way to cancel the thread!
+            // Bail out cheaply if a newer request or shutdown superseded this one,
+            // so the jthread join/reassign doesn't block on a stale parse
+            if (stoken.stop_requested()) {
+                return;
+            }
 
-        std::ifstream file(path);
-        if (!file.is_open()) {
-            MarkdownToHtmlAsyncEvent* event = new MarkdownToHtmlAsyncEvent(EVT_MARKDOWN_ERROR, wxID_ANY);
-            event->error = wxString("File open error!");
+            wxString rawMarkdown = wxString::FromUTF8(markdownStr);
+            wxString htmlContent = ConvertMarkdownToHtml(rawMarkdown);
+
+            if (stoken.stop_requested()) {
+                return;
+            }
+
+            MarkdownToHtmlAsyncEvent* event = new MarkdownToHtmlAsyncEvent(EVT_MARKDOWN_READY, wxID_ANY);
+            event->html = htmlContent;
             event->filePath = filePath;
-            wxQueueEvent(self->m_parent, event);
-            return;
+            wxQueueEvent(m_parent, event);
+        } catch (const std::exception& e) {
+            MarkdownToHtmlAsyncEvent* event = new MarkdownToHtmlAsyncEvent(EVT_MARKDOWN_ERROR, wxID_ANY);
+            event->error = wxString::FromUTF8(e.what());
+            event->filePath = filePath;
+            wxQueueEvent(m_parent, event);
         }
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-        std::string markdownStr = buffer.str();
-
-        wxString rawMarkdown = wxString::FromUTF8(markdownStr);
-
-        wxString htmlContent = self->ConvertMarkdownToHtml(rawMarkdown);
-        MarkdownToHtmlAsyncEvent* event = new MarkdownToHtmlAsyncEvent(EVT_MARKDOWN_READY, wxID_ANY);
-        event->html = htmlContent;
-        event->filePath = filePath;
-        wxQueueEvent(self->m_parent, event);
     });
 }
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <wx/fswatcher.h>
-
 #include "DirectoryScanner.h"
 #include "FileBrowserTreePanelWx.h"
 #include "HelperFunctions.h"
@@ -15,7 +13,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     explicit FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened = nullptr, DirectoryChangedCallback onDirectoryChanged = nullptr);
     ~FileBrowserTreePanel();
     void ListDir(const wxFileName fileName);
-    const void ReloadCurrentDir();
+    void ReloadCurrentDir();
 
    private:
     std::shared_ptr<DirectoryScanner> m_directoryScanner;
@@ -30,5 +28,4 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void OnDirectoryScanComplete(DirectoryScannerEvent& event);
     void OnHiddenFilesCheckbox(wxCommandEvent& event);
     void OnItemActivated(wxDataViewEvent& event);
-    void OnFileSystemEvent(wxFileSystemWatcherEvent& event);
 };

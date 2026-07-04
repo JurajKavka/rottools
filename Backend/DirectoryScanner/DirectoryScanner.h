@@ -18,7 +18,7 @@ struct ScanOptions {
 
 wxDECLARE_EVENT(wxEVT_DIRECTORY_SCAN_COMPLETE, DirectoryScannerEvent);
 
-class DirectoryScanner : public std::enable_shared_from_this<DirectoryScanner> {
+class DirectoryScanner {
    public:
     DirectoryScanner();
     ~DirectoryScanner();

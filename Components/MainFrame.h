@@ -3,6 +3,7 @@
 #include "MainFrameWx.h"
 #include "MarkdownToHtmlAsync/MarkdownToHtmlAsync.h"
 #include "FileBrowserTreePanel/FileBrowserTreePanel.h"
+#include <wx/fswatcher.h>
 #include <wx/splitter.h>
 
 // Forward declaration
@@ -29,5 +30,4 @@ class MainFrame : public MainFrameWx {
    public:
     MainFrame(wxWindow* parent);
     ~MainFrame();
-    void OpenFile(const wxString& filePath);
 };

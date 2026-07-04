@@ -31,8 +31,6 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_mainSplitter->SetMinimumPaneSize(100);
 
     wxSizer* mainSizer = this->GetSizer();
-
-    wxBoxSizer* horizontalSizer = new wxBoxSizer(wxHORIZONTAL);
     mainSizer->Add(m_mainSplitter, 1, wxEXPAND | wxALL, 0);
 
     // inital directory list
@@ -98,7 +96,8 @@ void MainFrame::OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
 }
 
 void MainFrame::OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
-    wxMessageBox("Error parsing markdown!", "Error", wxICON_ERROR);
+    wxString message = event.error.IsEmpty() ? wxString("Error parsing markdown!") : event.error;
+    wxMessageBox(message, "Error", wxICON_ERROR);
     if (statusBar) {
         statusBar->SetStatusText(wxString(""));
     }

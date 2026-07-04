@@ -1,5 +1,7 @@
 #include "DirectoryScanner.h"
 
+#include <algorithm>
+#include <cctype>
 #include <system_error>
 
 #include "HelperFunctions.h"
@@ -10,6 +12,9 @@ DirectoryScanner::DirectoryScanner() = default;
 
 DirectoryScanner::~DirectoryScanner() {
     CancelScan();
+    if (m_workerThread.joinable()) {
+        m_workerThread.join();
+    }
 }
 
 void DirectoryScanner::CancelScan() {
@@ -30,12 +35,12 @@ void DirectoryScanner::StartScan(const wxFileName fileName, const ScanOptions& o
 
     m_isScanning = true;
 
-    std::weak_ptr<DirectoryScanner> weakThis = weak_from_this();
-
-    m_workerThread = std::jthread([weakThis, fileName, options, eventTarget](std::stop_token stoken) {
-        if (auto sharedThis = weakThis.lock()) {
-            sharedThis->ScanThreadLogic(stoken, fileName, options, eventTarget);
-        }
+    // Capture a raw `this` rather than extending our own lifetime via a shared_ptr.
+    // The scanner is owned by its parent panel; ~DirectoryScanner (running on the
+    // owner's thread) requests stop and joins this thread before we are destroyed,
+    // so the worker can never end up destroying/joining itself.
+    m_workerThread = std::jthread([this, fileName, options, eventTarget](std::stop_token stoken) {
+        ScanThreadLogic(stoken, fileName, options, eventTarget);
     });
 }
 
@@ -49,43 +54,49 @@ void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName 
 
     std::filesystem::path rootPath = fileName.GetFullPath().ToStdWstring();
 
-    if (fs::exists(rootPath) && fs::is_directory(rootPath)) {
-        // Explicitly disable following symlinks to prevent circular reference errors
-        auto dirOptions = fs::directory_options::skip_permission_denied;
-        for (const auto& entry : fs::directory_iterator(rootPath, dirOptions)) {
-            try {
+    // The outer try/catch is mandatory: an exception escaping a jthread calls
+    // std::terminate. It also covers the iterator increment, which a range-for
+    // performs outside the loop body (so outside the inner try/catch).
+    try {
+        if (fs::exists(rootPath) && fs::is_directory(rootPath)) {
+            auto dirOptions = fs::directory_options::skip_permission_denied;
+            for (const auto& entry : fs::directory_iterator(rootPath, dirOptions)) {
                 if (stoken.stop_requested()) {
                     break;
                 }
 
-                if (entry.is_symlink()) {
-                    continue;
+                // A failure on a single entry only skips that entry
+                try {
+                    // Skip symlinks to prevent circular reference errors
+                    if (entry.is_symlink()) {
+                        continue;
+                    }
+
+                    std::string filename = entry.path().filename().string();
+                    // 🛠️ Check 1: Handle Hidden Files Option
+                    if (!options.showHiddenFiles && filename.starts_with('.')) {
+                        continue;
+                    }
+
+                    bool isDir = entry.is_directory();
+                    std::string ext = entry.path().extension().string();
+
+                    if (isDir || extSet.empty() || extSet.contains(ext)) {
+                        FileEntry fileEntry;
+                        fileEntry.path = entry.path();
+                        fileEntry.name = filename;
+                        fileEntry.isDirectory = isDir;
+                        fileEntry.size = isDir ? 0 : fs::file_size(entry.path());
+
+                        results.push_back(fileEntry);
+                    }
+                } catch (const fs::filesystem_error& e) {
+                    printError("[Error] Skipping entry: {} - {}", e.code().message(), e.what());
                 }
-
-                std::string filename = entry.path().filename().string();
-                // 🛠️ Check 1: Handle Hidden Files Option
-                if (!options.showHiddenFiles && filename.starts_with('.')) {
-                    continue;
-                }
-
-                bool isDir = entry.is_directory();
-                std::string ext = entry.path().extension().string();
-
-                if (isDir || extSet.empty() || extSet.contains(ext)) {
-                    FileEntry fileEntry;
-                    fileEntry.path = entry.path();
-                    fileEntry.name = filename;
-                    fileEntry.isDirectory = isDir;
-
-                    std::error_code ec;
-                    fileEntry.size = isDir ? 0 : fs::file_size(entry.path(), ec);
-
-                    results.push_back(fileEntry);
-                }
-            } catch (const fs::filesystem_error& e) {
-                printError("[Error] {} - {}", e.code().message(), e.what());
             }
         }
+    } catch (const std::exception& e) {
+        printError("[Error] Directory scan aborted: {}", e.what());
     }
 
     // 3. Queue the event to the Main Thread if not cancelled
@@ -93,7 +104,7 @@ void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName 
         // Create the event
 
         DirectoryScannerEvent* event = new DirectoryScannerEvent(wxEVT_DIRECTORY_SCAN_COMPLETE, wxID_ANY);
-        event->files = results;
+        event->files = std::move(results);
         event->currentDirectory = fileName;
 
         wxQueueEvent(eventTarget, event);
@@ -103,8 +114,7 @@ void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName 
 }
 
 std::vector<FileEntry> DirectoryScanner::SortEntries(const std::vector<FileEntry>& entries) const {
-    // 1. Create a copy so we don't destroy the original data
-    // mozem pouzit std::move a zahodit povodne data
+    // Sort an explicit local copy; the caller's data stays untouched
     std::vector<FileEntry> sorted = entries;
 
     std::sort(sorted.begin(), sorted.end(), [](const FileEntry& a, const FileEntry& b) {
@@ -112,25 +122,24 @@ std::vector<FileEntry> DirectoryScanner::SortEntries(const std::vector<FileEntry
         if (a.isDirectory != b.isDirectory) {
             return a.isDirectory > b.isDirectory;
         }
-        // Tier 2: Case-insensitive alphabetical sort
-        bool isLess = std::lexicographical_compare(
-            a.name.begin(), a.name.end(), b.name.begin(), b.name.end(),
-            [](unsigned char c1, unsigned char c2) { return std::tolower(c1) < std::tolower(c2); });
-
-        bool isGreater = std::lexicographical_compare(
-            b.name.begin(), b.name.end(), a.name.begin(), a.name.end(),
-            [](unsigned char c1, unsigned char c2) { return std::tolower(c1) < std::tolower(c2); });
-
+        // Tier 2: Case-insensitive alphabetical sort (single pass over both names)
+        auto itA = a.name.begin();
+        auto itB = b.name.begin();
+        for (; itA != a.name.end() && itB != b.name.end(); ++itA, ++itB) {
+            int lowerA = std::tolower(static_cast<unsigned char>(*itA));
+            int lowerB = std::tolower(static_cast<unsigned char>(*itB));
+            if (lowerA != lowerB) {
+                return lowerA < lowerB;
+            }
+        }
+        // Common prefix matched: the shorter name sorts first
+        if (a.name.size() != b.name.size()) {
+            return a.name.size() < b.name.size();
+        }
         // Tie-breaker: If names are identical case-insensitively (e.g., "Apple" vs "apple"),
         // fall back to a case-sensitive check to preserve strict weak ordering requirements.
-        if (!isLess && !isGreater) {
-            return a.name < b.name;
-        }
-
-        return isLess;
+        return a.name < b.name;
     });
 
-    // 3. Return the sorted vector by value
-    // C++11 and later use "Move Semantics," so this is very efficient!
     return sorted;
 }
