@@ -16,11 +16,15 @@ class MainFrame : public MainFrameWx {
     WebViewPanel* m_webViewPanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
     wxSplitterWindow* m_mainSplitter = nullptr;
+    wxFileSystemWatcher* m_fileSystemWatcher;
 
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
+    void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void OnMarkdownReady(MarkdownToHtmlAsyncEvent& event);
     void OnMarkdownError(MarkdownToHtmlAsyncEvent& event);
     void HandleFileOpened(const wxFileName& filePath);
+    void HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event);
+    void HandleDirectoryChanged(const wxFileName& filePath);
 
    public:
     MainFrame(wxWindow* parent);

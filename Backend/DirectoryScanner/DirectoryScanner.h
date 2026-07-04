@@ -1,32 +1,22 @@
 #pragma once
 
-#include <wx/wx.h>  
-#include <wx/filename.h>
+#include <wx/wx.h>
+
 #include <atomic>
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <thread>
 #include <unordered_set>
 #include <vector>
 
-// #include "HelperFunctions.h"
-
-namespace fs = std::filesystem;
-
-struct FileEntry {
-    fs::path path;
-    std::string name;
-    bool isDirectory;
-    uintmax_t size;
-};
+#include "DirectoryScannerEvent.h"
 
 struct ScanOptions {
     std::vector<std::string> extensions;
     bool showHiddenFiles = false;
 };
 
-wxDECLARE_EVENT(wxEVT_DIRECTORY_SCAN_COMPLETE, wxThreadEvent);
+wxDECLARE_EVENT(wxEVT_DIRECTORY_SCAN_COMPLETE, DirectoryScannerEvent);
 
 class DirectoryScanner : public std::enable_shared_from_this<DirectoryScanner> {
    public:
@@ -40,6 +30,5 @@ class DirectoryScanner : public std::enable_shared_from_this<DirectoryScanner> {
    private:
     std::jthread m_workerThread;
     std::atomic<bool> m_isScanning{false};
-    void ScanThreadLogic(std::stop_token stoken, fs::path rootPath, ScanOptions options,
-                         wxEvtHandler* eventTarget);
+    void ScanThreadLogic(std::stop_token stoken, const wxFileName fileName, ScanOptions options, wxEvtHandler* eventTarget);
 };

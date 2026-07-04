@@ -5,8 +5,8 @@
 
 #include <algorithm>
 
-FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened)
-    : FileBrowserTreePanelWx(parent), m_onFileOpened(onFileOpened) {
+FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened, DirectoryChangedCallback onDirectoryChanged)
+    : FileBrowserTreePanelWx(parent), m_onFileOpened(onFileOpened), m_onDirectoryChanged(onDirectoryChanged) {
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
     m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::OnHiddenFilesCheckbox, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::OnItemActivated, this);
@@ -30,10 +30,13 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback 
     // 4. Assign the image list to your tree control
     // 'AssignImageList' tells the tree to take ownership, so you don't need to 'delete' it later
     m_dataViewTreeCtrl1->AssignImageList(imageList);
+
+
 };
 
 FileBrowserTreePanel::~FileBrowserTreePanel() {
     Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
+    Unbind(wxEVT_FSWATCHER, &FileBrowserTreePanel::OnFileSystemEvent, this);
 };
 
 void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
@@ -48,9 +51,27 @@ void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
     for (const auto& entry : sortedData) {
         m_dataViewTreeCtrl1->AppendItem(root, entry.name, entry.isDirectory ? 0 : 1);
     }
+
+    if (!m_savedSelectionText.IsEmpty()) {
+        int count = m_dataViewTreeCtrl1->GetChildCount(root);
+        for (int i = 0; i < count; ++i) {
+            wxDataViewItem child = m_dataViewTreeCtrl1->GetNthChild(root, i);
+            if (child.IsOk() && m_dataViewTreeCtrl1->GetItemText(child) == m_savedSelectionText) {
+                m_dataViewTreeCtrl1->Select(child);
+                m_dataViewTreeCtrl1->EnsureVisible(child);
+                break;
+            }
+        }
+    }
 }
 
 void FileBrowserTreePanel::ListDir(const wxFileName fileName) {
+    wxDataViewItem currentSelection = m_dataViewTreeCtrl1->GetSelection();
+    if (currentSelection.IsOk()) {
+        m_savedSelectionText = m_dataViewTreeCtrl1->GetItemText(currentSelection);
+    } else {
+        m_savedSelectionText.clear();
+    }
     // Force the path to interpret its entire string structure as a directory.
     // It is probably not needed when working with `wxFileName` API ...
     m_currentPath = wxFileName::DirName(fileName.GetFullPath());
@@ -58,10 +79,11 @@ void FileBrowserTreePanel::ListDir(const wxFileName fileName) {
     m_directoryScanner->StartScan(fileName, m_scanOptions, this);
 }
 
-void FileBrowserTreePanel::OnDirectoryScanComplete(wxThreadEvent& event) {
-    auto files = event.GetPayload<std::vector<FileEntry>>();
-
-    UpdateTree(files);
+void FileBrowserTreePanel::OnDirectoryScanComplete(DirectoryScannerEvent& event) {
+    UpdateTree(event.files);
+    if (m_onDirectoryChanged) {
+        m_onDirectoryChanged(event.currentDirectory);
+    }
 }
 
 void FileBrowserTreePanel::OnHiddenFilesCheckbox(wxCommandEvent& event) {
@@ -114,5 +136,21 @@ void FileBrowserTreePanel::OnItemActivated(wxDataViewEvent& event) {
                 }
             }
         }
+    }
+}
+
+void FileBrowserTreePanel::OnFileSystemEvent(wxFileSystemWatcherEvent& event) {
+    int changeType = event.GetChangeType();
+
+    if (changeType == wxFSW_EVENT_CREATE || changeType == wxFSW_EVENT_DELETE || changeType == wxFSW_EVENT_RENAME) {
+        if (m_currentPath.IsOk() && m_currentPath.DirExists()) {
+            ListDir(m_currentPath);
+        }
+    }
+}
+
+const void FileBrowserTreePanel::ReloadCurrentDir() {
+    if (m_currentPath.IsOk() && m_currentPath.DirExists()) {
+        ListDir(m_currentPath);
     }
 }

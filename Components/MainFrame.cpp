@@ -11,12 +11,9 @@
 #include "HelperFunctions.h"
 #include "WebViewPanel/WebViewPanel.h"
 
-//-----------------------------------------------------------------------------
-// MainFrame implementation
-//-----------------------------------------------------------------------------
-
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
+    Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, fileOpenTool->GetId());
 
     Bind(EVT_MARKDOWN_READY, &MainFrame::OnMarkdownReady, this);
@@ -26,27 +23,28 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
 
     // 1. Instantiate the WebViewPanel, setting this frame as its parent
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
-    m_fileBrowserPanel = new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::HandleFileOpened, this));
+    m_fileBrowserPanel = new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::HandleFileOpened, this),
+                                                  std::bind_front(&MainFrame::HandleDirectoryChanged, this));
     m_webViewPanel = new WebViewPanel(m_mainSplitter);
 
-    m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_webViewPanel, 300);
-    m_mainSplitter->SetMinimumPaneSize(120);  // Prevents hiding the sidebar entirely
+    m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_webViewPanel, 100);
+    m_mainSplitter->SetMinimumPaneSize(100);
 
-    // 2. Vypýtame si od okna ten sizer, ktorý vygeneroval wxFormBuilder (s tlačidlom)
     wxSizer* mainSizer = this->GetSizer();
 
-    // 3. Bezpečne pridáme WebViewPanel do tohto sizeru
-    if (mainSizer) {
-        wxBoxSizer* horizontalSizer = new wxBoxSizer(wxHORIZONTAL);
-        // Zabezpečíme, že WebView vyplní zvyšný priestor (proporcia 1, wxEXPAND)
-        mainSizer->Add(m_mainSplitter, 1, wxEXPAND | wxALL, 0);
+    wxBoxSizer* horizontalSizer = new wxBoxSizer(wxHORIZONTAL);
+    mainSizer->Add(m_mainSplitter, 1, wxEXPAND | wxALL, 0);
 
-        // inital directory list
-        wxFileName initialDirectory;
-        initialDirectory.AssignHomeDir();
+    // inital directory list
+    wxFileName initialDirectory;
+    initialDirectory.AssignHomeDir();
+    m_fileBrowserPanel->ListDir(initialDirectory);
 
-        m_fileBrowserPanel->ListDir(initialDirectory);
-    }
+    // file system watcher
+    m_fileSystemWatcher = new wxFileSystemWatcher();
+    m_fileSystemWatcher->SetOwner(this);
+    Bind(wxEVT_FSWATCHER, &MainFrame::HandleFileSystemWatcherEvent, this);
+
     Layout();
 
     // 4. Register drag and drop targets
@@ -54,7 +52,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
         new FileDropTarget([this](const wxFileName& filePath) { m_parserThread->ParseFile(filePath); }));
 }
 
-MainFrame::~MainFrame() {}
+MainFrame::~MainFrame() {
+    delete m_fileSystemWatcher;
+}
 
 void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
     wxFileDialog openFileDialog(
@@ -77,6 +77,16 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
     m_parserThread->ParseFile(openFileDialog.GetPath());
 }
 
+void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
+    if (m_mainSplitter->IsSplit()) {
+        // Hides the file browser panel and expands the web view
+        m_mainSplitter->Unsplit(m_fileBrowserPanel);
+    } else {
+        // Restores the file browser on the left with a width of 200 pixels
+        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_webViewPanel, 200);
+    }
+}
+
 void MainFrame::OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
     if (m_webViewPanel) {
         m_webViewPanel->LoadHtml(event.html);
@@ -96,4 +106,26 @@ void MainFrame::OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
 
 void MainFrame::HandleFileOpened(const wxFileName& filePath) {
     m_parserThread->ParseFile(filePath);
+}
+
+void MainFrame::HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event) {
+    int changeType = event.GetChangeType();
+
+    // 💡 If a file is added, removed, or renamed, re-trigger ListDir silently
+    if (changeType == wxFSW_EVENT_CREATE || changeType == wxFSW_EVENT_DELETE || changeType == wxFSW_EVENT_RENAME) {
+        m_fileBrowserPanel->ReloadCurrentDir();
+    }
+}
+
+void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
+    if (m_fileSystemWatcher) {
+        m_fileSystemWatcher->RemoveAll();
+        if (filePath.DirExists()) {
+            // 💡 Using AddTree is required for reliable macOS FSEvents integration
+            bool success = m_fileSystemWatcher->AddTree(filePath); 
+            if (!success) {
+                printError("[ERROR] Watcher failed to add path: {}", filePath.GetFullPath());
+            }
+        }
+    }
 }

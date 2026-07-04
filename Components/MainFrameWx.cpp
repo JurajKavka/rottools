@@ -23,6 +23,13 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 
 	MenuBar->Append( m_menu1, _("File") );
 
+	m_menu2 = new wxMenu();
+	wxMenuItem* m_toggleFileBrowserMenuItem;
+	m_toggleFileBrowserMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu2->Append( m_toggleFileBrowserMenuItem );
+
+	MenuBar->Append( m_menu2, _("View") );
+
 	this->SetMenuBar( MenuBar );
 
 	wxBoxSizer* MainFrameSizer;
@@ -32,7 +39,7 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	this->SetSizer( MainFrameSizer );
 	this->Layout();
 	toolBar = this->CreateToolBar( wxTB_HORIZONTAL, wxID_ANY );
-	fileOpenTool = toolBar->AddTool( wxID_ANY, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+	fileOpenTool = toolBar->AddTool( wxID_ANY, _("Open file"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
 
 	toolBar->Realize();
 

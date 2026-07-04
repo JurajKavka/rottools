@@ -18,8 +18,8 @@ class MyApp : public wxApp {
         scanOptions.extensions = {};
         scanOptions.showHiddenFiles = true;
 
-        wxFileName rootDir("/Users/jurajkavka/Documents/crossuite");
-       // rootDir.AssignHomeDir();
+        wxFileName rootDir;
+        rootDir.AssignHomeDir();
 
         printLog("[Main Thread] Launching Async Scan of: {}", rootDir.GetFullPath().ToStdString());
 
@@ -36,13 +36,12 @@ class MyApp : public wxApp {
 
    private:
     std::shared_ptr<DirectoryScanner> m_directoryScanner;
-    void OnScanComplete(wxThreadEvent& event) {
+    void OnScanComplete(DirectoryScannerEvent& event) {
         printLog("[Main Thread] Scan Complete Event Received!");
 
         // Extract the custom data from the event payload
-        auto files = event.GetPayload<std::vector<FileEntry>>();
 
-        auto sortedData = m_directoryScanner->SortEntries(files);
+        auto sortedData = m_directoryScanner->SortEntries(event.files);
 
         printLog("Found {} items.", sortedData.size());
         for (const auto& file : sortedData) {
@@ -52,6 +51,8 @@ class MyApp : public wxApp {
                 printLog("f {} ({} bytes)", file.name, file.size);
             }
         }
+
+        printLog("Current directory is: {}", event.currentDirectory.GetFullPath());
 
         wxTheApp->ExitMainLoop();
     }

@@ -4,7 +4,7 @@
 
 #include "HelperFunctions.h"
 
-wxDEFINE_EVENT(wxEVT_DIRECTORY_SCAN_COMPLETE, wxThreadEvent);
+wxDEFINE_EVENT(wxEVT_DIRECTORY_SCAN_COMPLETE, DirectoryScannerEvent);
 
 DirectoryScanner::DirectoryScanner() = default;
 
@@ -32,22 +32,22 @@ void DirectoryScanner::StartScan(const wxFileName fileName, const ScanOptions& o
 
     std::weak_ptr<DirectoryScanner> weakThis = weak_from_this();
 
-    std::filesystem::path rootPath = fileName.GetFullPath().ToStdWstring();
-
-    m_workerThread = std::jthread([weakThis, rootPath, options, eventTarget](std::stop_token stoken) {
+    m_workerThread = std::jthread([weakThis, fileName, options, eventTarget](std::stop_token stoken) {
         if (auto sharedThis = weakThis.lock()) {
-            sharedThis->ScanThreadLogic(stoken, rootPath, options, eventTarget);
+            sharedThis->ScanThreadLogic(stoken, fileName, options, eventTarget);
         }
     });
 }
 
 // Pass options by value to the background thread to safely copy the configurations
-void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, fs::path rootPath, ScanOptions options,
+void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName fileName, ScanOptions options,
                                        wxEvtHandler* eventTarget) {
     std::vector<FileEntry> results;
 
     // Convert the vector into an unordered_set right inside the thread for efficient O(1) matching
     std::unordered_set<std::string> extSet(options.extensions.begin(), options.extensions.end());
+
+    std::filesystem::path rootPath = fileName.GetFullPath().ToStdWstring();
 
     if (fs::exists(rootPath) && fs::is_directory(rootPath)) {
         // Explicitly disable following symlinks to prevent circular reference errors
@@ -91,10 +91,10 @@ void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, fs::path rootPath
     // 3. Queue the event to the Main Thread if not cancelled
     if (!stoken.stop_requested()) {
         // Create the event
-        wxThreadEvent* event = new wxThreadEvent(wxEVT_DIRECTORY_SCAN_COMPLETE);
 
-        // Safely copy our std::vector into the wxWidgets event payload
-        event->SetPayload(results);
+        DirectoryScannerEvent* event = new DirectoryScannerEvent(wxEVT_DIRECTORY_SCAN_COMPLETE, wxID_ANY);
+        event->files = results;
+        event->currentDirectory = fileName;
 
         wxQueueEvent(eventTarget, event);
     }
