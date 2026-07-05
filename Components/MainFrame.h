@@ -41,12 +41,12 @@ class MainFrame : public MainFrameWx {
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event);
     void ApplySourcePanelVisibility();
-    void OnMarkdownReady(MarkdownToHtmlAsyncEvent& event);
-    void OnMarkdownError(MarkdownToHtmlAsyncEvent& event);
+    void HandleMarkdownReady(MarkdownToHtmlAsyncEvent& event);
+    void HandleMarkdownError(MarkdownToHtmlAsyncEvent& event);
     void OpenMarkdownFile(const wxFileName& filePath);
     void HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event);
     void HandleDirectoryChanged(const wxFileName& filePath);
-    void OnReloadDebounceTimer(wxTimerEvent& event);
+    void HandleReloadDebounceTimer(wxTimerEvent& event);
     void RefreshWatchedPaths();
 
    public:

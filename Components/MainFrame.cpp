@@ -22,8 +22,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
          wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, fileOpenTool->GetId());
 
-    Bind(EVT_MARKDOWN_READY, &MainFrame::OnMarkdownReady, this);
-    Bind(EVT_MARKDOWN_ERROR, &MainFrame::OnMarkdownError, this);
+    Bind(EVT_MARKDOWN_READY, &MainFrame::HandleMarkdownReady, this);
+    Bind(EVT_MARKDOWN_ERROR, &MainFrame::HandleMarkdownError, this);
 
     // 1. Instantiate the panels: file browser on the left, and on the right a
     // nested splitter holding the rendered preview and the HTML source view
@@ -63,7 +63,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
     Bind(wxEVT_FSWATCHER, &MainFrame::HandleFileSystemWatcherEvent, this);
 
     m_reloadDebounceTimer.SetOwner(this);
-    Bind(wxEVT_TIMER, &MainFrame::OnReloadDebounceTimer, this);
+    Bind(wxEVT_TIMER, &MainFrame::HandleReloadDebounceTimer, this);
 
     Layout();
 
@@ -111,7 +111,7 @@ void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
     }
 }
 
-void MainFrame::OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
+void MainFrame::HandleMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
     m_webViewPanel->LoadHtml(event.html);
     // Keep the source views current even while hidden, so toggling them in
     // always shows the source of the displayed document
@@ -166,7 +166,7 @@ void MainFrame::ApplySourcePanelVisibility() {
     m_rightSplitter->SplitVertically(m_webViewPanel, m_sourceSplitter);
 }
 
-void MainFrame::OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
+void MainFrame::HandleMarkdownError(MarkdownToHtmlAsyncEvent& event) {
     wxString message = event.error.IsEmpty() ? wxString("Error parsing markdown!") : event.error;
     wxMessageBox(message, "Error", wxICON_ERROR);
     statusBar->SetStatusText(wxString(""));
@@ -205,11 +205,11 @@ void MainFrame::HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event) {
     }
 }
 
-void MainFrame::OnReloadDebounceTimer(wxTimerEvent& event) {
+void MainFrame::HandleReloadDebounceTimer(wxTimerEvent& event) {
     if (m_currentFile.IsOk() && m_currentFile.FileExists()) {
         printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
         // Parse directly (not OpenMarkdownFile) to avoid status-bar flicker on
-        // every save; OnMarkdownReady refreshes the status bar anyway.
+        // every save; HandleMarkdownReady refreshes the status bar anyway.
         m_markdownParser.ParseFile(m_currentFile);
     }
 }

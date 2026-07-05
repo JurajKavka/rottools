@@ -28,7 +28,7 @@ HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent) : HtmlSourcePanelWx(parent) {
     // The panel is a viewer; ShowHtml() lifts read-only around updates
     m_styledTextCtrl->SetReadOnly(true);
 
-    m_styledTextCtrl->Bind(wxEVT_STC_MARGINCLICK, &HtmlSourcePanel::OnMarginClick, this);
+    m_styledTextCtrl->Bind(wxEVT_STC_MARGINCLICK, &HtmlSourcePanel::HandleMarginClick, this);
 }
 
 void HtmlSourcePanel::ShowHtml(const wxString& html) {
@@ -37,7 +37,7 @@ void HtmlSourcePanel::ShowHtml(const wxString& html) {
     m_styledTextCtrl->SetReadOnly(true);
 }
 
-void HtmlSourcePanel::OnMarginClick(wxStyledTextEvent& event) {
+void HtmlSourcePanel::HandleMarginClick(wxStyledTextEvent& event) {
     int line = m_styledTextCtrl->LineFromPosition(event.GetPosition());
     if (m_styledTextCtrl->GetFoldLevel(line) & wxSTC_FOLDLEVELHEADERFLAG) {
         m_styledTextCtrl->ToggleFold(line);

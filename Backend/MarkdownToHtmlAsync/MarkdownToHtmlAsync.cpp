@@ -11,7 +11,7 @@
 wxDEFINE_EVENT(EVT_MARKDOWN_READY, MarkdownToHtmlAsyncEvent);
 wxDEFINE_EVENT(EVT_MARKDOWN_ERROR, MarkdownToHtmlAsyncEvent);
 
-static void OnHtmlChunkGenerated(const MD_CHAR* htmlChunk, MD_SIZE chunkSize, void* userData) {
+static void HandleHtmlChunkGenerated(const MD_CHAR* htmlChunk, MD_SIZE chunkSize, void* userData) {
     std::string* outHtmlString = static_cast<std::string*>(userData);
     outHtmlString->append(htmlChunk, chunkSize);
 }
@@ -27,7 +27,7 @@ wxString MarkdownToHtmlAsync::ConvertMarkdownToHtml(const std::string& markdownC
     unsigned int renderFlags = MD_HTML_FLAG_SKIP_UTF8_BOM;
 
     int parseResult = md_html(markdownContent.c_str(), static_cast<MD_SIZE>(markdownContent.size()),
-                              OnHtmlChunkGenerated, &htmlOutputBuffer, parserFlags, renderFlags);
+                              HandleHtmlChunkGenerated, &htmlOutputBuffer, parserFlags, renderFlags);
 
     if (parseResult != 0) {
         return wxString("<strong>Error: The internal parser failed to evaluate this document layout.</strong>");

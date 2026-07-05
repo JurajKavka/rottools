@@ -27,7 +27,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     DirectoryChangedCallback m_onDirectoryChanged;
 
     void UpdateTree(const std::vector<FileEntry>& entries);
-    void OnDirectoryScanComplete(DirectoryScannerEvent& event);
-    void OnHiddenFilesCheckbox(wxCommandEvent& event);
-    void OnItemActivated(wxDataViewEvent& event);
+    void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
+    void HandleHiddenFilesCheckbox(wxCommandEvent& event);
+    void HandleItemActivated(wxDataViewEvent& event);
 };

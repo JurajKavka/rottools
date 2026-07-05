@@ -20,6 +20,14 @@ At the repo root, `make check` runs cppcheck static analysis (excludes wxFormBui
 
 Use these `make` targets only; do not invoke `cmake` directly.
 
+## Naming conventions
+
+Event/callback handler functions are named `Handle*` (e.g. `HandleMarkdownError`), never
+`On*`. The `On` prefix is reserved for the assignment points: wxWidgets framework virtual
+overrides (`OnInit`, `OnExit`, `OnDropFiles` — keep their framework names) and members
+holding callbacks (`m_onFileOpened`). Any function bound with `Bind()`, passed as a C
+callback, or stored in a `std::function` must start with `Handle`.
+
 ## wxFormBuilder files — hands off
 
 Never modify `*.fbp` files or the generated `*Wx.h`/`*Wx.cpp` files. The `.fbp` projects are

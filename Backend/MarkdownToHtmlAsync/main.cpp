@@ -11,11 +11,11 @@
 class ConsoleReceiver : public wxEvtHandler {
    public:
     ConsoleReceiver() {
-        Bind(EVT_MARKDOWN_READY, &ConsoleReceiver::OnMarkdownReady, this);
-        Bind(EVT_MARKDOWN_ERROR, &ConsoleReceiver::OnMarkdownError, this);
+        Bind(EVT_MARKDOWN_READY, &ConsoleReceiver::HandleMarkdownReady, this);
+        Bind(EVT_MARKDOWN_ERROR, &ConsoleReceiver::HandleMarkdownError, this);
     }
 
-    void OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
+    void HandleMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
         printLog("[Main Thread] Event Received!");
         printLog("Filename dir: {}", event.filePath.GetAbsolutePath());
         std::cout << "Content: " << event.html.ToStdString() << std::endl;
@@ -24,7 +24,7 @@ class ConsoleReceiver : public wxEvtHandler {
         wxTheApp->ExitMainLoop();
     }
 
-    void OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
+    void HandleMarkdownError(MarkdownToHtmlAsyncEvent& event) {
         std::cout << "[Main Thread] Event Received ERROR!" << std::endl;
         std::cout << "Content: " << event.error.ToStdString() << std::endl;
 

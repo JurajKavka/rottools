@@ -10,9 +10,9 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback 
     : FileBrowserTreePanelWx(parent),
       m_onFileOpened(std::move(onFileOpened)),
       m_onDirectoryChanged(std::move(onDirectoryChanged)) {
-    Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
-    m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::OnHiddenFilesCheckbox, this);
-    m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::OnItemActivated, this);
+    Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
+    m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
+    m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
 
     m_scanOptions.extensions = {".md"};
     m_scanOptions.showHiddenFiles = m_hiddenFilesCheckbox->IsChecked();
@@ -34,7 +34,7 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback 
 }
 
 FileBrowserTreePanel::~FileBrowserTreePanel() {
-    Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::OnDirectoryScanComplete, this);
+    Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
 }
 
 void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
@@ -77,14 +77,14 @@ void FileBrowserTreePanel::ListDir(const wxFileName& fileName) {
     m_directoryScanner.StartScan(fileName, m_scanOptions, this);
 }
 
-void FileBrowserTreePanel::OnDirectoryScanComplete(DirectoryScannerEvent& event) {
+void FileBrowserTreePanel::HandleDirectoryScanComplete(DirectoryScannerEvent& event) {
     UpdateTree(event.files);
     if (m_onDirectoryChanged) {
         m_onDirectoryChanged(event.currentDirectory);
     }
 }
 
-void FileBrowserTreePanel::OnHiddenFilesCheckbox(wxCommandEvent& event) {
+void FileBrowserTreePanel::HandleHiddenFilesCheckbox(wxCommandEvent& event) {
     // 1. Update the configuration state with the checkbox value
     m_scanOptions.showHiddenFiles = event.IsChecked();
 
@@ -95,7 +95,7 @@ void FileBrowserTreePanel::OnHiddenFilesCheckbox(wxCommandEvent& event) {
     }
 }
 
-void FileBrowserTreePanel::OnItemActivated(wxDataViewEvent& event) {
+void FileBrowserTreePanel::HandleItemActivated(wxDataViewEvent& event) {
     wxDataViewItem item = event.GetItem();
     if (!item.IsOk()) {
         return;

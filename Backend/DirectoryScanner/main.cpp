@@ -8,7 +8,7 @@
 class ScannerDemoApp : public wxApp {
    public:
     bool OnInit() override {
-        Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScannerDemoApp::OnScanComplete, this);
+        Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScannerDemoApp::HandleScanComplete, this);
 
         ScanOptions scanOptions;
         scanOptions.extensions = {};
@@ -26,13 +26,13 @@ class ScannerDemoApp : public wxApp {
     }
 
     int OnExit() override {
-        Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScannerDemoApp::OnScanComplete, this);
+        Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScannerDemoApp::HandleScanComplete, this);
         return wxApp::OnExit();
     }
 
    private:
     DirectoryScanner m_directoryScanner;
-    void OnScanComplete(DirectoryScannerEvent& event) {
+    void HandleScanComplete(DirectoryScannerEvent& event) {
         printLog("[Main Thread] Scan Complete Event Received!");
 
         // Extract the custom data from the event payload

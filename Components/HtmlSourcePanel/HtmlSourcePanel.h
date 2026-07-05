@@ -8,5 +8,5 @@ class HtmlSourcePanel : public HtmlSourcePanelWx {
     void ShowHtml(const wxString& html);
 
    private:
-    void OnMarginClick(wxStyledTextEvent& event);
+    void HandleMarginClick(wxStyledTextEvent& event);
 };
