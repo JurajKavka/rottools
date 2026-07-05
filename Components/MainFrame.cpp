@@ -10,6 +10,7 @@
 #include "FileDropTarget/FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel/HtmlSourcePanel.h"
+#include "MarkdownSourcePanel/MarkdownSourcePanel.h"
 #include "WebViewPanel/WebViewPanel.h"
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(this) {
@@ -17,6 +18,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleHtmlSourcePanelMenuItemClick, this,
          wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM);
+    Bind(wxEVT_MENU, &MainFrame::HandleToggleMarkdownSourcePanelMenuItemClick, this,
+         wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, fileOpenTool->GetId());
 
     Bind(EVT_MARKDOWN_READY, &MainFrame::OnMarkdownReady, this);
@@ -31,11 +34,18 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
     m_rightSplitter =
         new wxSplitterWindow(m_mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_webViewPanel = new WebViewPanel(m_rightSplitter);
-    m_htmlSourcePanel = new HtmlSourcePanel(m_rightSplitter);
+    m_sourceSplitter =
+        new wxSplitterWindow(m_rightSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
+    m_htmlSourcePanel = new HtmlSourcePanel(m_sourceSplitter);
+    m_markdownSourcePanel = new MarkdownSourcePanel(m_sourceSplitter);
     m_rightSplitter->SetMinimumPaneSize(100);
-    // Start with the source view hidden; the menu item splits it in
+    m_sourceSplitter->SetMinimumPaneSize(100);
+
+    // Start with both source views hidden; the menu items split them in
     m_rightSplitter->Initialize(m_webViewPanel);
+    m_sourceSplitter->Hide();
     m_htmlSourcePanel->Hide();
+    m_markdownSourcePanel->Hide();
 
     m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, 100);
     m_mainSplitter->SetMinimumPaneSize(100);
@@ -103,9 +113,10 @@ void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
 
 void MainFrame::OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
     m_webViewPanel->LoadHtml(event.html);
-    // Keep the source view current even while hidden, so toggling it in
-    // always shows the HTML of the displayed document
+    // Keep the source views current even while hidden, so toggling them in
+    // always shows the source of the displayed document
     m_htmlSourcePanel->ShowHtml(event.html);
+    m_markdownSourcePanel->ShowMarkdown(event.markdown);
     statusBar->SetStatusText(event.filePath.GetAbsolutePath());
     // Navigate the tree to the file's directory (e.g. after drag&drop or the open
     // dialog), but skip the rescan when that directory is already being shown.
@@ -115,13 +126,44 @@ void MainFrame::OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
 }
 
 void MainFrame::HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event) {
-    if (m_rightSplitter->IsSplit()) {
-        // Hides the HTML source view and expands the rendered preview
-        m_rightSplitter->Unsplit(m_htmlSourcePanel);
-    } else {
-        // Restores the source view below the preview, splitting the space evenly
-        m_rightSplitter->SplitHorizontally(m_webViewPanel, m_htmlSourcePanel);
+    m_showHtmlSource = !m_showHtmlSource;
+    ApplySourcePanelVisibility();
+}
+
+void MainFrame::HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event) {
+    m_showMarkdownSource = !m_showMarkdownSource;
+    ApplySourcePanelVisibility();
+}
+
+// Lays the right-hand side out as columns: the always-visible preview, then
+// the HTML source and markdown source columns as requested by the toggles.
+// Rebuilds from a collapsed state so every toggle combination takes the same
+// single code path.
+void MainFrame::ApplySourcePanelVisibility() {
+    if (m_sourceSplitter->IsSplit()) {
+        m_sourceSplitter->Unsplit(m_markdownSourcePanel);
     }
+    if (m_rightSplitter->IsSplit()) {
+        m_rightSplitter->Unsplit(m_sourceSplitter);
+    }
+    m_htmlSourcePanel->Hide();
+    m_markdownSourcePanel->Hide();
+
+    if (!m_showHtmlSource && !m_showMarkdownSource) {
+        return;
+    }
+
+    if (m_showHtmlSource && m_showMarkdownSource) {
+        m_htmlSourcePanel->Show();
+        m_markdownSourcePanel->Show();
+        m_sourceSplitter->SplitVertically(m_htmlSourcePanel, m_markdownSourcePanel);
+    } else {
+        wxWindow* sourceView = m_showHtmlSource ? static_cast<wxWindow*>(m_htmlSourcePanel)
+                                                : static_cast<wxWindow*>(m_markdownSourcePanel);
+        sourceView->Show();
+        m_sourceSplitter->Initialize(sourceView);
+    }
+    m_rightSplitter->SplitVertically(m_webViewPanel, m_sourceSplitter);
 }
 
 void MainFrame::OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {

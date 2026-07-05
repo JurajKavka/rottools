@@ -72,6 +72,7 @@ void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
 
             MarkdownToHtmlAsyncEvent* event = new MarkdownToHtmlAsyncEvent(EVT_MARKDOWN_READY, wxID_ANY);
             event->html = htmlContent;
+            event->markdown = wxString::FromUTF8(markdownStr);
             event->filePath = filePath;
             wxQueueEvent(m_parent, event);
         } catch (const std::exception& e) {

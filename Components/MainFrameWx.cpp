@@ -32,6 +32,10 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_toggleHtmlSourcePanelMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM, wxString( _("Toggle HTML Source") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu2->Append( m_toggleHtmlSourcePanelMenuItem );
 
+	wxMenuItem* m_toggleMarkdownSourcePanelMenuItem;
+	m_toggleMarkdownSourcePanelMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM, wxString( _("Toggle Markdown Source") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu2->Append( m_toggleMarkdownSourcePanelMenuItem );
+
 	MenuBar->Append( m_menu2, _("View") );
 
 	this->SetMenuBar( MenuBar );

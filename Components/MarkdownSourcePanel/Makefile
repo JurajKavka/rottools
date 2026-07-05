@@ -10,7 +10,7 @@ build:
 	cmake -B build && cmake --build build
 
 run:
-	./build/HtmlSourcePanelApp
+	./build/MarkdownSourcePanelApp
 
 rebuild:
 	cmake --build build
