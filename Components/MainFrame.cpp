@@ -49,6 +49,17 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
     this->SetDropTarget(new FileDropTarget(std::bind_front(&MainFrame::OpenMarkdownFile, this)));
 }
 
+MainFrame::~MainFrame() {
+    // Works around https://github.com/wxWidgets/wxWidgets/issues/26658:
+    // on macOS, ~wxFsEventsFileSystemWatcher deletes its stream map without
+    // FSEventStreamStop/Invalidate, so streams created by AddTree() stay
+    // scheduled on the run loop with a context pointer to the destroyed
+    // watcher -> SIGSEGV on the next fs event after this frame closes.
+    // RemoveAll() on the still-alive watcher runs the FSEvents override,
+    // which does invalidate the streams. Drop this once the fix ships.
+    m_fileSystemWatcher.RemoveAll();
+}
+
 void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
     wxFileDialog openFileDialog(
         this,                  // Parent window

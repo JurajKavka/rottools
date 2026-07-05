@@ -38,4 +38,5 @@ class MainFrame : public MainFrameWx {
 
    public:
     explicit MainFrame(wxWindow* parent);
+    ~MainFrame();
 };

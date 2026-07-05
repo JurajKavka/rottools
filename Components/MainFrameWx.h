@@ -48,7 +48,7 @@ class MainFrameWx : public wxFrame
 
 	public:
 
-		MainFrameWx( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("ℜ⛤✝ Reader"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 1051,642 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+		MainFrameWx( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("ℜ⛤✝ reader"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 1051,642 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 
 		~MainFrameWx();
 
