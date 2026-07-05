@@ -28,6 +28,10 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_toggleFileBrowserMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu2->Append( m_toggleFileBrowserMenuItem );
 
+	wxMenuItem* m_toggleHtmlSourcePanelMenuItem;
+	m_toggleHtmlSourcePanelMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM, wxString( _("Toggle HTML Source") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu2->Append( m_toggleHtmlSourcePanelMenuItem );
+
 	MenuBar->Append( m_menu2, _("View") );
 
 	this->SetMenuBar( MenuBar );

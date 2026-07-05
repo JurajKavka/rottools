@@ -11,14 +11,18 @@
 // Forward declaration
 class WebViewPanel;
 class FileBrowserTreePanel;
+class HtmlSourcePanel;
 
 class MainFrame : public MainFrameWx {
    private:
     MarkdownToHtmlAsync m_markdownParser;
     // Store a pointer to your custom panel
     WebViewPanel* m_webViewPanel = nullptr;
+    HtmlSourcePanel* m_htmlSourcePanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
     wxSplitterWindow* m_mainSplitter = nullptr;
+    // Splits the right side into rendered preview (top) and HTML source (bottom)
+    wxSplitterWindow* m_rightSplitter = nullptr;
     wxFileSystemWatcher m_fileSystemWatcher;
     // One save in an editor produces a burst of fs events; the timer collapses
     // the burst into a single re-parse of the open file.
@@ -28,6 +32,7 @@ class MainFrame : public MainFrameWx {
 
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
+    void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
     void OnMarkdownReady(MarkdownToHtmlAsyncEvent& event);
     void OnMarkdownError(MarkdownToHtmlAsyncEvent& event);
     void OpenMarkdownFile(const wxFileName& filePath);

@@ -117,6 +117,19 @@
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
           </object>
+          <object class="wxMenuItem" expanded="true">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">Toggle HTML Source</property>
+            <property name="name">m_toggleHtmlSourcePanelMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut"></property>
+            <property name="unchecked_bitmap"></property>
+          </object>
         </object>
       </object>
       <object class="wxBoxSizer" expanded="true">

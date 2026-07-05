@@ -19,3 +19,11 @@ At the repo root, `make check` runs cppcheck static analysis (excludes wxFormBui
 `*Wx.h`/`*Wx.cpp` files; exits non-zero on any finding). Run it before committing.
 
 Use these `make` targets only; do not invoke `cmake` directly.
+
+## wxFormBuilder files — hands off
+
+Never modify `*.fbp` files or the generated `*Wx.h`/`*Wx.cpp` files. The `.fbp` projects are
+edited exclusively by the user in wxFormBuilder, and the `*Wx.*` sources are generated from
+them. If a change is needed there (renaming a class, adding a widget or a menu item), ask the
+user to make it in wxFormBuilder; put all hand-written code in the non-`Wx` subclasses
+(e.g. `WebViewPanel` subclasses `WebViewPanelWx`).
