@@ -3,7 +3,7 @@
 #include <wx/sizer.h>
 #include <wx/webview.h>
 
-WebViewPanel::WebViewPanel(wxWindow* parent) : WebViewPanelWx(parent), m_webView(nullptr) {
+WebViewPanel::WebViewPanel(wxWindow* parent) : WebViewPanelWx(parent) {
     // 1. Create a sizer to manage the layout of this panel
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -11,9 +11,7 @@ WebViewPanel::WebViewPanel(wxWindow* parent) : WebViewPanelWx(parent), m_webView
     SetSizer(mainSizer);
 
     Layout();
-};
-
-WebViewPanel::~WebViewPanel() {};
+}
 
 void WebViewPanel::LoadHtml(const wxString& html) {
     if (!m_webView) {

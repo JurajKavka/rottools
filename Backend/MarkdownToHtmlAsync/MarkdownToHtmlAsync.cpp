@@ -2,6 +2,7 @@
 
 #include <md4c-html.h>
 
+#include <filesystem>
 #include <fstream>  // For opening the file
 #include <sstream>  // For reading the file content
 #include <string>
@@ -13,12 +14,11 @@ wxDEFINE_EVENT(EVT_MARKDOWN_ERROR, MarkdownToHtmlAsyncEvent);
 static void OnHtmlChunkGenerated(const MD_CHAR* htmlChunk, MD_SIZE chunkSize, void* userData) {
     std::string* outHtmlString = static_cast<std::string*>(userData);
     outHtmlString->append(htmlChunk, chunkSize);
-};
+}
 
-MarkdownToHtmlAsync::MarkdownToHtmlAsync(wxEvtHandler* parent) : m_parent(parent) {};
+MarkdownToHtmlAsync::MarkdownToHtmlAsync(wxEvtHandler* parent) : m_parent(parent) {}
 
-wxString MarkdownToHtmlAsync::ConvertMarkdownToHtml(const wxString& markdownContent) {
-    std::string rawMarkdownInput = markdownContent.ToStdString(wxConvUTF8);
+wxString MarkdownToHtmlAsync::ConvertMarkdownToHtml(const std::string& markdownContent) {
     std::string htmlOutputBuffer;
 
     // Enable Pro-level Markdown features (Tables, Checkboxes, Strikethrough)
@@ -26,15 +26,15 @@ wxString MarkdownToHtmlAsync::ConvertMarkdownToHtml(const wxString& markdownCont
 
     unsigned int renderFlags = MD_HTML_FLAG_SKIP_UTF8_BOM;
 
-    int parseResult = md_html(rawMarkdownInput.c_str(), (MD_SIZE)rawMarkdownInput.size(), OnHtmlChunkGenerated,
-                              &htmlOutputBuffer, parserFlags, renderFlags);
+    int parseResult = md_html(markdownContent.c_str(), static_cast<MD_SIZE>(markdownContent.size()),
+                              OnHtmlChunkGenerated, &htmlOutputBuffer, parserFlags, renderFlags);
 
     if (parseResult != 0) {
         return wxString("<strong>Error: The internal parser failed to evaluate this document layout.</strong>");
     }
 
     return wxString::FromUTF8(htmlOutputBuffer);
-};
+}
 
 void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
     std::filesystem::path path = filePath.GetFullPath().ToStdWstring();
@@ -64,8 +64,7 @@ void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
                 return;
             }
 
-            wxString rawMarkdown = wxString::FromUTF8(markdownStr);
-            wxString htmlContent = ConvertMarkdownToHtml(rawMarkdown);
+            wxString htmlContent = ConvertMarkdownToHtml(markdownStr);
 
             if (stoken.stop_requested()) {
                 return;

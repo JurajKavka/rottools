@@ -2,15 +2,17 @@
 
 #include <wx/event.h>
 #include <wx/filename.h>
-#include <filesystem>
 
-namespace fs = std::filesystem;
+#include <cstdint>
+#include <filesystem>
+#include <string>
+#include <vector>
 
 struct FileEntry {
-    fs::path path;
+    std::filesystem::path path;
     std::string name;
-    bool isDirectory;
-    uintmax_t size;
+    bool isDirectory = false;
+    std::uintmax_t size = 0;
 };
 
 class DirectoryScannerEvent : public wxEvent {
@@ -22,7 +24,7 @@ class DirectoryScannerEvent : public wxEvent {
     std::vector<FileEntry> files;
 
     // Required for wxWidgets event system
-    virtual wxEvent* Clone() const override {
+    wxEvent* Clone() const override {
         return new DirectoryScannerEvent(*this);
     }
 };

@@ -11,7 +11,7 @@
 #include "HelperFunctions.h"
 #include "WebViewPanel/WebViewPanel.h"
 
-MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
+MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(this) {
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, fileOpenTool->GetId());
@@ -19,11 +19,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(EVT_MARKDOWN_READY, &MainFrame::OnMarkdownReady, this);
     Bind(EVT_MARKDOWN_ERROR, &MainFrame::OnMarkdownError, this);
 
-    m_parserThread = std::make_shared<MarkdownToHtmlAsync>(this);
-
     // 1. Instantiate the WebViewPanel, setting this frame as its parent
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
-    m_fileBrowserPanel = new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::HandleFileOpened, this),
+    m_fileBrowserPanel = new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::OpenMarkdownFile, this),
                                                   std::bind_front(&MainFrame::HandleDirectoryChanged, this));
     m_webViewPanel = new WebViewPanel(m_mainSplitter);
 
@@ -39,19 +37,13 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_fileBrowserPanel->ListDir(initialDirectory);
 
     // file system watcher
-    m_fileSystemWatcher = new wxFileSystemWatcher();
-    m_fileSystemWatcher->SetOwner(this);
+    m_fileSystemWatcher.SetOwner(this);
     Bind(wxEVT_FSWATCHER, &MainFrame::HandleFileSystemWatcherEvent, this);
 
     Layout();
 
     // 4. Register drag and drop targets
-    this->SetDropTarget(
-        new FileDropTarget([this](const wxFileName& filePath) { m_parserThread->ParseFile(filePath); }));
-}
-
-MainFrame::~MainFrame() {
-    delete m_fileSystemWatcher;
+    this->SetDropTarget(new FileDropTarget(std::bind_front(&MainFrame::OpenMarkdownFile, this)));
 }
 
 void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
@@ -68,11 +60,7 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
         return;
     }
 
-    if (statusBar) {
-        statusBar->SetStatusText(wxString("Loading ..."));
-    }
-
-    m_parserThread->ParseFile(openFileDialog.GetPath());
+    OpenMarkdownFile(wxFileName(openFileDialog.GetPath()));
 }
 
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
@@ -86,45 +74,43 @@ void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
 }
 
 void MainFrame::OnMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
-    if (m_webViewPanel) {
-        m_webViewPanel->LoadHtml(event.html);
+    m_webViewPanel->LoadHtml(event.html);
+    statusBar->SetStatusText(event.filePath.GetAbsolutePath());
+    // Navigate the tree to the file's directory (e.g. after drag&drop or the open
+    // dialog), but skip the rescan when that directory is already being shown.
+    if (!m_fileBrowserPanel->IsShowingDir(event.filePath.GetPath())) {
+        m_fileBrowserPanel->ListDir(event.filePath.GetPath());
     }
-    if (statusBar) {
-        statusBar->SetStatusText(event.filePath.GetAbsolutePath());
-    }
-    m_fileBrowserPanel->ListDir(event.filePath.GetPath());
 }
 
 void MainFrame::OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
     wxString message = event.error.IsEmpty() ? wxString("Error parsing markdown!") : event.error;
     wxMessageBox(message, "Error", wxICON_ERROR);
-    if (statusBar) {
-        statusBar->SetStatusText(wxString(""));
-    }
+    statusBar->SetStatusText(wxString(""));
 }
 
-void MainFrame::HandleFileOpened(const wxFileName& filePath) {
-    m_parserThread->ParseFile(filePath);
+void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
+    statusBar->SetStatusText(wxString("Loading ..."));
+    m_markdownParser.ParseFile(filePath);
 }
 
 void MainFrame::HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event) {
     int changeType = event.GetChangeType();
 
-    // 💡 If a file is added, removed, or renamed, re-trigger ListDir silently
-    if (changeType == wxFSW_EVENT_CREATE || changeType == wxFSW_EVENT_DELETE || changeType == wxFSW_EVENT_RENAME) {
+    // 💡 If a file is added, removed, or renamed, re-trigger ListDir silently.
+    // The change type is a bitmask, so test with & rather than equality.
+    if (changeType & (wxFSW_EVENT_CREATE | wxFSW_EVENT_DELETE | wxFSW_EVENT_RENAME)) {
         m_fileBrowserPanel->ReloadCurrentDir();
     }
 }
 
 void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
-    if (m_fileSystemWatcher) {
-        m_fileSystemWatcher->RemoveAll();
-        if (filePath.DirExists()) {
-            // 💡 Using AddTree is required for reliable macOS FSEvents integration
-            bool success = m_fileSystemWatcher->AddTree(filePath); 
-            if (!success) {
-                printError("[ERROR] Watcher failed to add path: {}", filePath.GetFullPath());
-            }
+    m_fileSystemWatcher.RemoveAll();
+    if (filePath.DirExists()) {
+        // 💡 Using AddTree is required for reliable macOS FSEvents integration
+        bool success = m_fileSystemWatcher.AddTree(filePath);
+        if (!success) {
+            printError("[ERROR] Watcher failed to add path: {}", filePath.GetFullPath());
         }
     }
 }

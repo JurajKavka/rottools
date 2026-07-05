@@ -3,13 +3,22 @@
 #include <wx/stdpaths.h>
 
 #include <iostream>
+#include <mutex>
+
+namespace detail {
+void WriteLogLine(std::ostream& stream, const std::string& line) {
+    static std::mutex logMutex;
+    std::lock_guard lock(logMutex);
+    stream << line << '\n';
+}
+}  // namespace detail
 
 void printLog(const wxString& msg) {
-    std::cout << msg.ToStdString() << std::endl;
+    detail::WriteLogLine(std::cout, msg.ToStdString());
 }
 
 void printError(const wxString& msg) {
-    std::cerr << msg.ToStdString() << std::endl;
+    detail::WriteLogLine(std::cerr, msg.ToStdString());
 }
 
 std::string trimToStdString(const wxString& str) {

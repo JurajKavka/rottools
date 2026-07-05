@@ -1,7 +1,6 @@
 #include "FileDropTarget.h"
 
-
-FileDropTarget::FileDropTarget(DropCallback callback) : m_callback(callback) {}
+FileDropTarget::FileDropTarget(DropCallback callback) : m_callback(std::move(callback)) {}
 
 bool FileDropTarget::OnDropFiles(wxCoord x, wxCoord y, const wxArrayString& filenames) {
     if (filenames.GetCount() > 0 && m_callback) {

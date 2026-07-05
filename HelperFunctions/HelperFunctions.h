@@ -3,8 +3,16 @@
 #include <wx/filename.h>
 #include <wx/string.h>
 
+#include <format>
 #include <iostream>
 #include <string>
+#include <utility>
+
+namespace detail {
+// Serializes writes so a whole line stays atomic even when worker threads log
+// concurrently (std::osyncstream is not available in Apple's libc++ yet).
+void WriteLogLine(std::ostream& stream, const std::string& line);
+}  // namespace detail
 
 void printCppVersion();
 std::string trimToStdString(const wxString& str);
@@ -23,15 +31,13 @@ struct std::formatter<wxString> : std::formatter<std::string> {
     }
 };
 
-// 3. The magic variadic template for implicit formatting
+// 3. The magic variadic template for implicit formatting.
 template <typename... Args>
 void printLog(std::format_string<Args...> fmt, Args&&... args) {
-    // std::vformat is used under the hood by std::format, but using std::format
-    // here directly with forwarded arguments works perfectly.
-    std::cout << std::format(fmt, std::forward<Args>(args)...) << std::endl;
+    detail::WriteLogLine(std::cout, std::format(fmt, std::forward<Args>(args)...));
 }
 
 template <typename... Args>
 void printError(std::format_string<Args...> fmt, Args&&... args) {
-    std::cerr << std::format(fmt, std::forward<Args>(args)...) << std::endl;
+    detail::WriteLogLine(std::cerr, std::format(fmt, std::forward<Args>(args)...));
 }

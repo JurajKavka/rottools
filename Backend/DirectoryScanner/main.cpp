@@ -1,19 +1,15 @@
 #include <wx/wx.h>
 
-#include <filesystem>
 #include <iostream>
 
 #include "DirectoryScanner.h"
 #include "HelperFunctions.h"
 
-class MyApp : public wxApp {
+class ScannerDemoApp : public wxApp {
    public:
     bool OnInit() override {
-        Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &MyApp::OnScanComplete, this);
+        Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScannerDemoApp::OnScanComplete, this);
 
-        m_directoryScanner = std::make_shared<DirectoryScanner>();
-
-        std::filesystem::path currentDir = std::filesystem::current_path();
         ScanOptions scanOptions;
         scanOptions.extensions = {};
         scanOptions.showHiddenFiles = true;
@@ -24,24 +20,24 @@ class MyApp : public wxApp {
         printLog("[Main Thread] Launching Async Scan of: {}", rootDir.GetFullPath().ToStdString());
 
         // 6. Just call start. The event loop handles the rest.
-        m_directoryScanner->StartScan(rootDir, scanOptions, this);
+        m_directoryScanner.StartScan(rootDir, scanOptions, this);
 
         return true;
     }
 
     int OnExit() override {
-        Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &MyApp::OnScanComplete, this);
+        Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &ScannerDemoApp::OnScanComplete, this);
         return wxApp::OnExit();
     }
 
    private:
-    std::shared_ptr<DirectoryScanner> m_directoryScanner;
+    DirectoryScanner m_directoryScanner;
     void OnScanComplete(DirectoryScannerEvent& event) {
         printLog("[Main Thread] Scan Complete Event Received!");
 
         // Extract the custom data from the event payload
 
-        auto sortedData = m_directoryScanner->SortEntries(event.files);
+        auto sortedData = DirectoryScanner::SortEntries(event.files);
 
         printLog("Found {} items.", sortedData.size());
         for (const auto& file : sortedData) {
@@ -58,4 +54,4 @@ class MyApp : public wxApp {
     }
 };
 
-wxIMPLEMENT_APP(MyApp);
+wxIMPLEMENT_APP(ScannerDemoApp);

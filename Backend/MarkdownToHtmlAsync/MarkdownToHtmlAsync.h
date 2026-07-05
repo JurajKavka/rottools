@@ -2,7 +2,8 @@
 
 #include <wx/wx.h>
 
-#include <thread>  // 1. REQUIRED: Include memory for shared_ptr and enable_shared_from_this
+#include <string>
+#include <thread>
 
 #include "MarkdownToHtmlAsyncEvent.h"
 
@@ -19,5 +20,5 @@ class MarkdownToHtmlAsync {
    private:
     wxEvtHandler* m_parent;
     std::jthread m_workerThread;  // Store the thread as a member
-    [[nodiscard]] wxString ConvertMarkdownToHtml(const wxString& markdownContent);
+    [[nodiscard]] static wxString ConvertMarkdownToHtml(const std::string& markdownContent);
 };

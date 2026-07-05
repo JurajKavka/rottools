@@ -12,7 +12,7 @@ class MarkdownToHtmlAsyncEvent : public wxEvent {
     wxFileName filePath;
 
     // Required for wxWidgets event system
-    virtual wxEvent* Clone() const override {
+    wxEvent* Clone() const override {
         return new MarkdownToHtmlAsyncEvent(*this);
     }
 };

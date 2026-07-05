@@ -2,11 +2,23 @@
 
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 #include <system_error>
+#include <unordered_set>
 
 #include "HelperFunctions.h"
 
+namespace fs = std::filesystem;
+
 wxDEFINE_EVENT(wxEVT_DIRECTORY_SCAN_COMPLETE, DirectoryScannerEvent);
+
+// Extension matching is case-insensitive, so ".md" also catches "README.MD"
+static std::string ToLowerCopy(const std::string& text) {
+    std::string lowered = text;
+    std::ranges::transform(lowered, lowered.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return lowered;
+}
 
 DirectoryScanner::DirectoryScanner() = default;
 
@@ -27,7 +39,7 @@ bool DirectoryScanner::IsScanning() const {
     return m_isScanning;
 }
 
-void DirectoryScanner::StartScan(const wxFileName fileName, const ScanOptions& options, wxEvtHandler* eventTarget) {
+void DirectoryScanner::StartScan(const wxFileName& fileName, const ScanOptions& options, wxEvtHandler* eventTarget) {
     CancelScan();
     if (m_workerThread.joinable()) {
         m_workerThread.join();
@@ -44,13 +56,17 @@ void DirectoryScanner::StartScan(const wxFileName fileName, const ScanOptions& o
     });
 }
 
-// Pass options by value to the background thread to safely copy the configurations
-void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName fileName, ScanOptions options,
+// The references point into the lambda's by-value captures, which stay alive
+// for the whole run of the worker thread.
+void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName& fileName, const ScanOptions& options,
                                        wxEvtHandler* eventTarget) {
     std::vector<FileEntry> results;
 
     // Convert the vector into an unordered_set right inside the thread for efficient O(1) matching
-    std::unordered_set<std::string> extSet(options.extensions.begin(), options.extensions.end());
+    std::unordered_set<std::string> extSet;
+    for (const std::string& extension : options.extensions) {
+        extSet.insert(ToLowerCopy(extension));
+    }
 
     std::filesystem::path rootPath = fileName.GetFullPath().ToStdWstring();
 
@@ -81,14 +97,13 @@ void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName 
                     bool isDir = entry.is_directory();
                     std::string ext = entry.path().extension().string();
 
-                    if (isDir || extSet.empty() || extSet.contains(ext)) {
-                        FileEntry fileEntry;
-                        fileEntry.path = entry.path();
-                        fileEntry.name = filename;
-                        fileEntry.isDirectory = isDir;
-                        fileEntry.size = isDir ? 0 : fs::file_size(entry.path());
-
-                        results.push_back(fileEntry);
+                    if (isDir || extSet.empty() || extSet.contains(ToLowerCopy(ext))) {
+                        results.push_back(FileEntry{
+                            .path = entry.path(),
+                            .name = std::move(filename),
+                            .isDirectory = isDir,
+                            .size = isDir ? 0 : fs::file_size(entry.path()),
+                        });
                     }
                 } catch (const fs::filesystem_error& e) {
                     printError("[Error] Skipping entry: {} - {}", e.code().message(), e.what());
@@ -113,28 +128,22 @@ void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName 
     m_isScanning = false;
 }
 
-std::vector<FileEntry> DirectoryScanner::SortEntries(const std::vector<FileEntry>& entries) const {
+std::vector<FileEntry> DirectoryScanner::SortEntries(const std::vector<FileEntry>& entries) {
     // Sort an explicit local copy; the caller's data stays untouched
     std::vector<FileEntry> sorted = entries;
 
-    std::sort(sorted.begin(), sorted.end(), [](const FileEntry& a, const FileEntry& b) {
+    std::ranges::sort(sorted, [](const FileEntry& a, const FileEntry& b) {
         // Tier 1: Group Directories at the top
         if (a.isDirectory != b.isDirectory) {
             return a.isDirectory > b.isDirectory;
         }
-        // Tier 2: Case-insensitive alphabetical sort (single pass over both names)
-        auto itA = a.name.begin();
-        auto itB = b.name.begin();
-        for (; itA != a.name.end() && itB != b.name.end(); ++itA, ++itB) {
-            int lowerA = std::tolower(static_cast<unsigned char>(*itA));
-            int lowerB = std::tolower(static_cast<unsigned char>(*itB));
-            if (lowerA != lowerB) {
-                return lowerA < lowerB;
-            }
+        // Tier 2: Case-insensitive alphabetical sort
+        auto lower = [](char c) { return std::tolower(static_cast<unsigned char>(c)); };
+        if (std::ranges::lexicographical_compare(a.name, b.name, {}, lower, lower)) {
+            return true;
         }
-        // Common prefix matched: the shorter name sorts first
-        if (a.name.size() != b.name.size()) {
-            return a.name.size() < b.name.size();
+        if (std::ranges::lexicographical_compare(b.name, a.name, {}, lower, lower)) {
+            return false;
         }
         // Tie-breaker: If names are identical case-insensitively (e.g., "Apple" vs "apple"),
         // fall back to a case-sensitive check to preserve strict weak ordering requirements.
