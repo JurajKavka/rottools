@@ -36,6 +36,7 @@ class MainFrame : public MainFrameWx {
     wxFileName m_currentFile;
     wxFileName m_browsedDirectory;
 
+    void HandleNewWindowMenuItemClick(wxCommandEvent& event);
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);

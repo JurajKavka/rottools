@@ -21,6 +21,10 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	OpenFileMenuItem = new wxMenuItem( m_menu1, wxID_OPEN, wxString( _("&Open...\tCtrl+O") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu1->Append( OpenFileMenuItem );
 
+	wxMenuItem* m_newWindowMenuItem;
+	m_newWindowMenuItem = new wxMenuItem( m_menu1, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window\tCtrl+N") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu1->Append( m_newWindowMenuItem );
+
 	MenuBar->Append( m_menu1, _("File") );
 
 	m_menu2 = new wxMenu();

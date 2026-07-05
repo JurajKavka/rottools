@@ -7,7 +7,7 @@ endif()
 find_package(wxWidgets REQUIRED)
 include(${wxWidgets_USE_FILE})
 
-add_library(HelperFunctions HelperFunctions.cpp)
+add_library(HelperFunctions STATIC HelperFunctions.cpp)
 
 target_include_directories(HelperFunctions PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(HelperFunctions PUBLIC cxx_std_20)

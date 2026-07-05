@@ -14,6 +14,7 @@
 #include "WebViewPanel/WebViewPanel.h"
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(this) {
+    Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleHtmlSourcePanelMenuItemClick, this,
@@ -80,6 +81,12 @@ MainFrame::~MainFrame() {
     // RemoveAll() on the still-alive watcher runs the FSEvents override,
     // which does invalidate the streams. Drop this once the fix ships.
     m_fileSystemWatcher.RemoveAll();
+}
+
+// Each window is a fully independent MainFrame (own parser, watcher, panels);
+// wx keeps the app running until the last top-level window closes
+void MainFrame::HandleNewWindowMenuItemClick(wxCommandEvent& event) {
+    (new MainFrame(nullptr))->Show(true);
 }
 
 void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {

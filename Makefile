@@ -1,4 +1,4 @@
-.PHONY: all dev format check clean build run rebuild
+.PHONY: all dev format check clean build run rebuild dmg
 
 all: clean build run
 dev: rebuild run
@@ -28,3 +28,7 @@ run:
 
 rebuild:
 	cmake --build build
+
+# Build a distributable macOS disk image into dist/
+dmg:
+	./scripts/make-dmg.sh

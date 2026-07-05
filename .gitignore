@@ -2,4 +2,5 @@ build
 *.db
 .DS_Store
 prompts
-*.swp
+*.swpdist
+dist
