@@ -21,18 +21,37 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	OpenFileMenuItem = new wxMenuItem( m_menu1, wxID_OPEN, wxString( _("&Open...\tCtrl+O") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu1->Append( OpenFileMenuItem );
 
+	wxMenuItem* m_newWindowMenuItem;
+	m_newWindowMenuItem = new wxMenuItem( m_menu1, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window\tCtrl+N") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu1->Append( m_newWindowMenuItem );
+
 	MenuBar->Append( m_menu1, _("File") );
+
+	m_menu2 = new wxMenu();
+	wxMenuItem* m_toggleFileBrowserMenuItem;
+	m_toggleFileBrowserMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu2->Append( m_toggleFileBrowserMenuItem );
+
+	wxMenuItem* m_toggleHtmlSourcePanelMenuItem;
+	m_toggleHtmlSourcePanelMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM, wxString( _("Toggle HTML Source") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu2->Append( m_toggleHtmlSourcePanelMenuItem );
+
+	wxMenuItem* m_toggleMarkdownSourcePanelMenuItem;
+	m_toggleMarkdownSourcePanelMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM, wxString( _("Toggle Markdown Source") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu2->Append( m_toggleMarkdownSourcePanelMenuItem );
+
+	MenuBar->Append( m_menu2, _("View") );
 
 	this->SetMenuBar( MenuBar );
 
 	wxBoxSizer* MainFrameSizer;
-	MainFrameSizer = new wxBoxSizer( wxVERTICAL );
+	MainFrameSizer = new wxBoxSizer( wxHORIZONTAL );
 
 
 	this->SetSizer( MainFrameSizer );
 	this->Layout();
 	toolBar = this->CreateToolBar( wxTB_HORIZONTAL, wxID_ANY );
-	fileOpenTool = toolBar->AddTool( wxID_ANY, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+	fileOpenTool = toolBar->AddTool( wxID_ANY, _("Open file"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
 
 	toolBar->Realize();
 

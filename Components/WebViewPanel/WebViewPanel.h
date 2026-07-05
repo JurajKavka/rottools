@@ -8,11 +8,10 @@ class wxWebView;
 
 class WebViewPanel : public WebViewPanelWx {
    private:
-    wxWebView* m_webView;
+    wxWebView* m_webView = nullptr;
 
    public:
     explicit WebViewPanel(wxWindow* parent);
-    ~WebViewPanel();
 
     void LoadHtml(const wxString& html);
 };
