@@ -40,6 +40,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
     m_fileSystemWatcher.SetOwner(this);
     Bind(wxEVT_FSWATCHER, &MainFrame::HandleFileSystemWatcherEvent, this);
 
+    m_reloadDebounceTimer.SetOwner(this);
+    Bind(wxEVT_TIMER, &MainFrame::OnReloadDebounceTimer, this);
+
     Layout();
 
     // 4. Register drag and drop targets
@@ -90,6 +93,8 @@ void MainFrame::OnMarkdownError(MarkdownToHtmlAsyncEvent& event) {
 }
 
 void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
+    m_currentFile = filePath;
+    RefreshWatchedPaths();
     statusBar->SetStatusText(wxString("Loading ..."));
     m_markdownParser.ParseFile(filePath);
 }
@@ -102,15 +107,57 @@ void MainFrame::HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event) {
     if (changeType & (wxFSW_EVENT_CREATE | wxFSW_EVENT_DELETE | wxFSW_EVENT_RENAME)) {
         m_fileBrowserPanel->ReloadCurrentDir();
     }
+
+    // Live reload of the open document. MODIFY covers in-place writes, but the
+    // wx docs warn it is not reliably delivered on macOS; editors that save
+    // atomically (write temp file, rename over the original) surface as
+    // CREATE/RENAME on the document's path instead, which macOS does deliver.
+    if (!m_currentFile.IsOk()) {
+        return;
+    }
+    if (changeType & (wxFSW_EVENT_MODIFY | wxFSW_EVENT_CREATE | wxFSW_EVENT_RENAME)) {
+        bool touchesCurrentFile = event.GetPath().SameAs(m_currentFile) ||
+                                  (changeType & wxFSW_EVENT_RENAME && event.GetNewPath().SameAs(m_currentFile));
+        if (touchesCurrentFile) {
+            // (Re)starting the timer collapses an event burst into one reload
+            m_reloadDebounceTimer.StartOnce(250);
+        }
+    }
+}
+
+void MainFrame::OnReloadDebounceTimer(wxTimerEvent& event) {
+    if (m_currentFile.IsOk() && m_currentFile.FileExists()) {
+        printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
+        // Parse directly (not OpenMarkdownFile) to avoid status-bar flicker on
+        // every save; OnMarkdownReady refreshes the status bar anyway.
+        m_markdownParser.ParseFile(m_currentFile);
+    }
 }
 
 void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
+    m_browsedDirectory = wxFileName::DirName(filePath.GetFullPath());
+    RefreshWatchedPaths();
+}
+
+void MainFrame::RefreshWatchedPaths() {
     m_fileSystemWatcher.RemoveAll();
-    if (filePath.DirExists()) {
-        // 💡 Using AddTree is required for reliable macOS FSEvents integration
-        bool success = m_fileSystemWatcher.AddTree(filePath);
-        if (!success) {
-            printError("[ERROR] Watcher failed to add path: {}", filePath.GetFullPath());
+
+    // 💡 Using AddTree is required for reliable macOS FSEvents integration
+    if (m_browsedDirectory.IsOk() && m_browsedDirectory.DirExists()) {
+        if (!m_fileSystemWatcher.AddTree(m_browsedDirectory)) {
+            printError("[ERROR] Watcher failed to add path: {}", m_browsedDirectory.GetFullPath());
+        }
+    }
+
+    // Watch the open document's directory too, so live reload keeps working
+    // when the file browser navigates somewhere else.
+    if (m_currentFile.IsOk()) {
+        wxFileName documentDir = wxFileName::DirName(m_currentFile.GetPath());
+        bool alreadyWatched = m_browsedDirectory.IsOk() && documentDir.SameAs(m_browsedDirectory);
+        if (!alreadyWatched && documentDir.DirExists()) {
+            if (!m_fileSystemWatcher.AddTree(documentDir)) {
+                printError("[ERROR] Watcher failed to add path: {}", documentDir.GetFullPath());
+            }
         }
     }
 }

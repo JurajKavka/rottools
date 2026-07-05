@@ -1,4 +1,4 @@
-# mdreader
+# ℜ⛤✝ reader
 
 A native desktop Markdown viewer built using C++ and **wxWidgets**. It parses Markdown files locally and renders them using a native WebView component.
 
