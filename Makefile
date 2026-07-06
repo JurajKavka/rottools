@@ -18,13 +18,13 @@ check:
 		Backend Components HelperFunctions main.cpp
 
 clean: 
-	rm -rf ./build
+	rm -rf ./build ./dist
 
 build:
 	cmake -B build && cmake --build build 
 
 run:
-	./build/mdreader
+	./build/rotreader
 
 rebuild:
 	cmake --build build

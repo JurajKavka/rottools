@@ -1,5 +1,6 @@
 #!/bin/bash
-# Builds a distributable macOS disk image (.dmg) for mdreader.
+# Builds a distributable macOS disk image (.dmg) for rotreader
+# (the app is shown to users as "ℜ⛤✝ reader"; rotreader is the technical name).
 #
 # A raw Unix executable is not distributable on macOS: it depends on dylibs
 # installed by Homebrew on THIS machine. Distribution means building an .app
@@ -21,14 +22,20 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-APP_NAME="mdreader"
+EXE_NAME="rotreader"         # CMake target / binary name; also CFBundleExecutable.
+                             # MUST match the file CMake produces in build/ — do not change
+                             # here without renaming the CMake target.
+APP_NAME="ℜ⛤✝ reader"        # user-facing name: the .app bundle, Finder, Dock, menu bar.
 VERSION="0.1.0"
-BUNDLE_ID="com.jurajkavka.mdreader"
+BUNDLE_ID="com.jurajkavka.rotreader"
 BUILD_DIR="build"
 DIST_DIR="dist"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
 FRAMEWORKS_DIR="$APP_DIR/Contents/Frameworks"
-DMG_PATH="$DIST_DIR/$APP_NAME-$VERSION.dmg"
+RESOURCES_DIR="$APP_DIR/Contents/Resources"
+DMG_PATH="$DIST_DIR/$EXE_NAME-$VERSION.dmg"   # ASCII slug keeps the download file name sane
+ICON_SRC="assets/logo.png"   # 1024x1024 master; scaled down into the .icns
+ICON_NAME="AppIcon"          # basename of the generated .icns / CFBundleIconFile
 
 echo "==> Building $APP_NAME"
 cmake -B "$BUILD_DIR" >/dev/null && cmake --build "$BUILD_DIR" >/dev/null
@@ -41,8 +48,33 @@ cmake -B "$BUILD_DIR" >/dev/null && cmake --build "$BUILD_DIR" >/dev/null
 # ---------------------------------------------------------------------------
 echo "==> Assembling $APP_DIR"
 rm -rf "$DIST_DIR"
-mkdir -p "$APP_DIR/Contents/MacOS" "$FRAMEWORKS_DIR" "$APP_DIR/Contents/Resources"
-cp "$BUILD_DIR/$APP_NAME" "$APP_DIR/Contents/MacOS/$APP_NAME"
+mkdir -p "$APP_DIR/Contents/MacOS" "$FRAMEWORKS_DIR" "$RESOURCES_DIR"
+cp "$BUILD_DIR/$EXE_NAME" "$APP_DIR/Contents/MacOS/$EXE_NAME"
+
+# ---------------------------------------------------------------------------
+# App icon
+#
+# macOS wants an .icns: a container holding the icon rendered at every size
+# the system uses (Finder, Dock, Cmd-Tab, Get Info). We build one from the
+# 1024x1024 master by scaling it into the Apple-named .iconset layout with
+# `sips`, then compiling with `iconutil`. Both are built-in OS tools, so no
+# extra dependency. The bundle references it via CFBundleIconFile below.
+# ---------------------------------------------------------------------------
+ICON_PLIST_ENTRY=""
+if [ -f "$ICON_SRC" ]; then
+    echo "==> Generating $ICON_NAME.icns from $ICON_SRC"
+    ICONSET="$DIST_DIR/$ICON_NAME.iconset"
+    mkdir -p "$ICONSET"
+    for size in 16 32 128 256 512; do
+        sips -z "$size"   "$size"   "$ICON_SRC" --out "$ICONSET/icon_${size}x${size}.png"    >/dev/null
+        sips -z $((size*2)) $((size*2)) "$ICON_SRC" --out "$ICONSET/icon_${size}x${size}@2x.png" >/dev/null
+    done
+    iconutil -c icns "$ICONSET" -o "$RESOURCES_DIR/$ICON_NAME.icns"
+    rm -rf "$ICONSET"
+    ICON_PLIST_ENTRY="    <key>CFBundleIconFile</key>        <string>$ICON_NAME</string>"
+else
+    echo "==> WARNING: $ICON_SRC not found; building without an app icon"
+fi
 
 # The minimal set of keys Finder and the loader care about
 cat > "$APP_DIR/Contents/Info.plist" <<PLIST
@@ -50,9 +82,11 @@ cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleExecutable</key>      <string>$APP_NAME</string>
+    <key>CFBundleExecutable</key>      <string>$EXE_NAME</string>
     <key>CFBundleIdentifier</key>      <string>$BUNDLE_ID</string>
     <key>CFBundleName</key>            <string>$APP_NAME</string>
+    <key>CFBundleDisplayName</key>     <string>$APP_NAME</string>
+$ICON_PLIST_ENTRY
     <key>CFBundlePackageType</key>     <string>APPL</string>
     <key>CFBundleShortVersionString</key> <string>$VERSION</string>
     <key>CFBundleVersion</key>         <string>$VERSION</string>
@@ -93,7 +127,7 @@ resolve_dep() { # translate a recorded install name into an existing file path
     echo "$dep"
 }
 
-queue=("$APP_DIR/Contents/MacOS/$APP_NAME")
+queue=("$APP_DIR/Contents/MacOS/$EXE_NAME")
 while [ ${#queue[@]} -gt 0 ]; do
     file="${queue[0]}"; queue=("${queue[@]:1}")
 
