@@ -1,4 +1,4 @@
-# rottools
+# ℜ⛤✝ tools
 
 A suite (monorepo) of small native desktop utilities built with C++20 and
 **wxWidgets**, sharing a set of common libraries. Each tool has its own version
@@ -36,32 +36,35 @@ rottools/
 ## Build and run (local dev)
 
 Uses system-provided wxWidgets (e.g. `brew install wxwidgets`) and fetches md4c.
+`make help` prints the full menu; the common targets and their raw CMake
+equivalents are:
 
-```bash
-cmake --preset dev              # configure (Ninja, ./build)
-cmake --build build             # build everything
-make run                        # launch rotreader (opens the .app on macOS)
-```
+| `make`         | Does                             | Equivalent CMake |
+|----------------|----------------------------------|------------------|
+| `make build`   | Configure + build the whole tree | `cmake --preset dev && cmake --build build` |
+| `make run`     | Launch rotreader (`.app`)        | `open ./build/apps/rotreader/rotreader.app` |
+| `make rebuild` | Incremental build                | `cmake --build build` |
+| `make all`     | Clean + build + run              | `make clean build run` |
+| `make dev`     | Rebuild + run (fast inner loop)  | `make rebuild run` |
 
-Build a single shared component in isolation:
+Build/run a single shared component in isolation (`make help` lists them all):
 
-```bash
-cmake --build build --target rottools_ui_webview
-```
+| `make`               | Component            | Equivalent CMake |
+|----------------------|----------------------|------------------|
+| `make run-filetree`  | FileBrowserTreePanel | `cmake -B build -DROTTOOLS_BUILD_LIB_APPS=ON`<br>`cmake --build build --target rottools_ui_filetree_app`<br>`./build/libs/ui/FileBrowserTreePanel/rottools_ui_filetree_app` |
+| `make build-webview` | WebViewPanel (lib only) | `cmake --build build --target rottools_ui_webview` |
 
-Build the optional per-library standalone smoke-test apps:
-
-```bash
-cmake -B build -DROTTOOLS_BUILD_LIB_APPS=ON && cmake --build build
-```
+The other demos follow the same pattern: `run-htmlsource`, `run-mdsource`,
+`run-dirscan`, `run-md2html`, `run-helpers` (and `build-filedrop`).
 
 ## Package a distributable
 
-```bash
-make dmg                        # macOS .dmg via CPack (DragNDrop)
-# or, on any OS, after configuring:
-cd build && cpack               # -> rotreader-<version>-<os>-<arch>.<ext>
-```
+| `make`     | Does                     | Equivalent CMake |
+|------------|--------------------------|------------------|
+| `make dmg` | macOS `.dmg` via CPack   | `cmake --build build && cd build && cpack -G DragNDrop` |
+
+On any OS, once configured, `cd build && cpack` produces
+`rotreader-<version>-<os>-<arch>.<ext>` (`.dmg` / `.deb`+`.tar.gz` / NSIS+`.zip`).
 
 For a fully self-contained artifact (deps linked statically instead of against
 Homebrew/apt), configure with the vcpkg preset for your OS, e.g.
