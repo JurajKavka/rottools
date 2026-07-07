@@ -1,0 +1,39 @@
+# PR / push CI. Path filters build only the tools affected by a change
+# (a tool is affected by its own apps/<tool>/** or by any shared libs/cmake).
+# No artifacts are published here — this only proves the matrix stays green.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      rotreader: ${{ steps.filter.outputs.rotreader }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared: &shared
+              - 'libs/**'
+              - 'cmake/**'
+              - 'CMakeLists.txt'
+              - 'CMakePresets.json'
+              - 'vcpkg.json'
+              - '.github/workflows/_build.yml'
+            rotreader:
+              - *shared
+              - 'apps/rotreader/**'
+
+  rotreader:
+    needs: changes
+    if: needs.changes.outputs.rotreader == 'true'
+    uses: ./.github/workflows/_build.yml
+    with:
+      app: rotreader
+      upload-artifacts: false

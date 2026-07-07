@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=@ROTREADER_DISPLAY_NAME@
+Comment=@ROTREADER_DESCRIPTION@
+Exec=@ROTREADER_EXE_NAME@ %f
+Icon=@ROTREADER_EXE_NAME@
+Terminal=false
+Categories=@ROTREADER_CATEGORIES@
+MimeType=text/markdown;
