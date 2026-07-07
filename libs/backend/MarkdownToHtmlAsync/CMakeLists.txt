@@ -12,6 +12,12 @@ else()
         GIT_REPOSITORY https://github.com/mity/md4c.git
         GIT_TAG        release-0.5.3
     )
+    # md4c defaults to a shared lib and also builds a md2html CLI we don't use.
+    # Force static (links into the app; no dylib to locate at runtime) and skip
+    # the CLI. These MUST be CACHE entries: md4c's option() runs under
+    # cmake_minimum_required(3.12) (CMP0077 OLD) and ignores plain variables.
+    set(BUILD_SHARED_LIBS        OFF CACHE BOOL "" FORCE)
+    set(BUILD_MD2HTML_EXECUTABLE OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(md4c)
     set(ROTTOOLS_MD4C_HTML md4c-html)
 endif()

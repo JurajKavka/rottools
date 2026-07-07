@@ -80,14 +80,14 @@ function(rottools_package_app)
             MACOSX_BUNDLE_BUNDLE_NAME "${APP_DISPLAY_NAME}"
             MACOSX_BUNDLE_GUI_IDENTIFIER "${APP_BUNDLE_ID}")
 
-        install(TARGETS ${APP_TARGET} BUNDLE DESTINATION ".")
+        install(TARGETS ${APP_TARGET} BUNDLE DESTINATION "." COMPONENT ${APP_EXE_NAME})
 
     elseif(WIN32)
         set_target_properties(${APP_TARGET} PROPERTIES WIN32_EXECUTABLE TRUE)
-        install(TARGETS ${APP_TARGET} RUNTIME DESTINATION ".")
+        install(TARGETS ${APP_TARGET} RUNTIME DESTINATION "." COMPONENT ${APP_EXE_NAME})
 
     else() # Linux / other Unix
-        install(TARGETS ${APP_TARGET} RUNTIME DESTINATION "bin")
+        install(TARGETS ${APP_TARGET} RUNTIME DESTINATION "bin" COMPONENT ${APP_EXE_NAME})
 
         # .desktop entry
         set(ROTREADER_DISPLAY_NAME "${APP_DISPLAY_NAME}")
@@ -96,12 +96,13 @@ function(rottools_package_app)
         set(ROTREADER_CATEGORIES   "${APP_DESKTOP_CATEGORIES}")
         set(_desktop "${CMAKE_CURRENT_BINARY_DIR}/${APP_EXE_NAME}.desktop")
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/app.desktop.in" "${_desktop}" @ONLY)
-        install(FILES "${_desktop}" DESTINATION "share/applications")
+        install(FILES "${_desktop}" DESTINATION "share/applications" COMPONENT ${APP_EXE_NAME})
 
         if(APP_ICON_PNG AND EXISTS "${APP_ICON_PNG}")
             install(FILES "${APP_ICON_PNG}"
                     DESTINATION "share/icons/hicolor/512x512/apps"
-                    RENAME "${APP_EXE_NAME}.png")
+                    RENAME "${APP_EXE_NAME}.png"
+                    COMPONENT ${APP_EXE_NAME})
         endif()
     endif()
 
@@ -115,6 +116,12 @@ function(rottools_package_app)
     set(CPACK_PACKAGE_INSTALL_DIRECTORY   "${APP_DISPLAY_NAME}"               CACHE INTERNAL "")
     set(CPACK_PACKAGE_FILE_NAME "${APP_EXE_NAME}-${APP_VERSION}-${_os}-${_arch}" CACHE INTERNAL "")
     set(CPACK_STRIP_FILES                 TRUE                                 CACHE INTERNAL "")
+
+    # Package ONLY this app's component, in one archive. Excludes stray install()
+    # rules pulled in by dependencies built in-tree (e.g. md4c's bin/include/lib).
+    set(CPACK_COMPONENTS_ALL       "${APP_EXE_NAME}"        CACHE INTERNAL "")
+    set(CPACK_COMPONENTS_GROUPING  "ALL_COMPONENTS_IN_ONE"  CACHE INTERNAL "")
+    set(CPACK_COMPONENT_${APP_EXE_NAME}_HIDDEN TRUE         CACHE INTERNAL "")
 
     if(APPLE)
         set(CPACK_GENERATOR       "DragNDrop"          CACHE INTERNAL "")
