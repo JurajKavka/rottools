@@ -27,8 +27,6 @@ class MainFrame : public MainFrameWx {
     wxSplitterWindow* m_rightSplitter = nullptr;
     // Divides the source area into HTML source and markdown source columns
     wxSplitterWindow* m_sourceSplitter = nullptr;
-    bool m_showHtmlSource = false;
-    bool m_showMarkdownSource = false;
     wxFileSystemWatcher m_fileSystemWatcher;
     // One save in an editor produces a burst of fs events; the timer collapses
     // the burst into a single re-parse of the open file.
@@ -38,6 +36,7 @@ class MainFrame : public MainFrameWx {
 
     void HandleNewWindowMenuItemClick(wxCommandEvent& event);
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
+    void HandleSoloWebViewPanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event);

@@ -28,6 +28,10 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	MenuBar->Append( m_menu1, _("File") );
 
 	m_menu2 = new wxMenu();
+	wxMenuItem* m_soloWebViewPanelMenuItem;
+	m_soloWebViewPanelMenuItem = new wxMenuItem( m_menu2, wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM, wxString( _("Solo Markdown Prevew") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu2->Append( m_soloWebViewPanelMenuItem );
+
 	wxMenuItem* m_toggleFileBrowserMenuItem;
 	m_toggleFileBrowserMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu2->Append( m_toggleFileBrowserMenuItem );

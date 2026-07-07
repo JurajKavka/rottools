@@ -16,6 +16,7 @@
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(this) {
     Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
+    Bind(wxEVT_MENU, &MainFrame::HandleSoloWebViewPanelMenuItemClick, this, wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleHtmlSourcePanelMenuItemClick, this,
          wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM);
@@ -106,6 +107,17 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
     OpenMarkdownFile(wxFileName(openFileDialog.GetPath()));
 }
 
+// Collapses every panel except the always-visible markdown preview so it fills
+// the window. The individual toggle items then bring the others back one by one.
+void MainFrame::HandleSoloWebViewPanelMenuItemClick(wxCommandEvent& event) {
+    if (m_mainSplitter->IsSplit()) {
+        m_mainSplitter->Unsplit(m_fileBrowserPanel);
+    }
+    m_htmlSourcePanel->Hide();
+    m_markdownSourcePanel->Hide();
+    ApplySourcePanelVisibility();
+}
+
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
     if (m_mainSplitter->IsSplit()) {
         // Hides the file browser panel and expands the web view
@@ -133,20 +145,26 @@ void MainFrame::HandleMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
 }
 
 void MainFrame::HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event) {
-    m_showHtmlSource = !m_showHtmlSource;
+    m_htmlSourcePanel->Show(!m_htmlSourcePanel->IsShown());
     ApplySourcePanelVisibility();
 }
 
 void MainFrame::HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event) {
-    m_showMarkdownSource = !m_showMarkdownSource;
+    m_markdownSourcePanel->Show(!m_markdownSourcePanel->IsShown());
     ApplySourcePanelVisibility();
 }
 
 // Lays the right-hand side out as columns: the always-visible preview, then
-// the HTML source and markdown source columns as requested by the toggles.
-// Rebuilds from a collapsed state so every toggle combination takes the same
-// single code path.
+// the HTML source and markdown source columns, according to which source panels
+// are currently shown. The panels' own IsShown() state is the source of truth.
+// Rebuilds from a collapsed state so every combination takes the same single
+// code path.
 void MainFrame::ApplySourcePanelVisibility() {
+    // Capture the desired state before the collapse below clears it: Unsplit()
+    // hides the pane it removes.
+    bool showHtml = m_htmlSourcePanel->IsShown();
+    bool showMarkdown = m_markdownSourcePanel->IsShown();
+
     if (m_sourceSplitter->IsSplit()) {
         m_sourceSplitter->Unsplit(m_markdownSourcePanel);
     }
@@ -156,17 +174,17 @@ void MainFrame::ApplySourcePanelVisibility() {
     m_htmlSourcePanel->Hide();
     m_markdownSourcePanel->Hide();
 
-    if (!m_showHtmlSource && !m_showMarkdownSource) {
+    if (!showHtml && !showMarkdown) {
         return;
     }
 
-    if (m_showHtmlSource && m_showMarkdownSource) {
+    if (showHtml && showMarkdown) {
         m_htmlSourcePanel->Show();
         m_markdownSourcePanel->Show();
         m_sourceSplitter->SplitVertically(m_htmlSourcePanel, m_markdownSourcePanel);
     } else {
-        wxWindow* sourceView = m_showHtmlSource ? static_cast<wxWindow*>(m_htmlSourcePanel)
-                                                : static_cast<wxWindow*>(m_markdownSourcePanel);
+        wxWindow* sourceView =
+            showHtml ? static_cast<wxWindow*>(m_htmlSourcePanel) : static_cast<wxWindow*>(m_markdownSourcePanel);
         sourceView->Show();
         m_sourceSplitter->Initialize(sourceView);
     }
