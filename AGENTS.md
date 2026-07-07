@@ -6,47 +6,50 @@ This project is written in C++20.
 
 ## Build system
 
-Any directory containing a `Makefile` (e.g. the repo root, `Backend/DirectoryScanner`,
-`Backend/MarkdownToHtmlAsync`, `Components/FileBrowserTreePanel`, `HelperFunctions`) is an
-independently buildable and runnable component. `cd` into that directory and use:
+CMake monorepo (`rottools` suite). The umbrella [CMakeLists.txt](CMakeLists.txt) builds the
+whole tree: shared code lives under `libs/` as `rottools::*` targets, each tool under
+`apps/<tool>/` (currently `apps/rotreader`). The root `Makefile` wraps the common commands:
 
-- `make all` — clean, build, and run
+- `make build` — configure (`dev` preset, Ninja) and build everything
+- `make run` — launch rotreader
 - `make rebuild` — incremental build (no clean)
-- `make run` — run the already-built binary
-- `make dev` — rebuild and run (fast inner loop, no clean)
+- `make dmg` — package rotreader via CPack
+- `make check` — cppcheck static analysis over `libs` + `apps` (excludes wxFormBuilder-generated
+  `*Wx.h`/`*Wx.cpp`; exits non-zero on any finding). Run it before committing.
 
-At the repo root, `make check` runs cppcheck static analysis (excludes wxFormBuilder-generated
-`*Wx.h`/`*Wx.cpp` files; exits non-zero on any finding). Run it before committing.
+Configure/build directly with presets when needed:
 
-Use these `make` targets only; do not invoke `cmake` directly.
+- `cmake --preset dev && cmake --build build`
+- Build one shared component in isolation: `cmake --build build --target rottools_ui_webview`
+- Build the per-library standalone smoke-test apps: `cmake -B build -DROTTOOLS_BUILD_LIB_APPS=ON`
 
-## macOS packaging (`.app` / `.dmg`)
+Dependencies resolve from the system (Homebrew/apt) for the `dev` preset, or from vcpkg
+([vcpkg.json](vcpkg.json)) for the `ci-macos`/`ci-linux`/`ci-windows` presets.
 
-`make dmg` at the repo root builds the distributable `ℜ⛤✝ reader.app` and a compressed
-`rotreader-0.1.0.dmg` into `dist/`. It runs [scripts/make-dmg.sh](scripts/make-dmg.sh),
-which uses only built-in OS tools (`otool`, `install_name_tool`, `codesign`, `hdiutil`,
-`sips`, `iconutil`) — no CMake bundle target, no extra dependencies. Phases:
+## Packaging (CPack)
 
-1. Assembles the `.app` skeleton and writes `Contents/Info.plist` by hand (there is no
-   checked-in plist — it is generated from variables at the top of the script). Two distinct
-   name variables: `EXE_NAME` (`rotreader`) is the CMake target / binary / `CFBundleExecutable`
-   and must match the file CMake produces in `build/` (i.e. the `project()`/`add_executable()`
-   name in [CMakeLists.txt](CMakeLists.txt) and the `make run` path in the Makefile);
-   `APP_NAME` (`ℜ⛤✝ reader`) is the user-facing name used for the `.app` bundle dir,
-   `CFBundleName`/`CFBundleDisplayName`, and the mounted `.dmg` volume. The downloadable `.dmg`
-   file itself stays ASCII: `rotreader-0.1.0.dmg`. Other variables: `VERSION`, `BUNDLE_ID`
-   (`com.jurajkavka.rotreader`).
-2. Copies every non-system dylib the binary links against into `Contents/Frameworks` and
-   rewrites the Mach-O install names to `@executable_path/../Frameworks/...`.
-3. Ad-hoc code-signs (`codesign --sign -`) — enough to run on Apple Silicon, but NOT
-   Gatekeeper-clean on other machines (needs a Developer ID cert + notarization).
-4. Packs the `.dmg` with the "drag to Applications" symlink.
+Packaging is unified across macOS/Linux/Windows via CPack, driven by
+[cmake/RotToolsPackaging.cmake](cmake/RotToolsPackaging.cmake) (`rottools_package_app()`),
+called from each app's `CMakeLists.txt`. `cd build && cpack` (or `make dmg`) produces
+`rotreader-<version>-<os>-<arch>.<ext>`:
 
-**App icon:** generated on every `make dmg` from `assets/logo.png` (1024×1024 master) into
-`Contents/Resources/AppIcon.icns` via `sips` + `iconutil`, and referenced by the
-`CFBundleIconFile` key in the generated Info.plist. No `.icns` is committed. To change the
-icon, replace `assets/logo.png` and rebuild. To bump the version or bundle id, edit the
-variables at the top of `scripts/make-dmg.sh`.
+- **macOS:** `.dmg` (DragNDrop) wrapping the `.app` bundle.
+- **Linux:** `.deb` (Depends on `libwebkit2gtk-4.1-0`, `libgtk-3-0`) + portable `.tar.gz`.
+- **Windows:** NSIS installer + portable `.zip`.
+
+Version is single-sourced from `apps/<tool>/VERSION` and flows into a generated `version.h`,
+the macOS `Info.plist` ([packaging/macos/Info.plist.in](apps/rotreader/packaging/macos/Info.plist.in)),
+and the package name. The macOS `.app` icon is generated from
+`apps/rotreader/assets/logo.png` (1024×1024 master) into `AppIcon.icns` at build time.
+
+Two distinct names: `EXE_NAME` (`rotreader`) is the CMake target / binary / `CFBundleExecutable`;
+`DISPLAY_NAME` (`ℜ⛤✝ reader`) is the user-facing `.app`/`CFBundleName`/`.dmg` volume name.
+Bundle id `com.jurajkavka.rotreader`. To change any of these, edit the `rottools_package_app(...)`
+call in [apps/rotreader/CMakeLists.txt](apps/rotreader/CMakeLists.txt).
+
+macOS signing is still ad-hoc (CPack default); Developer-ID cert + notarization is a follow-up.
+For a fully self-contained `.dmg` (deps statically linked, not against Homebrew), configure with
+`--preset ci-macos` (vcpkg).
 
 ## Naming conventions
 

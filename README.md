@@ -1,41 +1,86 @@
-# ℜ⛤✝ reader
+# rottools
 
-A native desktop Markdown viewer built using C++ and **wxWidgets**. It parses Markdown files locally and renders them using a native WebView component.
+A suite (monorepo) of small native desktop utilities built with C++20 and
+**wxWidgets**, sharing a set of common libraries. Each tool has its own version
+and its own macOS / Linux / Windows builds, and is released independently.
 
-## Features
+## Tools
 
-- **Drag & Drop Support**: Drag a `.md` or `.markdown` file from your operating system's file manager (e.g. macOS Finder) and drop it directly onto the window to open it.
-- **Lazy WebView Initialization**: The application starts as a native frame and loads the native webview only after a file has been successfully opened and parsed. This prevents the native browser engine from hijacking OS-level drag-and-drop actions.
-- **Decoupled Architecture**: The file-dropping listener utilizes a generic callback framework (`std::function`), keeping the drop target completely decoupled from the main frame.
+| Tool         | Description                                                        |
+|--------------|-------------------------------------------------------------------|
+| **rotreader** | A native Markdown viewer (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ℜ⛤✝ reader**. |
 
----
+## Repository layout
 
-## Build and Run Instructions
-
-A `Makefile` is provided for convenience. Run these commands from the root directory:
-
-### 1. Build and Run (Clean Build)
-Removes previous builds, compiles all targets, and launches the application:
-```bash
-make all
+```
+rottools/
+  CMakeLists.txt         # umbrella build (selects tools via ROTTOOLS_BUILD_<TOOL>)
+  CMakePresets.json      # `dev` (system deps) + `ci-macos/linux/windows` (vcpkg)
+  vcpkg.json             # cross-platform dependency manifest (wxwidgets, md4c)
+  cmake/                 # shared modules: version + CPack packaging
+  libs/                  # SHARED, reusable libraries (rottools::* targets)
+    HelperFunctions/         rottools::helpers
+    backend/
+      MarkdownToHtmlAsync/   rottools::md2html
+      DirectoryScanner/      rottools::dirscan
+    ui/
+      WebViewPanel/          rottools::ui_webview
+      HtmlSourcePanel/       rottools::ui_htmlsource
+      MarkdownSourcePanel/   rottools::ui_mdsource
+      FileBrowserTreePanel/  rottools::ui_filetree
+      FileDropTarget/        rottools::ui_filedrop
+  apps/
+    rotreader/           # first tool: sources, VERSION, packaging/ inputs
 ```
 
-### 2. Rebuild
-Quickly compiles incremental changes without performing a clean step:
+## Build and run (local dev)
+
+Uses system-provided wxWidgets (e.g. `brew install wxwidgets`) and fetches md4c.
+
 ```bash
-make rebuild
+cmake --preset dev              # configure (Ninja, ./build)
+cmake --build build             # build everything
+make run                        # launch rotreader (opens the .app on macOS)
 ```
 
-### 3. Run
-Launches the built executable:
+Build a single shared component in isolation:
+
 ```bash
-make run
+cmake --build build --target rottools_ui_webview
 ```
 
----
+Build the optional per-library standalone smoke-test apps:
 
-## Architecture Overview
+```bash
+cmake -B build -DROTTOOLS_BUILD_LIB_APPS=ON && cmake --build build
+```
 
-- **`MainFrame`** (`Components/MainFrame.h` / `.cpp`): The main window containing the toolbar, status bar, and workspace. It coordinates file loading and Markdown parsing.
-- **`WebViewPanel`** (`Components/WebViewPanel/`): A custom panel that wraps the native `wxWebView`. It lazily constructs the webview on demand when a Markdown document is first rendered.
-- **`FileDropTarget`** (`Components/FileDropTarget/`): A reusable, generic wrapper around `wxFileDropTarget` that accepts a callback function `std::function<void(const wxString&)>` to decouple UI components.
+## Package a distributable
+
+```bash
+make dmg                        # macOS .dmg via CPack (DragNDrop)
+# or, on any OS, after configuring:
+cd build && cpack               # -> rotreader-<version>-<os>-<arch>.<ext>
+```
+
+For a fully self-contained artifact (deps linked statically instead of against
+Homebrew/apt), configure with the vcpkg preset for your OS, e.g.
+`cmake --preset ci-macos` (requires `VCPKG_ROOT` set).
+
+## Versioning & releases
+
+Each tool's version lives in `apps/<tool>/VERSION` (single source of truth) and
+flows into a generated `version.h`, the macOS `Info.plist`, and the CPack package
+name. Releases are per-tool and tag-driven: push a tag like `rotreader-v0.1.0`
+and the `Release rotreader` GitHub Actions workflow builds all three OSes and
+publishes a GitHub Release. Other tools are untouched.
+
+## Adding a new tool
+
+1. Create `apps/<tool>/` with `main.cpp`, a `VERSION` file, and `packaging/`
+   inputs (copy rotreader's as a starting point).
+2. In `apps/<tool>/CMakeLists.txt`, link only the `rottools::*` libraries you
+   need, then call `rottools_apply_version(...)` and `rottools_package_app(...)`.
+3. Add a `ROTTOOLS_BUILD_<TOOL>` option in the umbrella `CMakeLists.txt` and an
+   `add_subdirectory` guard in `apps/CMakeLists.txt`.
+4. Add a `release-<tool>.yml` workflow and a `<tool>` path filter in `ci.yml`.

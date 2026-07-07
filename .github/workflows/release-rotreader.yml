@@ -1,0 +1,36 @@
+# Independent release for the rotreader tool. Triggered by an app-prefixed tag
+# (e.g. rotreader-v0.1.0) so each tool releases on its own schedule/version.
+# Builds the three-OS matrix, then publishes a GitHub Release with the installers.
+name: Release rotreader
+
+on:
+  push:
+    tags: ['rotreader-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build.yml
+    with:
+      app: rotreader
+      upload-artifacts: true
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: rotreader-*
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "rotreader ${{ github.ref_name }}"
+          files: dist/*
+          generate_release_notes: true

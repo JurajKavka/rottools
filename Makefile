@@ -15,20 +15,22 @@ check:
 		--suppress=constParameterCallback \
 		--suppress="*:*Wx.h" --suppress="*:*Wx.cpp" \
 		--inline-suppr --error-exitcode=1 -i build --quiet \
-		Backend Components HelperFunctions main.cpp
+		libs apps
 
-clean: 
+clean:
 	rm -rf ./build ./dist
 
 build:
-	cmake -B build && cmake --build build 
+	cmake -S . -B build -G Ninja && cmake --build build
 
 run:
-	./build/rotreader
+	open ./build/apps/rotreader/rotreader.app
 
 rebuild:
 	cmake --build build
 
-# Build a distributable macOS disk image into dist/
-dmg:
-	./scripts/make-dmg.sh
+# Build a distributable macOS disk image via CPack (DragNDrop).
+# For a fully self-contained .dmg, configure with the vcpkg static path
+# (cmake --preset ci-macos) so wx links statically instead of against Homebrew.
+dmg: build
+	cd build && cpack -G DragNDrop

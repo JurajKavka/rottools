@@ -1,0 +1,58 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "dev",
+      "displayName": "Local dev (system wxWidgets, no vcpkg)",
+      "description": "Uses Homebrew/apt-provided wxWidgets and fetches md4c. No vcpkg toolchain.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "vcpkg-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "ci-macos",
+      "inherits": "vcpkg-base",
+      "displayName": "CI macOS (vcpkg, arm64)",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm64-osx",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "14.0"
+      }
+    },
+    {
+      "name": "ci-linux",
+      "inherits": "vcpkg-base",
+      "displayName": "CI Linux (vcpkg, x64 static libs)",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "ci-windows",
+      "inherits": "vcpkg-base",
+      "displayName": "CI Windows (vcpkg, x64 static CRT)",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev",        "configurePreset": "dev" },
+    { "name": "ci-macos",   "configurePreset": "ci-macos",   "configuration": "Release" },
+    { "name": "ci-linux",   "configurePreset": "ci-linux",   "configuration": "Release" },
+    { "name": "ci-windows", "configurePreset": "ci-windows", "configuration": "Release" }
+  ]
+}
