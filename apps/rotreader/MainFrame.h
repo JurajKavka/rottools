@@ -18,7 +18,7 @@ class MainFrame : public MainFrameWx {
    private:
     MarkdownToHtmlAsync m_markdownParser;
     // Store a pointer to your custom panel
-    WebViewPanel* m_webViewPanel = nullptr;
+    WebViewPanel* m_markdownPreviewPanel = nullptr;
     HtmlSourcePanel* m_htmlSourcePanel = nullptr;
     MarkdownSourcePanel* m_markdownSourcePanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
@@ -36,7 +36,7 @@ class MainFrame : public MainFrameWx {
 
     void HandleNewWindowMenuItemClick(wxCommandEvent& event);
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
-    void HandleSoloWebViewPanelMenuItemClick(wxCommandEvent& event);
+    void HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event);

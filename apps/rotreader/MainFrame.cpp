@@ -16,7 +16,7 @@
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(this) {
     Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
-    Bind(wxEVT_MENU, &MainFrame::HandleSoloWebViewPanelMenuItemClick, this, wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM);
+    Bind(wxEVT_MENU, &MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick, this, wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleHtmlSourcePanelMenuItemClick, this,
          wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM);
@@ -35,7 +35,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
 
     m_rightSplitter =
         new wxSplitterWindow(m_mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
-    m_webViewPanel = new WebViewPanel(m_rightSplitter);
+    m_markdownPreviewPanel = new WebViewPanel(m_rightSplitter);
     m_sourceSplitter =
         new wxSplitterWindow(m_rightSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_htmlSourcePanel = new HtmlSourcePanel(m_sourceSplitter);
@@ -44,7 +44,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
     m_sourceSplitter->SetMinimumPaneSize(100);
 
     // Start with both source views hidden; the menu items split them in
-    m_rightSplitter->Initialize(m_webViewPanel);
+    m_rightSplitter->Initialize(m_markdownPreviewPanel);
     m_sourceSplitter->Hide();
     m_htmlSourcePanel->Hide();
     m_markdownSourcePanel->Hide();
@@ -109,7 +109,7 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
 
 // Collapses every panel except the always-visible markdown preview so it fills
 // the window. The individual toggle items then bring the others back one by one.
-void MainFrame::HandleSoloWebViewPanelMenuItemClick(wxCommandEvent& event) {
+void MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& event) {
     if (m_mainSplitter->IsSplit()) {
         m_mainSplitter->Unsplit(m_fileBrowserPanel);
     }
@@ -131,7 +131,7 @@ void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
 }
 
 void MainFrame::HandleMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
-    m_webViewPanel->LoadHtml(event.html);
+    m_markdownPreviewPanel->LoadHtml(event.html);
     // Keep the source views current even while hidden, so toggling them in
     // always shows the source of the displayed document
     m_htmlSourcePanel->ShowHtml(event.html);
@@ -188,7 +188,7 @@ void MainFrame::ApplySourcePanelVisibility() {
         sourceView->Show();
         m_sourceSplitter->Initialize(sourceView);
     }
-    m_rightSplitter->SplitVertically(m_webViewPanel, m_sourceSplitter);
+    m_rightSplitter->SplitVertically(m_markdownPreviewPanel, m_sourceSplitter);
 }
 
 void MainFrame::HandleMarkdownError(MarkdownToHtmlAsyncEvent& event) {
