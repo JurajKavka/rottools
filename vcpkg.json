@@ -7,7 +7,10 @@
   "dependencies": [
     {
       "name": "wxwidgets",
-      "default-features": true
+      "default-features": true,
+      "features": [
+        "webview"
+      ]
     },
     "md4c"
   ]
