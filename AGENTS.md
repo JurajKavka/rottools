@@ -43,7 +43,7 @@ and the package name. The macOS `.app` icon is generated from
 `apps/rotreader/assets/logo.png` (1024×1024 master) into `AppIcon.icns` at build time.
 
 Two distinct names: `EXE_NAME` (`rotreader`) is the CMake target / binary / `CFBundleExecutable`;
-`DISPLAY_NAME` (`ℜ⛤✝ reader`) is the user-facing `.app`/`CFBundleName`/`.dmg` volume name.
+`DISPLAY_NAME` (`ℜ⛤𝔗 reader`) is the user-facing `.app`/`CFBundleName`/`.dmg` volume name.
 Bundle id `com.jurajkavka.rotreader`. To change any of these, edit the `rottools_package_app(...)`
 call in [apps/rotreader/CMakeLists.txt](apps/rotreader/CMakeLists.txt).
 

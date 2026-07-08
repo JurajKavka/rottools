@@ -1,4 +1,4 @@
-# ℜ⛤✝ tools
+# ℜ⛤𝔗 tools
 
 A suite (monorepo) of small native desktop utilities built with C++20 and
 **wxWidgets**, sharing a set of common libraries. Each tool has its own version
@@ -8,7 +8,7 @@ and its own macOS / Linux / Windows builds, and is released independently.
 
 | Tool         | Description                                                        |
 |--------------|-------------------------------------------------------------------|
-| **rotreader** | A native Markdown viewer (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ℜ⛤✝ reader**. |
+| **rotreader** | A native Markdown viewer (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ℜ⛤𝔗 reader**. |
 
 ## Repository layout
 

@@ -26,7 +26,7 @@ rottools_apply_version(rotreader ROTREADER "${CMAKE_CURRENT_SOURCE_DIR}/VERSION"
 # Install rules + per-OS CPack packaging (.dmg / .deb+.tar.gz / NSIS+.zip)
 rottools_package_app(
     TARGET       rotreader
-    DISPLAY_NAME "ℜ⛤✝ reader"
+    DISPLAY_NAME "ROT Reader"
     EXE_NAME     rotreader
     BUNDLE_ID    com.jurajkavka.rotreader
     VERSION      "${ROTREADER_VERSION}"
