@@ -6,19 +6,16 @@
 
 #include "FileBrowserTreePanel.h"
 #include "MainFrameWx.h"
-#include "MarkdownToHtmlAsync.h"
+#include "MarkdownPreviewPanel.h"
 
-// Forward declaration
-class WebViewPanel;
-class FileBrowserTreePanel;
+// Forward declarations
 class HtmlSourcePanel;
 class MarkdownSourcePanel;
 
 class MainFrame : public MainFrameWx {
    private:
-    MarkdownToHtmlAsync m_markdownParser;
     // Store a pointer to your custom panel
-    WebViewPanel* m_markdownPreviewPanel = nullptr;
+    MarkdownPreviewPanel* m_markdownPreviewPanel = nullptr;
     HtmlSourcePanel* m_htmlSourcePanel = nullptr;
     MarkdownSourcePanel* m_markdownSourcePanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
@@ -41,13 +38,14 @@ class MainFrame : public MainFrameWx {
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event);
     void ApplySourcePanelVisibility();
-    void HandleMarkdownReady(MarkdownToHtmlAsyncEvent& event);
-    void HandleMarkdownError(MarkdownToHtmlAsyncEvent& event);
     void OpenMarkdownFile(const wxFileName& filePath);
     void HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event);
     void HandleDirectoryChanged(const wxFileName& filePath);
     void HandleReloadDebounceTimer(wxTimerEvent& event);
     void RefreshWatchedPaths();
+
+    void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
+    void HandleMarkdownError(const wxString& error);
 
    public:
     explicit MainFrame(wxWindow* parent);

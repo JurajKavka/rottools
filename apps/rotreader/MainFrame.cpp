@@ -11,9 +11,8 @@
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
 #include "MarkdownSourcePanel.h"
-#include "WebViewPanel.h"
 
-MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(this) {
+MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
     Bind(wxEVT_MENU, &MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick, this, wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM);
@@ -24,9 +23,6 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
          wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, fileOpenTool->GetId());
 
-    Bind(EVT_MARKDOWN_READY, &MainFrame::HandleMarkdownReady, this);
-    Bind(EVT_MARKDOWN_ERROR, &MainFrame::HandleMarkdownError, this);
-
     // 1. Instantiate the panels: file browser on the left, and on the right a
     // nested splitter holding the rendered preview and the HTML source view
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
@@ -35,7 +31,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent), m_markdownParser(t
 
     m_rightSplitter =
         new wxSplitterWindow(m_mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
-    m_markdownPreviewPanel = new WebViewPanel(m_rightSplitter);
+    m_markdownPreviewPanel =
+        new MarkdownPreviewPanel(m_rightSplitter, std::bind_front(&MainFrame::HandleMarkdownReady, this),
+                                 std::bind_front(&MainFrame::HandleMarkdownError, this));
     m_sourceSplitter =
         new wxSplitterWindow(m_rightSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_htmlSourcePanel = new HtmlSourcePanel(m_sourceSplitter);
@@ -130,20 +128,6 @@ void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
     }
 }
 
-void MainFrame::HandleMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
-    m_markdownPreviewPanel->LoadHtml(event.html);
-    // Keep the source views current even while hidden, so toggling them in
-    // always shows the source of the displayed document
-    m_htmlSourcePanel->ShowHtml(event.html);
-    m_markdownSourcePanel->ShowMarkdown(event.markdown);
-    statusBar->SetStatusText(event.filePath.GetAbsolutePath());
-    // Navigate the tree to the file's directory (e.g. after drag&drop or the open
-    // dialog), but skip the rescan when that directory is already being shown.
-    if (!m_fileBrowserPanel->IsShowingDir(event.filePath.GetPath())) {
-        m_fileBrowserPanel->ListDir(event.filePath.GetPath());
-    }
-}
-
 void MainFrame::HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event) {
     m_htmlSourcePanel->Show(!m_htmlSourcePanel->IsShown());
     ApplySourcePanelVisibility();
@@ -191,17 +175,11 @@ void MainFrame::ApplySourcePanelVisibility() {
     m_rightSplitter->SplitVertically(m_markdownPreviewPanel, m_sourceSplitter);
 }
 
-void MainFrame::HandleMarkdownError(MarkdownToHtmlAsyncEvent& event) {
-    wxString message = event.error.IsEmpty() ? wxString("Error parsing markdown!") : event.error;
-    wxMessageBox(message, "Error", wxICON_ERROR);
-    statusBar->SetStatusText(wxString(""));
-}
-
 void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
     m_currentFile = filePath;
     RefreshWatchedPaths();
     statusBar->SetStatusText(wxString("Loading ..."));
-    m_markdownParser.ParseFile(filePath);
+    m_markdownPreviewPanel->LoadFile(filePath);
 }
 
 void MainFrame::HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event) {
@@ -233,9 +211,9 @@ void MainFrame::HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event) {
 void MainFrame::HandleReloadDebounceTimer(wxTimerEvent& event) {
     if (m_currentFile.IsOk() && m_currentFile.FileExists()) {
         printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
-        // Parse directly (not OpenMarkdownFile) to avoid status-bar flicker on
+        // Load directly (not OpenMarkdownFile) to avoid status-bar flicker on
         // every save; HandleMarkdownReady refreshes the status bar anyway.
-        m_markdownParser.ParseFile(m_currentFile);
+        m_markdownPreviewPanel->LoadFile(m_currentFile);
     }
 }
 
@@ -265,4 +243,21 @@ void MainFrame::RefreshWatchedPaths() {
             }
         }
     }
+}
+
+void MainFrame::HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData) {
+    m_htmlSourcePanel->ShowHtml(markdownPreviewData.html);
+    m_markdownSourcePanel->ShowMarkdown(markdownPreviewData.markdown);
+    statusBar->SetStatusText(markdownPreviewData.fileName.GetAbsolutePath());
+    // Navigate the tree to the file's directory (e.g. after drag&drop or the open
+    // dialog), but skip the rescan when that directory is already being shown.
+    if (!m_fileBrowserPanel->IsShowingDir(markdownPreviewData.fileName.GetPath())) {
+        m_fileBrowserPanel->ListDir(markdownPreviewData.fileName.GetPath());
+    }
+}
+
+void MainFrame::HandleMarkdownError(const wxString& error) {
+    wxString message = error.IsEmpty() ? wxString("Error parsing markdown!") : error;
+    wxMessageBox(message, "Error", wxICON_ERROR);
+    statusBar->SetStatusText(wxString(""));
 }

@@ -37,6 +37,10 @@ run-htmlsource: _demos ## HtmlSourcePanel        (rottools::ui_htmlsource)
 	cmake --build build --target rottools_ui_htmlsource_app
 	./build/libs/ui/HtmlSourcePanel/rottools_ui_htmlsource_app
 
+run-markdownpreview: _demos ## MarkdownPreviewPanel        (rottools::ui_markdownpreview)
+	cmake --build build --target rottools_ui_markdownpreview_app
+	./build/libs/ui/MarkdownPreviewPanel/rottools_ui_markdownpreview_app
+
 run-mdsource: _demos   ## MarkdownSourcePanel    (rottools::ui_mdsource)
 	cmake --build build --target rottools_ui_mdsource_app
 	./build/libs/ui/MarkdownSourcePanel/rottools_ui_mdsource_app
