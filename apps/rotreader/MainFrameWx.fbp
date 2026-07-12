@@ -169,6 +169,12 @@
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
           </object>
+          <object class="submenu" expanded="true">
+            <property name="bitmap"></property>
+            <property name="label">Theme</property>
+            <property name="name">m_themeSubmenu</property>
+            <property name="permission">protected</property>
+          </object>
         </object>
       </object>
       <object class="wxBoxSizer" expanded="false">

@@ -4,6 +4,7 @@
 #include <wx/splitter.h>
 #include <wx/timer.h>
 
+#include "CssThemes.h"
 #include "FileBrowserTreePanel.h"
 #include "MainFrameWx.h"
 #include "MarkdownPreviewPanel.h"
@@ -30,6 +31,10 @@ class MainFrame : public MainFrameWx {
     wxTimer m_reloadDebounceTimer;
     wxFileName m_currentFile;
     wxFileName m_browsedDirectory;
+    // First of the CssThemeCount consecutive ids given to the Theme menu items
+    wxWindowID m_themeMenuBaseId = wxID_ANY;
+    // Index into cssThemes; the frame owns the theme, the preview panel does not
+    int m_themeId = RotdownMonoLight;
 
     void HandleNewWindowMenuItemClick(wxCommandEvent& event);
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
@@ -38,6 +43,9 @@ class MainFrame : public MainFrameWx {
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event);
     void ApplySourcePanelVisibility();
+    void PopulateThemeMenu();
+    void HandleThemeMenuItemClick(wxCommandEvent& event);
+    MarkdownPreviewOptions GetPreviewOptions() const;
     void OpenMarkdownFile(const wxFileName& filePath);
     void HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event);
     void HandleDirectoryChanged(const wxFileName& filePath);

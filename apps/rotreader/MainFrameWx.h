@@ -46,6 +46,7 @@ class MainFrameWx : public wxFrame
 		wxMenuBar* MenuBar;
 		wxMenu* m_menu1;
 		wxMenu* m_menu2;
+		wxMenu* m_themeSubmenu;
 		wxToolBar* toolBar;
 		wxToolBarToolBase* fileOpenTool;
 		wxStatusBar* statusBar;

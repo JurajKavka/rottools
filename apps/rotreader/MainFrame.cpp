@@ -23,6 +23,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, fileOpenTool->GetId());
 
+    PopulateThemeMenu();
+
     // 1. Instantiate the panels: file browser on the left, and on the right a
     // nested splitter holding the rendered preview and the HTML source view
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
@@ -175,11 +177,36 @@ void MainFrame::ApplySourcePanelVisibility() {
     m_rightSplitter->SplitVertically(m_markdownPreviewPanel, m_sourceSplitter);
 }
 
+// Fills the (empty) Theme submenu from the CssThemes.h table, one radio item per
+// theme. The ids run from m_themeMenuBaseId in CssThemeId order, so an item's id
+// minus the base is the theme's index in cssThemes.
+void MainFrame::PopulateThemeMenu() {
+    m_themeMenuBaseId = wxWindow::NewControlId(CssThemeCount);
+
+    for (int themeIndex = 0; themeIndex < CssThemeCount; ++themeIndex) {
+        m_themeSubmenu->AppendRadioItem(m_themeMenuBaseId + themeIndex, cssThemes[themeIndex].name);
+    }
+
+    m_themeSubmenu->Check(m_themeMenuBaseId + m_themeId, true);
+    Bind(wxEVT_MENU, &MainFrame::HandleThemeMenuItemClick, this, m_themeMenuBaseId,
+         m_themeMenuBaseId + CssThemeCount - 1);
+}
+
+void MainFrame::HandleThemeMenuItemClick(wxCommandEvent& event) {
+    m_themeId = event.GetId() - m_themeMenuBaseId;
+    // The document is already parsed; only the page around it changes
+    m_markdownPreviewPanel->Render(GetPreviewOptions());
+}
+
+MarkdownPreviewOptions MainFrame::GetPreviewOptions() const {
+    return {.injectStyle = cssThemes[m_themeId].css};
+}
+
 void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
     m_currentFile = filePath;
     RefreshWatchedPaths();
     statusBar->SetStatusText(wxString("Loading ..."));
-    m_markdownPreviewPanel->LoadFile(filePath);
+    m_markdownPreviewPanel->LoadFile(filePath, GetPreviewOptions());
 }
 
 void MainFrame::HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event) {
@@ -213,7 +240,7 @@ void MainFrame::HandleReloadDebounceTimer(wxTimerEvent& event) {
         printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
         // Load directly (not OpenMarkdownFile) to avoid status-bar flicker on
         // every save; HandleMarkdownReady refreshes the status bar anyway.
-        m_markdownPreviewPanel->LoadFile(m_currentFile);
+        m_markdownPreviewPanel->LoadFile(m_currentFile, GetPreviewOptions());
     }
 }
 
