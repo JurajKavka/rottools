@@ -8,7 +8,6 @@ class MarkdownToHtmlAsyncEvent : public wxEvent {
     MarkdownToHtmlAsyncEvent(wxEventType type, int id) : wxEvent(id, type) {}
 
     wxString html;
-    // The raw markdown source the html was generated from
     wxString markdown;
     wxString error;
     wxFileName filePath;
