@@ -4,3 +4,4 @@ build
 prompts
 *.swp
 dist
+.local

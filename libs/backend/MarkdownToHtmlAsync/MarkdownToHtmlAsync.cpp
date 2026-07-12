@@ -77,11 +77,21 @@ std::string EscapeHtml(const std::string& text) {
     escaped.reserve(text.size());
     for (char c : text) {
         switch (c) {
-            case '&': escaped += "&amp;"; break;
-            case '<': escaped += "&lt;"; break;
-            case '>': escaped += "&gt;"; break;
-            case '"': escaped += "&quot;"; break;
-            default: escaped += c; break;
+            case '&':
+                escaped += "&amp;";
+                break;
+            case '<':
+                escaped += "&lt;";
+                break;
+            case '>':
+                escaped += "&gt;";
+                break;
+            case '"':
+                escaped += "&quot;";
+                break;
+            default:
+                escaped += c;
+                break;
         }
     }
     return escaped;
@@ -133,9 +143,10 @@ std::string RenderFrontmatterHtml(const std::string& frontmatter) {
         "border:1px solid rgba(128,128,128,0.4); border-radius:6px; "
         "background:rgba(128,128,128,0.12); font-size:0.9em;\">\n";
     for (const auto& [key, value] : rows) {
-        html += "<tr><td style=\"padding:4px 14px; font-weight:600; vertical-align:top; "
-                "white-space:nowrap; opacity:0.75;\">" +
-                EscapeHtml(key) + "</td><td style=\"padding:4px 14px 4px 0;\">" + EscapeHtml(value) + "</td></tr>\n";
+        html +=
+            "<tr><td style=\"padding:4px 14px; font-weight:600; vertical-align:top; "
+            "white-space:nowrap; opacity:0.75;\">" +
+            EscapeHtml(key) + "</td><td style=\"padding:4px 14px 4px 0;\">" + EscapeHtml(value) + "</td></tr>\n";
     }
     html += "</table>\n";
     return html;
