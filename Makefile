@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help all dev build run rebuild dmg \
+.PHONY: help all dev build run run-fg rebuild dmg \
         run-filetree run-htmlsource run-mdsource run-dirscan run-md2html run-helpers \
         build-webview build-filedrop \
         format check clean _demos
@@ -13,14 +13,17 @@ help: ## Show this help (default target)
 	@echo ""
 
 ##@ App — rotreader (the whole tree)
-all: clean build run   ## Clean, build, and run rotreader
-dev: rebuild run       ## Rebuild and run (fast inner loop)
+all: clean build run-fg   ## Clean, build, and run rotreader (foreground)
+dev: rebuild run-fg       ## Rebuild and run in foreground (fast inner loop)
 
 build:                 ## Configure + build the whole tree (system wx)
 	cmake -S . -B build -G Ninja && cmake --build build
 
 run:                   ## Launch rotreader (.app bundle)
 	open ./build/apps/rotreader/rotreader.app
+
+run-fg:                ## Launch rotreader in foreground (see printLog output)
+	./build/apps/rotreader/rotreader.app/Contents/MacOS/rotreader
 
 rebuild:               ## Incremental build of the whole tree
 	cmake --build build

@@ -43,10 +43,11 @@ wxString MarkdownPreviewPanel::GetHtmlPage(const wxString& parsedMarkdownToHtml,
 }
 
 void MarkdownPreviewPanel::Paint() {
-    wxString htmlPage = this->GetHtmlPage(m_parsedHtml, m_options);
-    this->LoadHtml(htmlPage);
+    m_htmlPage = this->GetHtmlPage(m_parsedHtml, m_options);
+    this->LoadHtml(m_htmlPage);
+
     if (m_onMarkdownReadyCallback) {
-        MarkdownPreviewData markdownPreviewData = {.html = htmlPage, .markdown = m_markdown, .fileName = m_fileName};
+        MarkdownPreviewData markdownPreviewData = {.html = m_htmlPage, .markdown = m_markdown, .fileName = m_fileName};
         m_onMarkdownReadyCallback(markdownPreviewData);
     }
 }
