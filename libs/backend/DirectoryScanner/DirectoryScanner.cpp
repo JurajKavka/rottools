@@ -30,9 +30,7 @@ DirectoryScanner::~DirectoryScanner() {
 }
 
 void DirectoryScanner::CancelScan() {
-    if (m_workerThread.joinable()) {
-        m_workerThread.request_stop();
-    }
+    m_stopRequested = true;
 }
 
 bool DirectoryScanner::IsScanning() const {
@@ -45,20 +43,21 @@ void DirectoryScanner::StartScan(const wxFileName& fileName, const ScanOptions& 
         m_workerThread.join();
     }
 
+    m_stopRequested = false;
     m_isScanning = true;
 
     // Capture a raw `this` rather than extending our own lifetime via a shared_ptr.
     // The scanner is owned by its parent panel; ~DirectoryScanner (running on the
     // owner's thread) requests stop and joins this thread before we are destroyed,
     // so the worker can never end up destroying/joining itself.
-    m_workerThread = std::jthread([this, fileName, options, eventTarget](std::stop_token stoken) {
-        ScanThreadLogic(stoken, fileName, options, eventTarget);
+    m_workerThread = std::thread([this, fileName, options, eventTarget] {
+        ScanThreadLogic(fileName, options, eventTarget);
     });
 }
 
 // The references point into the lambda's by-value captures, which stay alive
 // for the whole run of the worker thread.
-void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName& fileName, const ScanOptions& options,
+void DirectoryScanner::ScanThreadLogic(const wxFileName& fileName, const ScanOptions& options,
                                        wxEvtHandler* eventTarget) {
     std::vector<FileEntry> results;
 
@@ -70,14 +69,14 @@ void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName&
 
     std::filesystem::path rootPath = fileName.GetFullPath().ToStdWstring();
 
-    // The outer try/catch is mandatory: an exception escaping a jthread calls
-    // std::terminate. It also covers the iterator increment, which a range-for
+    // The outer try/catch is mandatory: an exception escaping the worker thread
+    // calls std::terminate. It also covers the iterator increment, which a range-for
     // performs outside the loop body (so outside the inner try/catch).
     try {
         if (fs::exists(rootPath) && fs::is_directory(rootPath)) {
             auto dirOptions = fs::directory_options::skip_permission_denied;
             for (const auto& entry : fs::directory_iterator(rootPath, dirOptions)) {
-                if (stoken.stop_requested()) {
+                if (m_stopRequested) {
                     break;
                 }
 
@@ -115,7 +114,7 @@ void DirectoryScanner::ScanThreadLogic(std::stop_token stoken, const wxFileName&
     }
 
     // 3. Queue the event to the Main Thread if not cancelled
-    if (!stoken.stop_requested()) {
+    if (!m_stopRequested) {
         // Create the event
 
         DirectoryScannerEvent* event = new DirectoryScannerEvent(wxEVT_DIRECTORY_SCAN_COMPLETE, wxID_ANY);

@@ -26,8 +26,10 @@ class DirectoryScanner {
     static std::vector<FileEntry> SortEntries(const std::vector<FileEntry>& entries);
 
    private:
-    std::jthread m_workerThread;
+    // Plain std::thread + atomic flag instead of std::jthread/std::stop_token:
+    // Apple's libc++ only ships jthread from Xcode 26.4, too new to require.
+    std::thread m_workerThread;
+    std::atomic<bool> m_stopRequested{false};
     std::atomic<bool> m_isScanning{false};
-    void ScanThreadLogic(std::stop_token stoken, const wxFileName& fileName, const ScanOptions& options,
-                         wxEvtHandler* eventTarget);
+    void ScanThreadLogic(const wxFileName& fileName, const ScanOptions& options, wxEvtHandler* eventTarget);
 };
