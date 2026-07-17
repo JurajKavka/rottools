@@ -156,6 +156,17 @@ std::string RenderFrontmatterHtml(const std::string& frontmatter) {
 
 MarkdownToHtmlAsync::MarkdownToHtmlAsync(wxEvtHandler* parent) : m_parent(parent) {}
 
+MarkdownToHtmlAsync::~MarkdownToHtmlAsync() {
+    StopWorker();
+}
+
+void MarkdownToHtmlAsync::StopWorker() {
+    m_stopRequested = true;
+    if (m_workerThread.joinable()) {
+        m_workerThread.join();
+    }
+}
+
 wxString MarkdownToHtmlAsync::ConvertMarkdownToHtml(const std::string& markdownContent) {
     std::string htmlOutputBuffer;
 
@@ -177,12 +188,17 @@ wxString MarkdownToHtmlAsync::ConvertMarkdownToHtml(const std::string& markdownC
 void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
     std::filesystem::path path = filePath.GetFullPath().ToStdWstring();
 
+    // Retire any in-flight parse first: assigning over a joinable std::thread
+    // calls std::terminate, so stop + join before reusing the member.
+    StopWorker();
+    m_stopRequested = false;
+
     // Capture a raw `this` rather than extending our own lifetime via a shared_ptr.
     // The parser is owned by the MainFrame; ~MarkdownToHtmlAsync (running on the
     // owner's thread) requests stop and joins this thread before we are destroyed,
     // so the worker can never end up destroying/joining itself.
-    m_workerThread = std::jthread([this, path, filePath](std::stop_token stoken) {
-        // An exception escaping a jthread calls std::terminate, so guard the body
+    m_workerThread = std::thread([this, path, filePath] {
+        // An exception escaping the worker thread calls std::terminate, so guard the body
         try {
             std::ifstream file(path);
             if (!file.is_open()) {
@@ -197,8 +213,8 @@ void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
             std::string markdownStr = buffer.str();
 
             // Bail out cheaply if a newer request or shutdown superseded this one,
-            // so the jthread join/reassign doesn't block on a stale parse
-            if (stoken.stop_requested()) {
+            // so the join/reassign doesn't block on a stale parse
+            if (m_stopRequested) {
                 return;
             }
 
@@ -208,7 +224,7 @@ void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
                 htmlContent = wxString::FromUTF8(RenderFrontmatterHtml(split.frontmatter)) + htmlContent;
             }
 
-            if (stoken.stop_requested()) {
+            if (m_stopRequested) {
                 return;
             }
 
@@ -227,5 +243,5 @@ void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
 }
 
 void MarkdownToHtmlAsync::AbortParseFile() {
-    m_workerThread.request_stop();
+    m_stopRequested = true;
 }
