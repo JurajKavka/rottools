@@ -1,11 +1,14 @@
 # CI for pushes to main only (no per-PR/branch builds — too costly while
-# iterating). Path filters build only the tools affected by a change (a tool is
-# affected by its own apps/<tool>/** or by any shared libs/cmake).
+# iterating). workflow_dispatch adds a manual "Run workflow" button so any
+# branch can be built on demand without an automatic trigger.
+# Path filters build only the tools affected by a change (a tool is affected by
+# its own apps/<tool>/** or by any shared libs/cmake).
 # Installers are uploaded as workflow artifacts (Actions run > Artifacts) for
 # testing; they expire per the repo's retention policy and are not a release.
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
 
@@ -37,7 +40,8 @@ jobs:
 
   rotreader:
     needs: changes
-    if: needs.changes.outputs.rotreader == 'true'
+    # A manual run always builds; path filtering only gates automatic push runs.
+    if: needs.changes.outputs.rotreader == 'true' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/_build.yml
     with:
       app: rotreader
