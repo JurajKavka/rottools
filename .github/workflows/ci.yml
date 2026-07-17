@@ -1,11 +1,11 @@
-# PR / push CI. Path filters build only the tools affected by a change
-# (a tool is affected by its own apps/<tool>/** or by any shared libs/cmake).
+# CI for pushes to main only (no per-PR/branch builds — too costly while
+# iterating). Path filters build only the tools affected by a change (a tool is
+# affected by its own apps/<tool>/** or by any shared libs/cmake).
 # Installers are uploaded as workflow artifacts (Actions run > Artifacts) for
 # testing; they expire per the repo's retention policy and are not a release.
 name: CI
 
 on:
-  pull_request:
   push:
     branches: [main]
 
