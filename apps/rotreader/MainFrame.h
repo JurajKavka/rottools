@@ -1,11 +1,12 @@
 #pragma once
 
-#include <wx/fswatcher.h>
 #include <wx/splitter.h>
-#include <wx/timer.h>
+
+#include <memory>
 
 #include "CssThemes.h"
 #include "FileBrowserTreePanel.h"
+#include "FsWatcher.h"
 #include "MainFrameWx.h"
 #include "MarkdownPreviewPanel.h"
 
@@ -25,10 +26,10 @@ class MainFrame : public MainFrameWx {
     wxSplitterWindow* m_rightSplitter = nullptr;
     // Divides the source area into HTML source and markdown source columns
     wxSplitterWindow* m_sourceSplitter = nullptr;
-    wxFileSystemWatcher m_fileSystemWatcher;
-    // One save in an editor produces a burst of fs events; the timer collapses
-    // the burst into a single re-parse of the open file.
-    wxTimer m_reloadDebounceTimer;
+    // Watches the browsed directory (list reloads) and the open document (live
+    // reload); recreated by RefreshWatchedPaths when either target changes.
+    std::unique_ptr<FsWatcher> m_browserWatcher;
+    std::unique_ptr<FsWatcher> m_documentWatcher;
     wxFileName m_currentFile;
     wxFileName m_browsedDirectory;
     // First of the CssThemeCount consecutive ids given to the Theme menu items
@@ -45,11 +46,10 @@ class MainFrame : public MainFrameWx {
     void ApplySourcePanelVisibility();
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);
-    MarkdownPreviewOptions GetPreviewOptions() const;
+    MarkdownPreviewOptions GetPreviewOptions(ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop) const;
     void OpenMarkdownFile(const wxFileName& filePath);
-    void HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event);
+    void ReloadOpenDocument();
     void HandleDirectoryChanged(const wxFileName& filePath);
-    void HandleReloadDebounceTimer(wxTimerEvent& event);
     void RefreshWatchedPaths();
 
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);

@@ -60,12 +60,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     initialDirectory.AssignHomeDir();
     m_fileBrowserPanel->ListDir(initialDirectory);
 
-    // file system watcher
-    m_fileSystemWatcher.SetOwner(this);
-    Bind(wxEVT_FSWATCHER, &MainFrame::HandleFileSystemWatcherEvent, this);
-
-    m_reloadDebounceTimer.SetOwner(this);
-    Bind(wxEVT_TIMER, &MainFrame::HandleReloadDebounceTimer, this);
+    // The file system watchers are created lazily by RefreshWatchedPaths, which
+    // runs once the initial ListDir scan completes (via HandleDirectoryChanged).
 
     Layout();
 
@@ -74,14 +70,10 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
 }
 
 MainFrame::~MainFrame() {
-    // Works around https://github.com/wxWidgets/wxWidgets/issues/26658:
-    // on macOS, ~wxFsEventsFileSystemWatcher deletes its stream map without
-    // FSEventStreamStop/Invalidate, so streams created by AddTree() stay
-    // scheduled on the run loop with a context pointer to the destroyed
-    // watcher -> SIGSEGV on the next fs event after this frame closes.
-    // RemoveAll() on the still-alive watcher runs the FSEvents override,
-    // which does invalidate the streams. Drop this once the fix ships.
-    m_fileSystemWatcher.RemoveAll();
+    // Tear the watchers down first (FsWatcher's destructor invalidates its
+    // FSEvents streams) while the panels their callbacks reference are alive.
+    m_browserWatcher.reset();
+    m_documentWatcher.reset();
 }
 
 // Each window is a fully independent MainFrame (own parser, watcher, panels);
@@ -194,53 +186,38 @@ void MainFrame::PopulateThemeMenu() {
 
 void MainFrame::HandleThemeMenuItemClick(wxCommandEvent& event) {
     m_themeId = event.GetId() - m_themeMenuBaseId;
-    // The document is already parsed; only the page around it changes
-    m_markdownPreviewPanel->Render(GetPreviewOptions());
+    // The document is already parsed; only the page around it changes, so keep
+    // the reader's scroll position.
+    m_markdownPreviewPanel->Render(GetPreviewOptions(ScrollBehavior::KeepPosition));
 }
 
-MarkdownPreviewOptions MainFrame::GetPreviewOptions() const {
-    return {.injectStyle = cssThemes[m_themeId].css};
+MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavior) const {
+    return {.injectStyle = cssThemes[m_themeId].css, .scrollBehavior = scrollBehavior};
 }
 
 void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
     m_currentFile = filePath;
     RefreshWatchedPaths();
+    // Follow the browser to the opened file's directory (drag&drop, the open
+    // dialog, or a file picked elsewhere), unless it is already shown. This is
+    // deliberately here and not in HandleMarkdownReady: a live reload after an
+    // external save re-parses through LoadFile directly, and must not drag the
+    // browser back to the document's folder while the user browses elsewhere.
+    if (!m_fileBrowserPanel->IsShowingDir(filePath.GetPath())) {
+        m_fileBrowserPanel->ListDir(filePath.GetPath());
+    }
     statusBar->SetStatusText(wxString("Loading ..."));
+    // A different file: start at the top (the ScrollBehavior default).
     m_markdownPreviewPanel->LoadFile(filePath, GetPreviewOptions());
 }
 
-void MainFrame::HandleFileSystemWatcherEvent(wxFileSystemWatcherEvent& event) {
-    int changeType = event.GetChangeType();
-
-    // 💡 If a file is added, removed, or renamed, re-trigger ListDir silently.
-    // The change type is a bitmask, so test with & rather than equality.
-    if (changeType & (wxFSW_EVENT_CREATE | wxFSW_EVENT_DELETE | wxFSW_EVENT_RENAME)) {
-        m_fileBrowserPanel->ReloadCurrentDir();
-    }
-
-    // Live reload of the open document. MODIFY covers in-place writes, but the
-    // wx docs warn it is not reliably delivered on macOS; editors that save
-    // atomically (write temp file, rename over the original) surface as
-    // CREATE/RENAME on the document's path instead, which macOS does deliver.
-    if (!m_currentFile.IsOk()) {
-        return;
-    }
-    if (changeType & (wxFSW_EVENT_MODIFY | wxFSW_EVENT_CREATE | wxFSW_EVENT_RENAME)) {
-        bool touchesCurrentFile = event.GetPath().SameAs(m_currentFile) ||
-                                  (changeType & wxFSW_EVENT_RENAME && event.GetNewPath().SameAs(m_currentFile));
-        if (touchesCurrentFile) {
-            // (Re)starting the timer collapses an event burst into one reload
-            m_reloadDebounceTimer.StartOnce(250);
-        }
-    }
-}
-
-void MainFrame::HandleReloadDebounceTimer(wxTimerEvent& event) {
+void MainFrame::ReloadOpenDocument() {
     if (m_currentFile.IsOk() && m_currentFile.FileExists()) {
         printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
         // Load directly (not OpenMarkdownFile) to avoid status-bar flicker on
         // every save; HandleMarkdownReady refreshes the status bar anyway.
-        m_markdownPreviewPanel->LoadFile(m_currentFile, GetPreviewOptions());
+        // Same file reloaded live: keep the reader's scroll position.
+        m_markdownPreviewPanel->LoadFile(m_currentFile, GetPreviewOptions(ScrollBehavior::KeepPosition));
     }
 }
 
@@ -250,25 +227,15 @@ void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
 }
 
 void MainFrame::RefreshWatchedPaths() {
-    m_fileSystemWatcher.RemoveAll();
-
-    // 💡 Using AddTree is required for reliable macOS FSEvents integration
+    m_browserWatcher.reset();
     if (m_browsedDirectory.IsOk() && m_browsedDirectory.DirExists()) {
-        if (!m_fileSystemWatcher.AddTree(m_browsedDirectory)) {
-            printError("[ERROR] Watcher failed to add path: {}", m_browsedDirectory.GetFullPath());
-        }
+        m_browserWatcher =
+            std::make_unique<FsWatcher>(m_browsedDirectory, [this] { m_fileBrowserPanel->ReloadCurrentDir(); });
     }
 
-    // Watch the open document's directory too, so live reload keeps working
-    // when the file browser navigates somewhere else.
+    m_documentWatcher.reset();
     if (m_currentFile.IsOk()) {
-        wxFileName documentDir = wxFileName::DirName(m_currentFile.GetPath());
-        bool alreadyWatched = m_browsedDirectory.IsOk() && documentDir.SameAs(m_browsedDirectory);
-        if (!alreadyWatched && documentDir.DirExists()) {
-            if (!m_fileSystemWatcher.AddTree(documentDir)) {
-                printError("[ERROR] Watcher failed to add path: {}", documentDir.GetFullPath());
-            }
-        }
+        m_documentWatcher = std::make_unique<FsWatcher>(m_currentFile, [this] { ReloadOpenDocument(); });
     }
 }
 
@@ -276,11 +243,6 @@ void MainFrame::HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewDa
     m_htmlSourcePanel->ShowHtml(markdownPreviewData.html);
     m_markdownSourcePanel->ShowMarkdown(markdownPreviewData.markdown);
     statusBar->SetStatusText(markdownPreviewData.fileName.GetAbsolutePath());
-    // Navigate the tree to the file's directory (e.g. after drag&drop or the open
-    // dialog), but skip the rescan when that directory is already being shown.
-    if (!m_fileBrowserPanel->IsShowingDir(markdownPreviewData.fileName.GetPath())) {
-        m_fileBrowserPanel->ListDir(markdownPreviewData.fileName.GetPath());
-    }
 }
 
 void MainFrame::HandleMarkdownError(const wxString& error) {
