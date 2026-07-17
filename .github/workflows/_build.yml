@@ -50,12 +50,15 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       # Linux: wxWebView needs WebKitGTK dev packages + GTK; plus ninja/pkg-config.
+      # autoconf/automake/libtool/autoconf-archive are needed by vcpkg to build
+      # autotools-based ports from source (e.g. libxcrypt, pulled in transitively).
       - name: Install Linux system deps
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build pkg-config \
-            libgtk-3-dev libwebkit2gtk-4.1-dev libsecret-1-dev libnotify-dev
+            libgtk-3-dev libwebkit2gtk-4.1-dev libsecret-1-dev libnotify-dev \
+            autoconf automake libtool autoconf-archive
 
       - name: Install Ninja (macOS)
         if: runner.os == 'macOS'
