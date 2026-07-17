@@ -11,6 +11,9 @@ on:
 jobs:
   changes:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read 
     outputs:
       rotreader: ${{ steps.filter.outputs.rotreader }}
     steps:
@@ -26,6 +29,7 @@ jobs:
               - 'CMakePresets.json'
               - 'vcpkg.json'
               - '.github/workflows/_build.yml'
+              - '.github/workflows/ci.yml'
             rotreader:
               - *shared
               - 'apps/rotreader/**'

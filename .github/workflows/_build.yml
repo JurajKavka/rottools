@@ -26,9 +26,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
+          # Toolchain floor: the code uses std::format + std::jthread, so the
+          # runner needs Xcode >= 16.3 (macos-15) and GCC >= 13 (ubuntu-24.04).
+          - os: macos-15
             preset: ci-macos
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             preset: ci-linux
           - os: windows-2022
             preset: ci-windows
@@ -62,6 +64,14 @@ jobs:
       - name: Install Ninja (Windows)
         if: runner.os == 'Windows'
         run: choco install ninja -y
+
+      # The Ninja generator needs cl.exe on PATH; this exports the VS dev
+      # environment to all following steps.
+      - name: Set up MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       # Use the vcpkg preinstalled on the runner image.
       - name: Configure
