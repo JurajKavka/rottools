@@ -37,6 +37,18 @@ FileBrowserTreePanel::~FileBrowserTreePanel() {
     Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
 }
 
+wxDataViewItem FileBrowserTreePanel::FindChildByText(const wxString& text) const {
+    wxDataViewItem root;
+    int count = m_dataViewTreeCtrl1->GetChildCount(root);
+    for (int i = 0; i < count; ++i) {
+        wxDataViewItem child = m_dataViewTreeCtrl1->GetNthChild(root, i);
+        if (child.IsOk() && m_dataViewTreeCtrl1->GetItemText(child) == text) {
+            return child;
+        }
+    }
+    return wxDataViewItem();
+}
+
 void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
     auto sortedData = DirectoryScanner::SortEntries(entries);
 
@@ -51,25 +63,52 @@ void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
     }
 
     if (!m_savedSelectionText.IsEmpty()) {
-        int count = m_dataViewTreeCtrl1->GetChildCount(root);
-        for (int i = 0; i < count; ++i) {
-            wxDataViewItem child = m_dataViewTreeCtrl1->GetNthChild(root, i);
-            if (child.IsOk() && m_dataViewTreeCtrl1->GetItemText(child) == m_savedSelectionText) {
-                m_dataViewTreeCtrl1->Select(child);
-                m_dataViewTreeCtrl1->EnsureVisible(child);
-                break;
+        wxDataViewItem selection = FindChildByText(m_savedSelectionText);
+        if (selection.IsOk()) {
+            m_dataViewTreeCtrl1->Select(selection);
+            // Pulling the selection into view would defeat KeepPosition: the
+            // user may have scrolled away from it deliberately.
+            if (m_scrollBehavior == ScrollBehavior::ResetToTop) {
+                m_dataViewTreeCtrl1->EnsureVisible(selection);
             }
+        }
+    }
+
+    if (m_scrollBehavior == ScrollBehavior::KeepPosition && !m_savedTopItemText.IsEmpty()) {
+        wxDataViewItem topItem = FindChildByText(m_savedTopItemText);
+        if (topItem.IsOk()) {
+            // EnsureVisible alone would leave the row at the bottom edge (the
+            // rebuilt view starts at the top). Scrolling to the end first makes
+            // the second call approach from below, which puts the row back at
+            // the top edge. Both run before the next paint, so only the final
+            // position is ever drawn.
+            int count = m_dataViewTreeCtrl1->GetChildCount(root);
+            if (count > 0) {
+                m_dataViewTreeCtrl1->EnsureVisible(m_dataViewTreeCtrl1->GetNthChild(root, count - 1));
+            }
+            m_dataViewTreeCtrl1->EnsureVisible(topItem);
         }
     }
 }
 
-void FileBrowserTreePanel::ListDir(const wxFileName& fileName) {
+void FileBrowserTreePanel::ListDir(const wxFileName& fileName, ScrollBehavior scrollBehavior) {
+    m_scrollBehavior = scrollBehavior;
+
     wxDataViewItem currentSelection = m_dataViewTreeCtrl1->GetSelection();
     if (currentSelection.IsOk()) {
         m_savedSelectionText = m_dataViewTreeCtrl1->GetItemText(currentSelection);
     } else {
         m_savedSelectionText.clear();
     }
+
+    m_savedTopItemText.clear();
+    if (scrollBehavior == ScrollBehavior::KeepPosition) {
+        wxDataViewItem topItem = m_dataViewTreeCtrl1->GetTopItem();
+        if (topItem.IsOk()) {
+            m_savedTopItemText = m_dataViewTreeCtrl1->GetItemText(topItem);
+        }
+    }
+
     // Force the path to interpret its entire string structure as a directory.
     // It is probably not needed when working with `wxFileName` API ...
     m_currentPath = wxFileName::DirName(fileName.GetFullPath());
@@ -143,6 +182,8 @@ bool FileBrowserTreePanel::IsShowingDir(const wxFileName& dir) const {
 
 void FileBrowserTreePanel::ReloadCurrentDir() {
     if (m_currentPath.IsOk() && m_currentPath.DirExists()) {
-        ListDir(m_currentPath);
+        // A live reload after an fs event: the list refreshes under the user,
+        // so the view must not jump to the top.
+        ListDir(m_currentPath, ScrollBehavior::KeepPosition);
     }
 }

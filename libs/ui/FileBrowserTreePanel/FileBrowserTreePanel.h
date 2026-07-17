@@ -13,7 +13,16 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     explicit FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened = nullptr,
                                   DirectoryChangedCallback onDirectoryChanged = nullptr);
     ~FileBrowserTreePanel();
-    void ListDir(const wxFileName& fileName);
+
+    /**
+     * @brief Lists a directory in the tree.
+     *
+     * @param fileName Directory to list
+     * @param scrollBehavior KeepPosition holds the scroll when re-listing the
+     *        same directory (a live reload); the default starts at the top, as
+     *        navigating to a new directory should.
+     */
+    void ListDir(const wxFileName& fileName, ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop);
     void ReloadCurrentDir();
     bool IsShowingDir(const wxFileName& dir) const;
 
@@ -22,11 +31,18 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     ScanOptions m_scanOptions;
     wxFileName m_currentPath;
     wxString m_savedSelectionText;
+    /// Text of the row at the top of the viewport, saved so a KeepPosition
+    /// re-list can scroll back to it (item handles do not survive the rebuild)
+    wxString m_savedTopItemText;
+    /// Behavior for the scan in flight, applied when its results arrive
+    ScrollBehavior m_scrollBehavior = ScrollBehavior::ResetToTop;
 
     FileOpenedCallback m_onFileOpened;
     DirectoryChangedCallback m_onDirectoryChanged;
 
     void UpdateTree(const std::vector<FileEntry>& entries);
+    /// Finds the top-level row with the given text; invalid item if none match
+    wxDataViewItem FindChildByText(const wxString& text) const;
     void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
     void HandleHiddenFilesCheckbox(wxCommandEvent& event);
     void HandleItemActivated(wxDataViewEvent& event);

@@ -8,6 +8,19 @@
 #include <string>
 #include <utility>
 
+/**
+ * @brief What happens to the scroll position when a panel's content is replaced.
+ *
+ * Shared by the content panels (web view, file browser tree): a live reload of
+ * the same content keeps the view still, a navigation starts at the top.
+ */
+enum class ScrollBehavior {
+    /// Start at the top, as a fresh load does
+    ResetToTop,
+    /// Keep the current vertical scroll offset across the update
+    KeepPosition,
+};
+
 namespace detail {
 // Serializes writes so a whole line stays atomic even when worker threads log
 // concurrently (std::osyncstream is not available in Apple's libc++ yet).

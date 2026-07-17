@@ -6,15 +6,8 @@
 // Forward declaration prevents bloated compile times
 class wxWebView;
 
-/**
- * @brief What happens to the scroll position when a new page is shown.
- */
-enum class ScrollBehavior {
-    /// Start at the top, as a normal page load does
-    ResetToTop,
-    /// Keep the current vertical scroll offset across the update
-    KeepPosition,
-};
+// ScrollBehavior comes from HelperFunctions.h; it is shared with the other
+// content panels.
 
 class WebViewPanel : public WebViewPanelWx {
    private:
