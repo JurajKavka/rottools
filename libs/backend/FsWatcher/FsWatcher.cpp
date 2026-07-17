@@ -2,6 +2,28 @@
 
 #include "HelperFunctions.h"
 
+namespace {
+
+/**
+ * @brief Parent directory of the entry an event describes.
+ *
+ * Directory entries arrive dir-style (".../name/", empty filename) from the
+ * macOS FSEvents backend, file entries file-style (".../name"); both parent to
+ * the containing directory.
+ */
+wxFileName ParentDirOf(const wxFileName& path) {
+    if (path.GetFullName().IsEmpty()) {
+        wxFileName parent = path;
+        if (parent.GetDirCount() > 0) {
+            parent.RemoveLastDir();
+        }
+        return parent;
+    }
+    return wxFileName::DirName(path.GetPath());
+}
+
+}  // namespace
+
 FsWatcher::FsWatcher(const wxFileName& target, Callback onChanged, int debounceMs)
     : m_watchingFile(!target.GetFullName().IsEmpty()),
       m_target(target),
@@ -46,11 +68,11 @@ bool FsWatcher::IsRelevant(wxFileSystemWatcherEvent& event) const {
     if (!(changeType & (wxFSW_EVENT_CREATE | wxFSW_EVENT_DELETE | wxFSW_EVENT_RENAME))) {
         return false;
     }
-    if (wxFileName::DirName(event.GetPath().GetPath()).SameAs(m_watchedDir)) {
+    if (ParentDirOf(event.GetPath()).SameAs(m_watchedDir)) {
         return true;
     }
     return (changeType & wxFSW_EVENT_RENAME) && event.GetNewPath().IsOk() &&
-           wxFileName::DirName(event.GetNewPath().GetPath()).SameAs(m_watchedDir);
+           ParentDirOf(event.GetNewPath()).SameAs(m_watchedDir);
 }
 
 void FsWatcher::HandleFsEvent(wxFileSystemWatcherEvent& event) {
