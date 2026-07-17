@@ -1,6 +1,6 @@
-# CI for pushes to main only (no per-PR/branch builds — too costly while
-# iterating). workflow_dispatch adds a manual "Run workflow" button so any
-# branch can be built on demand without an automatic trigger.
+# TEMPORARY: pull_request is enabled while stabilizing the Linux CI build.
+# Once the matrix is green, drop the pull_request trigger to go back to
+# main-only builds (plus the manual workflow_dispatch button).
 # Path filters build only the tools affected by a change (a tool is affected by
 # its own apps/<tool>/** or by any shared libs/cmake).
 # Installers are uploaded as workflow artifacts (Actions run > Artifacts) for
@@ -9,6 +9,7 @@ name: CI
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
     branches: [main]
 
