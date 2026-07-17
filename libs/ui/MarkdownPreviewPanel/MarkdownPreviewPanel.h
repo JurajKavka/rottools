@@ -9,6 +9,10 @@
 struct MarkdownPreviewOptions {
     /// Bare CSS, without a <style> tag: the panel wraps it in one. Empty renders the page unstyled.
     wxString injectStyle;
+    /// KeepPosition holds the scroll when re-rendering the same document (a
+    /// live reload or a theme change). Ignored on the first load of a document,
+    /// which always starts at the top.
+    ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop;
 };
 
 /**

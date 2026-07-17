@@ -46,7 +46,7 @@ class MainFrame : public MainFrameWx {
     void ApplySourcePanelVisibility();
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);
-    MarkdownPreviewOptions GetPreviewOptions() const;
+    MarkdownPreviewOptions GetPreviewOptions(ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop) const;
     void OpenMarkdownFile(const wxFileName& filePath);
     void ReloadOpenDocument();
     void HandleDirectoryChanged(const wxFileName& filePath);

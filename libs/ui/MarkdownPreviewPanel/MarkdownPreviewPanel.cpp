@@ -44,7 +44,7 @@ wxString MarkdownPreviewPanel::GetHtmlPage(const wxString& parsedMarkdownToHtml,
 
 void MarkdownPreviewPanel::Paint() {
     m_htmlPage = this->GetHtmlPage(m_parsedHtml, m_options);
-    this->LoadHtml(m_htmlPage);
+    this->LoadHtml(m_htmlPage, m_options.scrollBehavior);
 
     if (m_onMarkdownReadyCallback) {
         MarkdownPreviewData markdownPreviewData = {.html = m_htmlPage, .markdown = m_markdown, .fileName = m_fileName};

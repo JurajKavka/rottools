@@ -186,12 +186,13 @@ void MainFrame::PopulateThemeMenu() {
 
 void MainFrame::HandleThemeMenuItemClick(wxCommandEvent& event) {
     m_themeId = event.GetId() - m_themeMenuBaseId;
-    // The document is already parsed; only the page around it changes
-    m_markdownPreviewPanel->Render(GetPreviewOptions());
+    // The document is already parsed; only the page around it changes, so keep
+    // the reader's scroll position.
+    m_markdownPreviewPanel->Render(GetPreviewOptions(ScrollBehavior::KeepPosition));
 }
 
-MarkdownPreviewOptions MainFrame::GetPreviewOptions() const {
-    return {.injectStyle = cssThemes[m_themeId].css};
+MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavior) const {
+    return {.injectStyle = cssThemes[m_themeId].css, .scrollBehavior = scrollBehavior};
 }
 
 void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
@@ -206,6 +207,7 @@ void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
         m_fileBrowserPanel->ListDir(filePath.GetPath());
     }
     statusBar->SetStatusText(wxString("Loading ..."));
+    // A different file: start at the top (the ScrollBehavior default).
     m_markdownPreviewPanel->LoadFile(filePath, GetPreviewOptions());
 }
 
@@ -214,7 +216,8 @@ void MainFrame::ReloadOpenDocument() {
         printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
         // Load directly (not OpenMarkdownFile) to avoid status-bar flicker on
         // every save; HandleMarkdownReady refreshes the status bar anyway.
-        m_markdownPreviewPanel->LoadFile(m_currentFile, GetPreviewOptions());
+        // Same file reloaded live: keep the reader's scroll position.
+        m_markdownPreviewPanel->LoadFile(m_currentFile, GetPreviewOptions(ScrollBehavior::KeepPosition));
     }
 }
 
