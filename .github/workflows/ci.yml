@@ -1,6 +1,7 @@
 # PR / push CI. Path filters build only the tools affected by a change
 # (a tool is affected by its own apps/<tool>/** or by any shared libs/cmake).
-# No artifacts are published here — this only proves the matrix stays green.
+# Installers are uploaded as workflow artifacts (Actions run > Artifacts) for
+# testing; they expire per the repo's retention policy and are not a release.
 name: CI
 
 on:
@@ -40,4 +41,4 @@ jobs:
     uses: ./.github/workflows/_build.yml
     with:
       app: rotreader
-      upload-artifacts: false
+      upload-artifacts: true
