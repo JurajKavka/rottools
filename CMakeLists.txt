@@ -37,6 +37,25 @@ option(ROTTOOLS_BUILD_LIB_APPS  "Build per-library standalone smoke-test apps" O
 find_package(wxWidgets COMPONENTS core base stc webview REQUIRED)
 include(${wxWidgets_USE_FILE})
 
+# --- Windows: WebView2 loader search path ------------------------------------
+# wxWidgets' Edge WebView backend pulls in the loader with
+#   #pragma comment(lib, "WebView2LoaderStatic.lib")
+# so the linker has to resolve that name off its search path. On Windows
+# FindwxWidgets leaves wxWidgets_LIBRARY_DIRS empty and returns absolute library
+# paths instead, so include(${wxWidgets_USE_FILE}) adds no link directory and the
+# final link fails with LNK1104. Put the directory holding the loader back on the
+# search path. link_directories() only affects targets created afterwards, hence
+# the placement above add_subdirectory().
+if(WIN32)
+    find_library(ROTTOOLS_WEBVIEW2_LOADER NAMES WebView2LoaderStatic WebView2Loader.dll)
+    if(ROTTOOLS_WEBVIEW2_LOADER)
+        get_filename_component(ROTTOOLS_WEBVIEW2_LOADER_DIR "${ROTTOOLS_WEBVIEW2_LOADER}" DIRECTORY)
+        link_directories("${ROTTOOLS_WEBVIEW2_LOADER_DIR}")
+    else()
+        message(WARNING "WebView2 loader library not found; the wxWebView Edge backend will fail to link.")
+    endif()
+endif()
+
 add_subdirectory(libs)
 add_subdirectory(apps)
 
