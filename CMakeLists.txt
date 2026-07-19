@@ -56,6 +56,30 @@ if(WIN32)
     endif()
 endif()
 
+# --- Windows: wxWidgets' lexilla ---------------------------------------------
+# wxSTC needs two builtin libraries, wxscintilla and wxlexilla. vcpkg's
+# wxwidgets CMake wrapper pre-seeds the cache for wxscintilla but not wxlexilla,
+# so FindwxWidgets reports "missing components: lexilla", drops it from
+# wxWidgets_LIBRARIES, and the link ends in LNK2019 on CreateLexer /
+# LexerNameFromID / Lexilla::Load. Search for it the way FindwxWidgets would and
+# append it, so every target that already links ${wxWidgets_LIBRARIES} picks it
+# up after wxscintilla.
+if(WIN32 AND NOT "lexilla" IN_LIST wxWidgets_FIND_COMPONENTS)
+    find_library(ROTTOOLS_WX_LEXILLA_RELEASE NAMES wxlexilla
+        PATHS "${wxWidgets_LIB_DIR}" NO_DEFAULT_PATH)
+    find_library(ROTTOOLS_WX_LEXILLA_DEBUG NAMES wxlexillad
+        PATHS "${wxWidgets_LIB_DIR}/../../debug/lib" "${wxWidgets_LIB_DIR}" NO_DEFAULT_PATH)
+    if(ROTTOOLS_WX_LEXILLA_RELEASE AND ROTTOOLS_WX_LEXILLA_DEBUG)
+        list(APPEND wxWidgets_LIBRARIES
+            optimized "${ROTTOOLS_WX_LEXILLA_RELEASE}"
+            debug "${ROTTOOLS_WX_LEXILLA_DEBUG}")
+    elseif(ROTTOOLS_WX_LEXILLA_RELEASE)
+        list(APPEND wxWidgets_LIBRARIES "${ROTTOOLS_WX_LEXILLA_RELEASE}")
+    else()
+        message(WARNING "wxlexilla not found in ${wxWidgets_LIB_DIR}; wxStyledTextCtrl will fail to link.")
+    endif()
+endif()
+
 add_subdirectory(libs)
 add_subdirectory(apps)
 
