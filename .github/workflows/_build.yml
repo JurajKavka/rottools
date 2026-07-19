@@ -1,5 +1,5 @@
 # Reusable build+package workflow. Given a tool name, builds it on all three
-# OSes via vcpkg (with GitHub Actions binary caching) and produces installers.
+# OSes via vcpkg (binary-cached through actions/cache) and produces installers.
 # Called by ci.yml (no upload) and by each release-<tool>.yml (uploads artifacts).
 #
 # NOTE: first-run validation needed on GitHub — CI specifics (vcpkg wxwidgets
@@ -36,18 +36,43 @@ jobs:
             preset: ci-windows
     runs-on: ${{ matrix.os }}
     env:
-      # vcpkg binary caching -> GitHub Actions cache (huge win: wxWidgets is slow to build)
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      # vcpkg binary caching. The old 'x-gha' backend was removed upstream; with
+      # it configured vcpkg warned and silently cached nothing, so every run
+      # rebuilt wxWidgets from source (~10-30 min). The supported replacement is
+      # the plain 'files' backend pointed at a directory we persist ourselves
+      # with actions/cache below.
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
     steps:
       - uses: actions/checkout@v4
 
-      # Expose the ACTIONS_* tokens vcpkg's x-gha cache backend needs.
-      - name: Enable vcpkg GHA binary cache
-        uses: actions/github-script@v7
+      - name: Create vcpkg cache directory
+        shell: bash
+        run: mkdir -p "${{ github.workspace }}/vcpkg-cache"
+
+      # Restore on the closest key, always save under a unique one: cache entries
+      # are immutable, so reusing a key would never pick up newly built ports.
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: ${{ github.workspace }}/vcpkg-cache
+          key: vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-triplets/*.cmake') }}-${{ github.sha }}
+          restore-keys: |
+            vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-triplets/*.cmake') }}-
+            vcpkg-${{ matrix.os }}-
+
+      # vcpkg builds 73 ports from source on Linux and filled the runner disk
+      # ("No space left on device" while compiling wxWidgets). The hosted image
+      # ships ~30 GB of toolchains we never use; drop them before building.
+      - name: Free disk space (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /usr/local/.ghcup /opt/hostedtoolcache/CodeQL \
+            /usr/local/share/powershell /usr/share/swift
+          sudo docker image prune --all --force || true
+          sudo apt-get clean
+          df -h /
 
       # Linux: wxWebView needs WebKitGTK dev packages + GTK; plus ninja/pkg-config.
       # autoconf/automake/libtool/autoconf-archive + libltdl-dev are needed by vcpkg
