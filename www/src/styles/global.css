@@ -1,0 +1,102 @@
+/*
+ * Site-wide base styles. Tokens come from the rotdown design system: scale.css
+ * holds everything colourless, the two palettes hold nothing but colour. Import
+ * order matters — light is the default, dark overrides it.
+ */
+
+@import './scale.css';
+@import './palettes/rotdown-light.css';
+@import './palettes/rotdown-dark.css';
+
+:root {
+  /* Site-only. rotdown's --rd-measure (80rem) is a full reading column; these
+     are the narrower widths a marketing page wants. */
+  --site-wrap: 68rem;
+  --site-measure: 62ch;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--rd-canvas);
+  color: var(--rd-ink);
+  font-family: var(--rd-font-sans);
+  font-size: var(--rd-font-size);
+  line-height: var(--rd-line-height);
+  font-weight: var(--rd-weight-normal);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  line-height: var(--rd-line-height-tight);
+  font-weight: var(--rd-weight-bold);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--rd-size-h1);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: var(--rd-size-h2);
+  letter-spacing: -0.01em;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--rd-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--rd-accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+::selection {
+  background: var(--rd-selection-bg);
+  color: var(--rd-selection-ink);
+}
+
+:focus-visible {
+  outline: var(--rd-focus-ring);
+  outline-offset: var(--rd-focus-offset);
+  border-radius: 2px;
+}
+
+code {
+  font-family: var(--rd-font-mono);
+  font-size: 0.88em;
+  background: var(--rd-surface);
+  border: var(--rd-rule-width) solid var(--rd-border);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+
+.wrap {
+  max-width: var(--site-wrap);
+  margin-inline: auto;
+  padding-inline: var(--rd-space-6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

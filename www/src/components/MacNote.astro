@@ -1,0 +1,54 @@
+---
+// macOS builds are ad-hoc signed, so Gatekeeper claims a downloaded .app is
+// "damaged". Say so up front: someone who hits that warning with no warning
+// assumes the app is broken and leaves. Mirrors the README section.
+---
+
+<aside class="note">
+  <h3>First launch on macOS</h3>
+  <p>
+    macOS may say <em>&ldquo;rotreader is damaged and can&rsquo;t be opened&rdquo;</em>. It
+    isn&rsquo;t. The builds aren&rsquo;t signed with a paid Apple Developer
+    certificate, so macOS blocks them by default. Clear the quarantine flag once,
+    after dragging the app to Applications:
+  </p>
+  <pre><code>xattr -dr com.apple.quarantine /Applications/rotreader.app</code></pre>
+</aside>
+
+<style>
+  .note {
+    border: var(--rd-rule-width) solid var(--rd-border);
+    border-inline-start: var(--rd-quote-rule-width) solid var(--rd-accent);
+    border-radius: var(--rd-radius);
+    background: var(--rd-surface);
+    padding: var(--rd-space-5) var(--rd-space-6);
+  }
+
+  h3 {
+    margin: 0 0 var(--rd-space-2);
+    font-size: var(--rd-size-h4);
+  }
+
+  p {
+    margin: 0 0 var(--rd-space-3);
+    max-width: var(--site-measure);
+    color: var(--rd-ink-muted);
+  }
+
+  pre {
+    margin: 0;
+    overflow-x: auto;
+    background: var(--rd-canvas);
+    border: var(--rd-rule-width) solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    padding: var(--rd-space-3) var(--rd-space-4);
+    font-family: var(--rd-font-mono);
+    font-size: 0.88em;
+  }
+
+  pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+</style>

@@ -1,0 +1,130 @@
+---
+// Switches between the two Rotdown themes the app ships.
+//
+// The button advertises the action, never the current state: in Rotdown Light it
+// reads "Rotdown Dark", shows a moon, and is painted in the dark palette, so it
+// is a preview of what you get by pressing it. In Rotdown Dark, the reverse.
+//
+// The choice is stored in localStorage; the inline script in Layout.astro
+// applies it before first paint so the page never flashes the wrong theme.
+//
+// Rendered hidden and unhidden by the script below, so a no-JavaScript visitor
+// never sees a control that cannot do anything. They still get a themed page:
+// the dark palette's media query follows the OS preference.
+---
+
+<button id="theme-toggle" type="button" hidden>
+  <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="4.2"></circle>
+    <path
+      d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7M18.7 5.3L17 7M7 17l-1.7 1.7"
+    ></path>
+  </svg>
+  <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"></path>
+  </svg>
+  <span class="label"></span>
+</button>
+
+<script>
+  const STORAGE_KEY = 'rottools-theme';
+  const THEME_NAMES = { light: 'Rotdown Light', dark: 'Rotdown Dark' } as const;
+
+  const button = document.getElementById('theme-toggle');
+  const label = button?.querySelector('.label');
+
+  function apply(theme: 'light' | 'dark') {
+    document.documentElement.dataset.theme = theme;
+
+    // Everything on the button names the theme you'd switch *to*.
+    const target = theme === 'dark' ? 'light' : 'dark';
+    if (label) label.textContent = THEME_NAMES[target];
+    button?.setAttribute('aria-label', `Switch to ${THEME_NAMES[target]}`);
+    button?.setAttribute('title', `Switch to ${THEME_NAMES[target]}`);
+  }
+
+  apply(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+  button?.removeAttribute('hidden');
+
+  button?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(STORAGE_KEY, next);
+    apply(next);
+  });
+</script>
+
+<style>
+  #theme-toggle:not([hidden]) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  /* Painted in the palette it switches to, so the button previews the result.
+     Values are the palettes' own (see src/styles/palettes/); they are literals
+     rather than var() because the page only ever exposes the *active* theme's
+     tokens. No media-query variant is needed: the button is hidden until the
+     script runs, and the script always stamps data-theme.
+
+     Default state is Rotdown Light active, so the button wears Rotdown Dark. */
+  #theme-toggle {
+    padding: var(--rd-space-2) var(--rd-space-3);
+    font: inherit;
+    font-size: var(--rd-size-small);
+    background: #17171a;
+    color: #e6e4e0;
+    border: var(--rd-rule-width) solid #34333a;
+    border-radius: var(--rd-radius);
+    cursor: pointer;
+    transition: border-color 0.15s ease, opacity 0.15s ease;
+  }
+
+  :global(:root[data-theme='dark']) #theme-toggle {
+    background: #fdfdfb;
+    color: #1e1d1a;
+    border-color: #e2e0d9;
+  }
+
+  #theme-toggle:hover {
+    border-color: var(--rd-accent);
+    opacity: 0.9;
+  }
+
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Filled as well as stroked: a crescent outline at 16px reads as a smudge, a
+     solid one reads as a moon. The moon only ever appears on the dark-painted
+     button, so it is always this yellow on #17171a. */
+  .moon {
+    fill: #ffcc33;
+    stroke: #ffcc33;
+  }
+
+  /* Show the icon for the theme the button switches to. */
+  .sun {
+    display: none;
+  }
+
+  :global(:root[data-theme='dark']) .sun {
+    display: block;
+  }
+
+  :global(:root[data-theme='dark']) .moon {
+    display: none;
+  }
+
+  /* The name is long; on a narrow screen the icon carries it alone. */
+  @media (max-width: 30rem) {
+    .label {
+      display: none;
+    }
+  }
+</style>

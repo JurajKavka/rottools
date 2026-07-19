@@ -1,0 +1,112 @@
+---
+import '../styles/global.css';
+import ThemeToggle from '../components/ThemeToggle.astro';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="/logo.png" />
+    <meta property="og:type" content="website" />
+    <meta name="generator" content={Astro.generator} />
+
+    {/* Runs before first paint so a stored dark choice never flashes light. */}
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem('rottools-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme =
+          stored ?? (prefersDark ? 'dark' : 'light');
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="/">ℜ⛤𝔗 tools</a>
+        <nav>
+          <a href="https://github.com/JurajKavka/rottools">Source</a>
+          <ThemeToggle />
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <p>
+          &copy; {year} Juraj Kavka. Free software, built in the open on
+          <a href="https://github.com/JurajKavka/rottools">GitHub</a>.
+        </p>
+      </div>
+    </footer>
+
+    <style>
+      .site-header {
+        border-bottom: 1px solid var(--rd-border);
+        background: var(--rd-surface);
+      }
+
+      .header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 4rem;
+      }
+
+      .brand {
+        font-weight: var(--rd-weight-bold);
+        color: var(--rd-ink);
+        text-decoration: none;
+        letter-spacing: 0.01em;
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+      }
+
+      nav > a {
+        color: var(--rd-ink-muted);
+        text-decoration: none;
+      }
+
+      nav > a:hover {
+        color: var(--rd-ink);
+        text-decoration: underline;
+      }
+
+      .site-footer {
+        border-top: 1px solid var(--rd-border);
+        margin-top: 5rem;
+        padding-block: 2rem;
+        color: var(--rd-ink-muted);
+        font-size: 0.9rem;
+      }
+
+      .site-footer p {
+        margin: 0;
+      }
+    </style>
+  </body>
+</html>
