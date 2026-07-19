@@ -36,10 +36,12 @@
     },
     {
       "name": "ci-linux",
-      "inherits": "vcpkg-base",
-      "displayName": "CI Linux (vcpkg, x64 static libs)",
+      "displayName": "CI Linux (system wxWidgets from apt)",
+      "description": "No vcpkg. vcpkg's wxwidgets port depends on gtk3/cairo/pango, which drags the whole GTK+X11 stack in as ~100 source builds; the .deb depends on the system libgtk/libwebkit at runtime anyway, so building our own is wasted work. md4c falls back to FetchContent.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-linux-release"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {

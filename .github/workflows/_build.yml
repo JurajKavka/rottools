@@ -60,31 +60,17 @@ jobs:
             vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-triplets/*.cmake') }}-
             vcpkg-${{ matrix.os }}-
 
-      # vcpkg builds 73 ports from source on Linux and filled the runner disk
-      # ("No space left on device" while compiling wxWidgets). The hosted image
-      # ships ~30 GB of toolchains we never use; drop them before building.
-      - name: Free disk space (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          df -h /
-          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
-            /usr/local/.ghcup /opt/hostedtoolcache/CodeQL \
-            /usr/local/share/powershell /usr/share/swift
-          sudo docker image prune --all --force || true
-          sudo apt-get clean
-          df -h /
-
-      # Linux: wxWebView needs WebKitGTK dev packages + GTK; plus ninja/pkg-config.
-      # autoconf/automake/libtool/autoconf-archive + libltdl-dev are needed by vcpkg
-      # to build autotools-based ports from source (e.g. libxcrypt, pulled in
-      # transitively; libxcrypt links against libltdl).
+      # Linux does not use vcpkg (see the ci-linux preset): wxWidgets and its GTK
+      # stack come from apt, and md4c falls back to FetchContent. That keeps the
+      # job to one compile instead of ~100 source builds, and stops us depending
+      # on gitlab.freedesktop.org, which throttles bulk archive downloads.
       - name: Install Linux system deps
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build pkg-config \
-            libgtk-3-dev libwebkit2gtk-4.1-dev libsecret-1-dev libnotify-dev \
-            autoconf automake libtool autoconf-archive libltdl-dev
+            libwxgtk3.2-dev libwxgtk-webview3.2-dev \
+            libgtk-3-dev libwebkit2gtk-4.1-dev libsecret-1-dev libnotify-dev
 
       - name: Install Ninja (macOS)
         if: runner.os == 'macOS'

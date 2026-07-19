@@ -134,7 +134,12 @@ function(rottools_package_app)
     else()
         set(CPACK_GENERATOR                "TGZ;DEB"      CACHE INTERNAL "")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${APP_VENDOR}" CACHE INTERNAL "")
-        # WebKitGTK (wxWebView engine) + GTK are depended on, not bundled.
+        # GTK, WebKitGTK (the wxWebView engine) and wxWidgets itself are depended
+        # on, not bundled. Let dpkg-shlibdeps read the linked binary and derive
+        # the list: hand-maintaining it means guessing exact package names, which
+        # drift across releases (Ubuntu 24.04's 64-bit time_t "t64" renames, for
+        # one). The hardcoded list stays as the fallback if shlibdeps is absent.
+        set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON CACHE INTERNAL "")
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "libwebkit2gtk-4.1-0, libgtk-3-0" CACHE INTERNAL "")
         set(CPACK_DEBIAN_PACKAGE_SECTION "utils"         CACHE INTERNAL "")
     endif()
