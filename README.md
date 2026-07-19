@@ -70,6 +70,35 @@ For a fully self-contained artifact (deps linked statically instead of against
 Homebrew/apt), configure with the vcpkg preset for your OS, e.g.
 `cmake --preset ci-macos` (requires `VCPKG_ROOT` set).
 
+## Installing on macOS ("rotreader is damaged")
+
+macOS refuses to launch a downloaded `.app` with:
+
+> "rotreader" is damaged and can't be opened. You should move it to the Trash.
+
+Nothing is damaged. The builds are ad-hoc signed (no Apple Developer ID, no
+notarization), and anything a browser downloads gets tagged
+`com.apple.quarantine`. A quarantined app that Gatekeeper can't verify produces
+that misleading wording. Clear the tag once, after dragging the app out of the
+`.dmg`:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/rotreader.app
+```
+
+If it still refuses, re-apply an ad-hoc signature and clear the tag again:
+
+```sh
+codesign --force --deep --sign - /Applications/rotreader.app
+xattr -dr com.apple.quarantine /Applications/rotreader.app
+```
+
+Two things that do *not* help: right-click → Open (that only covers the milder
+"unidentified developer" case, and macOS 15 dropped it in favour of System
+Settings > Privacy & Security > "Open Anyway"), and downloading from a GitHub
+Release rather than a CI artifact — the `.dmg` is identical either way and
+quarantine is applied on download.
+
 ## Versioning & releases
 
 Each tool's version lives in `apps/<tool>/VERSION` (single source of truth) and
