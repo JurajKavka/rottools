@@ -1,6 +1,6 @@
-# TEMPORARY: pull_request is enabled while stabilizing the Linux CI build.
-# Once the matrix is green, drop the pull_request trigger to go back to
-# main-only builds (plus the manual workflow_dispatch button).
+# Builds run when something lands on main, or on demand via the Actions tab
+# ("Run workflow"). Branches and pull requests do not build: at this stage the
+# three-OS matrix is not worth spending on every push.
 # Path filters build only the tools affected by a change (a tool is affected by
 # its own apps/<tool>/** or by any shared libs/cmake).
 # Installers are uploaded as workflow artifacts (Actions run > Artifacts) for
@@ -9,7 +9,6 @@ name: CI
 
 on:
   workflow_dispatch:
-  pull_request:
   push:
     branches: [main]
 
@@ -18,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read 
     outputs:
       rotreader: ${{ steps.filter.outputs.rotreader }}
     steps:
