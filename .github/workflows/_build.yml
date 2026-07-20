@@ -1,5 +1,5 @@
 # Reusable build+package workflow. Given a tool name, builds it on all three
-# OSes via vcpkg (with GitHub Actions binary caching) and produces installers.
+# OSes via vcpkg (binary-cached through actions/cache) and produces installers.
 # Called by ci.yml (no upload) and by each release-<tool>.yml (uploads artifacts).
 #
 # NOTE: first-run validation needed on GitHub — CI specifics (vcpkg wxwidgets
@@ -36,25 +36,40 @@ jobs:
             preset: ci-windows
     runs-on: ${{ matrix.os }}
     env:
-      # vcpkg binary caching -> GitHub Actions cache (huge win: wxWidgets is slow to build)
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      # vcpkg binary caching. The old 'x-gha' backend was removed upstream; with
+      # it configured vcpkg warned and silently cached nothing, so every run
+      # rebuilt wxWidgets from source (~10-30 min). The supported replacement is
+      # the plain 'files' backend pointed at a directory we persist ourselves
+      # with actions/cache below.
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
     steps:
       - uses: actions/checkout@v4
 
-      # Expose the ACTIONS_* tokens vcpkg's x-gha cache backend needs.
-      - name: Enable vcpkg GHA binary cache
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+      - name: Create vcpkg cache directory
+        shell: bash
+        run: mkdir -p "${{ github.workspace }}/vcpkg-cache"
 
-      # Linux: wxWebView needs WebKitGTK dev packages + GTK; plus ninja/pkg-config.
+      # Restore on the closest key, always save under a unique one: cache entries
+      # are immutable, so reusing a key would never pick up newly built ports.
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg-cache
+          key: vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-triplets/*.cmake') }}-${{ github.sha }}
+          restore-keys: |
+            vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-triplets/*.cmake') }}-
+            vcpkg-${{ matrix.os }}-
+
+      # Linux does not use vcpkg (see the ci-linux preset): wxWidgets and its GTK
+      # stack come from apt, and md4c falls back to FetchContent. That keeps the
+      # job to one compile instead of ~100 source builds, and stops us depending
+      # on gitlab.freedesktop.org, which throttles bulk archive downloads.
       - name: Install Linux system deps
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build pkg-config \
+            libwxgtk3.2-dev libwxgtk-webview3.2-dev \
             libgtk-3-dev libwebkit2gtk-4.1-dev libsecret-1-dev libnotify-dev
 
       - name: Install Ninja (macOS)

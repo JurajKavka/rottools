@@ -1,0 +1,104 @@
+---
+import type { Tool } from '../data/tools';
+
+interface Props {
+  tool: Tool;
+}
+
+const { tool } = Astro.props;
+---
+
+<article class="card">
+  <header>
+    <h2>{tool.displayName}</h2>
+    <p class="tagline">{tool.tagline}</p>
+  </header>
+
+  <p class="description">{tool.description}</p>
+
+  <ul class="downloads">
+    {
+      tool.downloads.map((download) => (
+        <li>
+          <a class="download" href={download.href} data-platform={download.platform}>
+            <span class="label">{download.label}</span>
+            <span class="note">{download.note}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="version">
+    Version {tool.version} &middot; <code>{tool.slug}</code>
+  </p>
+</article>
+
+<style>
+  .card {
+    background: var(--rd-surface);
+    border: var(--rd-rule-width) solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    padding: var(--rd-space-8);
+  }
+
+  h2 {
+    margin: 0;
+    border: 0;
+    padding: 0;
+  }
+
+  .tagline {
+    margin: var(--rd-space-1) 0 0;
+    color: var(--rd-ink-muted);
+  }
+
+  .description {
+    max-width: var(--site-measure);
+  }
+
+  .downloads {
+    list-style: none;
+    margin: var(--rd-space-6) 0 0;
+    padding: 0;
+    display: grid;
+    /* Buttons sit side by side when there's room and stack when there isn't,
+       with no breakpoint to maintain. */
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: var(--rd-space-3);
+  }
+
+  .download {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: var(--rd-space-3) var(--rd-space-4);
+    border: var(--rd-rule-width) solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    background: var(--rd-canvas);
+    color: var(--rd-ink);
+    text-decoration: none;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .download:hover {
+    border-color: var(--rd-accent);
+    color: var(--rd-ink);
+    transform: translateY(-1px);
+  }
+
+  .label {
+    font-weight: var(--rd-weight-medium);
+  }
+
+  .note {
+    font-size: var(--rd-size-small);
+    color: var(--rd-ink-muted);
+  }
+
+  .version {
+    margin: var(--rd-space-6) 0 0;
+    font-size: var(--rd-size-small);
+    color: var(--rd-ink-muted);
+  }
+</style>

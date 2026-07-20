@@ -57,18 +57,44 @@ Build/run a single shared component in isolation (`make help` lists them all):
 The other demos follow the same pattern: `run-htmlsource`, `run-mdsource`,
 `run-dirscan`, `run-md2html`, `run-helpers` (and `build-filedrop`).
 
-## Package a distributable
+## Installing on macOS
 
-| `make`     | Does                     | Equivalent CMake |
-|------------|--------------------------|------------------|
-| `make dmg` | macOS `.dmg` via CPack   | `cmake --build build && cd build && cpack -G DragNDrop` |
+The builds are ad-hoc signed — there is no paid Apple Developer ID and no
+notarization — so the first launch is blocked. macOS says it cannot verify the
+developer. Let it through once:
 
-On any OS, once configured, `cd build && cpack` produces
-`rotreader-<version>-<os>-<arch>.<ext>` (`.dmg` / `.deb`+`.tar.gz` / NSIS+`.zip`).
+1. Open the `.dmg` and drag **rotreader** to Applications.
+2. Double-click it. macOS offers *Move to Trash* or *Done* — press **Done**.
+   This step is required: the Open Anyway button in the next step does not appear
+   until the app has been blocked once and the dialog dismissed.
+3. Open **System Settings > Privacy & Security** and scroll to *Security*. A line
+   about rotreader being blocked now has an **Open Anyway** button.
+4. Click it, authenticate, then confirm **Open**.
 
-For a fully self-contained artifact (deps linked statically instead of against
-Homebrew/apt), configure with the vcpkg preset for your OS, e.g.
-`cmake --preset ci-macos` (requires `VCPKG_ROOT` set).
+macOS remembers the decision; later launches are normal. Right-click > Open no
+longer works — macOS 15 replaced it with the Privacy & Security route above.
+
+From a terminal the same thing is one command, run after dragging the app across:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/rotreader.app
+```
+
+### If it says "damaged" instead (it should not happen)
+
+> "rotreader" is damaged and can't be opened. You should move it to the Trash.
+
+That wording means the code signature is *invalid*, not merely unrecognized, and
+there is no Open Anyway button for it. It should not happen: the packaging
+re-signs the bundle after install for exactly this reason (see
+[cmake/RotToolsPackaging.cmake](cmake/RotToolsPackaging.cmake)) because
+`CPACK_STRIP_FILES` and install-time rpath rewriting both invalidate the ad-hoc
+signature the linker applies to arm64 binaries. If a build ever reports it
+again, the signature broke somewhere after that step:
+
+```sh
+codesign -vvv --deep --strict /Applications/rotreader.app
+```
 
 ## Versioning & releases
 

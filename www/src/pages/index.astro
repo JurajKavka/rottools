@@ -1,0 +1,53 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ToolCard from '../components/ToolCard.astro';
+import MacNote from '../components/MacNote.astro';
+import { tools } from '../data/tools';
+---
+
+<Layout
+  title="ℜ⛤𝔗 tools — small native desktop utilities"
+  description="A suite of small native desktop utilities for macOS, Windows and Linux. Built in C++ with wxWidgets. Free and open source."
+>
+  <section class="hero">
+    <div class="wrap">
+      <h1>Small native desktop tools.</h1>
+      <p class="lede">
+        No Electron, no telemetry, no account. Each tool is a single native
+        binary for macOS, Windows and Linux, built in C++ with wxWidgets and
+        released independently.
+      </p>
+    </div>
+  </section>
+
+  <section class="wrap tools">
+    {tools.map((tool) => <ToolCard tool={tool} />)}
+  </section>
+
+  <section class="wrap">
+    <MacNote />
+  </section>
+</Layout>
+
+<style>
+  .hero {
+    padding-block: var(--rd-space-12) var(--rd-space-8);
+  }
+
+  h1 {
+    margin: 0;
+  }
+
+  .lede {
+    max-width: var(--site-measure);
+    margin: var(--rd-space-5) 0 0;
+    font-size: 1.15rem;
+    color: var(--rd-ink-muted);
+  }
+
+  .tools {
+    display: grid;
+    gap: var(--rd-space-6);
+    margin-bottom: var(--rd-space-12);
+  }
+</style>

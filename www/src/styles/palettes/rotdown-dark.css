@@ -1,0 +1,65 @@
+/*
+ * Rotdown Dark — the warm neutral, inverted, blue accent. Kept off pure black so
+ * the accent has somewhere to sit.
+ *
+ * Values copied from rotdown/src/palettes/rotdown-dark.css.
+ *
+ * Applied two ways. The attribute rule is the theme toggle's explicit choice.
+ * The media query covers the no-JavaScript case, where nothing stamps
+ * data-theme and the OS preference is all we have; it is skipped when the
+ * visitor has explicitly chosen light. The values are repeated because CSS has
+ * no way to apply one declaration block to a selector and a media query at once
+ * — keep the two lists identical.
+ */
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --rd-canvas: #17171a;
+  --rd-surface: #201f24;
+  --rd-surface-strong: #2b2a30;
+  --rd-border: #34333a;
+
+  --rd-ink: #e6e4e0;
+  --rd-ink-muted: #a5a29b;
+  --rd-ink-faint: #74716b;
+
+  /* Lifted off the light-theme blue, which goes muddy on a dark canvas. */
+  --rd-accent: #3794ff;
+  --rd-accent-hover: #6cb6ff;
+  --rd-accent-soft: #1b2740;
+
+  --rd-mark-bg: #6b5a1c;
+  --rd-mark-ink: #f7f3e6;
+  --rd-selection-bg: #1e3a5f;
+  --rd-selection-ink: #f7f3e6;
+
+  /* Dark ink on the lighter accent — a white check would wash out. */
+  --rd-check-mark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%2317171a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.4l3 3 6-6.8'/></svg>");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --rd-canvas: #17171a;
+    --rd-surface: #201f24;
+    --rd-surface-strong: #2b2a30;
+    --rd-border: #34333a;
+
+    --rd-ink: #e6e4e0;
+    --rd-ink-muted: #a5a29b;
+    --rd-ink-faint: #74716b;
+
+    --rd-accent: #3794ff;
+    --rd-accent-hover: #6cb6ff;
+    --rd-accent-soft: #1b2740;
+
+    --rd-mark-bg: #6b5a1c;
+    --rd-mark-ink: #f7f3e6;
+    --rd-selection-bg: #1e3a5f;
+    --rd-selection-ink: #f7f3e6;
+
+    --rd-check-mark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%2317171a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.4l3 3 6-6.8'/></svg>");
+  }
+}

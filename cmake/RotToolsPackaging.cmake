@@ -82,6 +82,25 @@ function(rottools_package_app)
 
         install(TARGETS ${APP_TARGET} BUNDLE DESTINATION "." COMPONENT ${APP_EXE_NAME})
 
+        # Re-sign after installing. The linker gives every arm64 binary an ad-hoc
+        # signature, and both CPACK_STRIP_FILES (strip) and CMake's install-time
+        # rpath rewriting invalidate it. macOS rejects an invalidly signed app
+        # outright — "<app> is damaged and can't be opened", with no way past it —
+        # whereas a validly signed but un-notarized app gets the ordinary
+        # unidentified-developer prompt, which the user can clear via
+        # Privacy & Security > Open Anyway. Same ad-hoc identity ("-"), just
+        # applied last. Declared after install(TARGETS) because install rules run
+        # in declaration order.
+        install(CODE "
+            execute_process(
+                COMMAND codesign --force --deep --sign - \"\${CMAKE_INSTALL_PREFIX}/${APP_EXE_NAME}.app\"
+                RESULT_VARIABLE _rottools_codesign_result)
+            if(NOT _rottools_codesign_result EQUAL 0)
+                message(WARNING
+                    \"codesign failed (\${_rottools_codesign_result}); macOS will report the app as damaged\")
+            endif()
+        " COMPONENT ${APP_EXE_NAME})
+
     elseif(WIN32)
         set_target_properties(${APP_TARGET} PROPERTIES WIN32_EXECUTABLE TRUE)
         install(TARGETS ${APP_TARGET} RUNTIME DESTINATION "." COMPONENT ${APP_EXE_NAME})
@@ -134,7 +153,12 @@ function(rottools_package_app)
     else()
         set(CPACK_GENERATOR                "TGZ;DEB"      CACHE INTERNAL "")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${APP_VENDOR}" CACHE INTERNAL "")
-        # WebKitGTK (wxWebView engine) + GTK are depended on, not bundled.
+        # GTK, WebKitGTK (the wxWebView engine) and wxWidgets itself are depended
+        # on, not bundled. Let dpkg-shlibdeps read the linked binary and derive
+        # the list: hand-maintaining it means guessing exact package names, which
+        # drift across releases (Ubuntu 24.04's 64-bit time_t "t64" renames, for
+        # one). The hardcoded list stays as the fallback if shlibdeps is absent.
+        set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON CACHE INTERNAL "")
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "libwebkit2gtk-4.1-0, libgtk-3-0" CACHE INTERNAL "")
         set(CPACK_DEBIAN_PACKAGE_SECTION "utils"         CACHE INTERNAL "")
     endif()

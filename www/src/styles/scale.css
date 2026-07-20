@@ -1,0 +1,66 @@
+/*
+ * Everything a theme shares: type, spacing, lines. No colour lives here — that is
+ * a palette's whole job (src/palettes/), which is what makes a new theme a single
+ * file of variables rather than a fork of the stylesheet.
+ *
+ * Copied verbatim from the rotdown design system (rotdown/src/scale.css) so the
+ * site and the Markdown rotreader renders share one scale. Re-copy it rather
+ * than editing it here; site-only values belong in global.css.
+ */
+
+:root {
+  /* Type ------------------------------------------------------------------ */
+  --rd-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  --rd-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  --rd-font-size: 1.0625rem;
+  --rd-line-height: 1.65;
+  --rd-line-height-tight: 1.25;
+
+  --rd-weight-normal: 400;
+  --rd-weight-medium: 600;
+  --rd-weight-bold: 700;
+
+  /* Headings scale with the viewport at the top end, where a fixed size would
+     either shout on a phone or look timid on a wide window. */
+  --rd-size-h1: clamp(1.85rem, 1.45rem + 1.7vw, 2.55rem);
+  --rd-size-h2: clamp(1.45rem, 1.25rem + 0.9vw, 1.85rem);
+  --rd-size-h3: 1.3rem;
+  --rd-size-h4: 1.1rem;
+  --rd-size-h5: 1rem;
+  --rd-size-h6: 0.9rem;
+  --rd-size-small: 0.875em;
+
+  /* Space ------------------------------------------------------------------
+     A 4px grid, expressed in rem so it stays anchored to the root (1rem = 16px)
+     rather than drifting with whatever font size the surrounding block happens
+     to have. Every block-level gap in the theme comes from this scale — nothing
+     else invents its own number. */
+  --rd-space-1: 0.25rem; /*  4px */
+  --rd-space-2: 0.5rem; /*   8px */
+  --rd-space-3: 0.75rem; /* 12px */
+  --rd-space-4: 1rem; /*    16px */
+  --rd-space-5: 1.25rem; /* 20px */
+  --rd-space-6: 1.5rem; /*  24px */
+  --rd-space-8: 2rem; /*    32px */
+  --rd-space-12: 3rem; /*   48px */
+
+  --rd-block-gap: var(--rd-space-4); /*            16px between blocks */
+  --rd-heading-space-before: var(--rd-space-6); /* 24px above a heading */
+  --rd-heading-space-after: var(--rd-space-3); /*  12px below a heading */
+
+  --rd-measure: 80rem; /* 1280px */
+  --rd-page-padding-x: clamp(var(--rd-space-4), 5vw, var(--rd-space-12));
+  --rd-page-padding-y: clamp(var(--rd-space-6), 4vw, var(--rd-space-12));
+
+  /* Lines and corners ------------------------------------------------------ */
+  --rd-radius: 6px;
+  --rd-rule-width: 1px;
+  --rd-quote-rule-width: 3px;
+
+  /* Resolves against whatever --rd-accent the palette sets. */
+  --rd-focus-ring: 2px solid var(--rd-accent);
+  --rd-focus-offset: 2px;
+}

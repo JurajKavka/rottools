@@ -1,0 +1,36 @@
+/*
+ * Rotdown Light — warm near-neutral paper, blue accent. A markdown reader is a
+ * place to sit and read; pure #fff on #000 is a place to squint.
+ *
+ * The accent is the whole colour budget: links, hover, focus ring, checked task
+ * box. Nothing has a colour of its own.
+ *
+ * Values copied from rotdown/src/palettes/rotdown-light.css. The only change is
+ * the selector: the site's theme toggle stamps data-theme on <html>, so light is
+ * both the default and an explicit choice.
+ */
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --rd-canvas: #fdfdfb;
+  --rd-surface: #f3f2ee;
+  --rd-surface-strong: #e9e7e1;
+  --rd-border: #e2e0d9;
+
+  --rd-ink: #1e1d1a;
+  --rd-ink-muted: #605e56;
+  --rd-ink-faint: #8b887e;
+
+  --rd-accent: #0078d4;
+  --rd-accent-hover: #005a9e;
+  --rd-accent-soft: #e8eff9;
+
+  --rd-mark-bg: #fbeaa8;
+  --rd-mark-ink: var(--rd-ink);
+  --rd-selection-bg: #cfe0f6;
+  --rd-selection-ink: var(--rd-ink);
+
+  --rd-check-mark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%23fdfdfb' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.4l3 3 6-6.8'/></svg>");
+}

@@ -4,6 +4,13 @@
 
 This project is written in C++20.
 
+## Git — never commit or push on your own
+
+Never run `git commit` or `git push` unless the user asks for it in that message. Make the
+edits, then stop and report what changed and why. The user reviews the diff first and decides
+when it gets committed. "Fix X" is a request to change files, not a request to commit them.
+This also applies after a green pipeline or a successful build — those are not approval.
+
 ## Build system
 
 CMake monorepo (`rottools` suite). The umbrella [CMakeLists.txt](CMakeLists.txt) builds the
