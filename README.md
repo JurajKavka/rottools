@@ -57,19 +57,6 @@ Build/run a single shared component in isolation (`make help` lists them all):
 The other demos follow the same pattern: `run-htmlsource`, `run-mdsource`,
 `run-dirscan`, `run-md2html`, `run-helpers` (and `build-filedrop`).
 
-## Package a distributable
-
-| `make`     | Does                     | Equivalent CMake |
-|------------|--------------------------|------------------|
-| `make dmg` | macOS `.dmg` via CPack   | `cmake --build build && cd build && cpack -G DragNDrop` |
-
-On any OS, once configured, `cd build && cpack` produces
-`rotreader-<version>-<os>-<arch>.<ext>` (`.dmg` / `.deb`+`.tar.gz` / NSIS+`.zip`).
-
-For a fully self-contained artifact (deps linked statically instead of against
-Homebrew/apt), configure with the vcpkg preset for your OS, e.g.
-`cmake --preset ci-macos` (requires `VCPKG_ROOT` set).
-
 ## Installing on macOS
 
 The builds are ad-hoc signed — there is no paid Apple Developer ID and no
