@@ -11,6 +11,13 @@ edits, then stop and report what changed and why. The user reviews the diff firs
 when it gets committed. "Fix X" is a request to change files, not a request to commit them.
 This also applies after a green pipeline or a successful build — those are not approval.
 
+**Never push to `main`.** Not directly, not via `git push origin HEAD:main`, not with a force
+push, and not even when the user says "commit and push" — that means the branch that is
+currently checked out, never `main`. `main` is protected and takes changes only through a pull
+request. If a plan you wrote mentions pushing to `main` and the user approves the plan, that is
+still not approval to push to `main`; push the current branch and open a PR instead. If a push
+prints a "Bypassed rule violations" warning, stop and report it rather than continuing.
+
 ## Build system
 
 CMake monorepo (`rottools` suite). The umbrella [CMakeLists.txt](CMakeLists.txt) builds the
