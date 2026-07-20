@@ -28,9 +28,16 @@ jobs:
           pattern: rotreader-*
           merge-multiple: true
 
+      # The tag already carries the tool name (rotreader-v0.1.0), so the bare
+      # version is what is left after stripping that prefix. GitHub expressions
+      # have no replace(), hence a step rather than an inline template.
+      - name: Derive version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#rotreader-}" >> "$GITHUB_OUTPUT"
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "rotreader ${{ github.ref_name }}"
+          name: "rotreader-rottools-${{ steps.ver.outputs.version }}"
           files: dist/*
           generate_release_notes: true
