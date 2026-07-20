@@ -1,17 +1,29 @@
 ---
-// macOS builds are ad-hoc signed, so Gatekeeper claims a downloaded .app is
-// "damaged". Say so up front: someone who hits that warning with no warning
-// assumes the app is broken and leaves. Mirrors the README section.
+// The builds are ad-hoc signed, not notarized, so macOS blocks the first launch.
+// Say so on the download page: someone who hits an unexplained refusal assumes
+// the app is broken and leaves. Mirrors the README section.
 ---
 
 <aside class="note">
   <h3>First launch on macOS</h3>
   <p>
-    macOS may say <em>&ldquo;rotreader is damaged and can&rsquo;t be opened&rdquo;</em>. It
-    isn&rsquo;t. The builds aren&rsquo;t signed with a paid Apple Developer
-    certificate, so macOS blocks them by default. Clear the quarantine flag once,
-    after dragging the app to Applications:
+    These builds aren&rsquo;t signed with a paid Apple Developer certificate, so
+    macOS blocks the first launch and says it can&rsquo;t verify the developer.
+    Let it through once and later launches are normal:
   </p>
+  <ol>
+    <li>
+      Double-click rotreader. macOS offers <em>Move to Trash</em> or
+      <em>Done</em> — press <strong>Done</strong>. This step is required: it is
+      what makes the button in step&nbsp;3 appear.
+    </li>
+    <li>
+      Open <strong>System Settings &rsaquo; Privacy &amp; Security</strong> and
+      scroll to <em>Security</em>.
+    </li>
+    <li>Next to the note about rotreader, click <strong>Open Anyway</strong>.</li>
+  </ol>
+  <p class="terminal">Or, from a terminal:</p>
   <pre><code>xattr -dr com.apple.quarantine /Applications/rotreader.app</code></pre>
 </aside>
 
@@ -33,6 +45,22 @@
     margin: 0 0 var(--rd-space-3);
     max-width: var(--site-measure);
     color: var(--rd-ink-muted);
+  }
+
+  ol {
+    margin: 0 0 var(--rd-space-4);
+    padding-inline-start: var(--rd-space-6);
+    max-width: var(--site-measure);
+    color: var(--rd-ink-muted);
+  }
+
+  li + li {
+    margin-block-start: var(--rd-space-1);
+  }
+
+  .terminal {
+    margin-bottom: var(--rd-space-2);
+    font-size: var(--rd-size-small);
   }
 
   pre {

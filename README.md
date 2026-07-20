@@ -70,34 +70,44 @@ For a fully self-contained artifact (deps linked statically instead of against
 Homebrew/apt), configure with the vcpkg preset for your OS, e.g.
 `cmake --preset ci-macos` (requires `VCPKG_ROOT` set).
 
-## Installing on macOS ("rotreader is damaged")
+## Installing on macOS
 
-macOS refuses to launch a downloaded `.app` with:
+The builds are ad-hoc signed — there is no paid Apple Developer ID and no
+notarization — so the first launch is blocked. macOS says it cannot verify the
+developer. Let it through once:
+
+1. Open the `.dmg` and drag **rotreader** to Applications.
+2. Double-click it. macOS offers *Move to Trash* or *Done* — press **Done**.
+   This step is required: the Open Anyway button in the next step does not appear
+   until the app has been blocked once and the dialog dismissed.
+3. Open **System Settings > Privacy & Security** and scroll to *Security*. A line
+   about rotreader being blocked now has an **Open Anyway** button.
+4. Click it, authenticate, then confirm **Open**.
+
+macOS remembers the decision; later launches are normal. Right-click > Open no
+longer works — macOS 15 replaced it with the Privacy & Security route above.
+
+From a terminal the same thing is one command, run after dragging the app across:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/rotreader.app
+```
+
+### If it says "damaged" instead (it should not happen)
 
 > "rotreader" is damaged and can't be opened. You should move it to the Trash.
 
-Nothing is damaged. The builds are ad-hoc signed (no Apple Developer ID, no
-notarization), and anything a browser downloads gets tagged
-`com.apple.quarantine`. A quarantined app that Gatekeeper can't verify produces
-that misleading wording. Clear the tag once, after dragging the app out of the
-`.dmg`:
+That wording means the code signature is *invalid*, not merely unrecognized, and
+there is no Open Anyway button for it. It should not happen: the packaging
+re-signs the bundle after install for exactly this reason (see
+[cmake/RotToolsPackaging.cmake](cmake/RotToolsPackaging.cmake)) because
+`CPACK_STRIP_FILES` and install-time rpath rewriting both invalidate the ad-hoc
+signature the linker applies to arm64 binaries. If a build ever reports it
+again, the signature broke somewhere after that step:
 
 ```sh
-xattr -dr com.apple.quarantine /Applications/rotreader.app
+codesign -vvv --deep --strict /Applications/rotreader.app
 ```
-
-If it still refuses, re-apply an ad-hoc signature and clear the tag again:
-
-```sh
-codesign --force --deep --sign - /Applications/rotreader.app
-xattr -dr com.apple.quarantine /Applications/rotreader.app
-```
-
-Two things that do *not* help: right-click → Open (that only covers the milder
-"unidentified developer" case, and macOS 15 dropped it in favour of System
-Settings > Privacy & Security > "Open Anyway"), and downloading from a GitHub
-Release rather than a CI artifact — the `.dmg` is identical either way and
-quarantine is applied on download.
 
 ## Versioning & releases
 
