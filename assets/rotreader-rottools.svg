@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="2048"
+   height="2048"
+   viewBox="0 0 541.86666 541.86666"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="rotreader-rottools.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+   inkscape:export-filename="logo.png"
+   inkscape:export-xdpi="48"
+   inkscape:export-ydpi="48"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showguides="true"
+     inkscape:zoom="0.19674822"
+     inkscape:cx="1514.6262"
+     inkscape:cy="1443.4692"
+     inkscape:window-width="1392"
+     inkscape:window-height="969"
+     inkscape:window-x="0"
+     inkscape:window-y="30"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer3"
+     inkscape:export-bgcolor="#ffffffff" />
+  <defs
+     id="defs1">
+    <rect
+       x="1417.8099"
+       y="1455.9753"
+       width="1182.9901"
+       height="856.75653"
+       id="rect21" />
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter23"
+       x="-0.14378713"
+       y="-0.7298202"
+       width="1.2875743"
+       height="2.4596404">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="32.463935"
+         id="feGaussianBlur23" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter25"
+       x="-0.14212856"
+       y="-0.15598296"
+       width="1.2842571"
+       height="1.2864456">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="3.5812542"
+         id="feGaussianBlur25" />
+    </filter>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="display:inline;opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.529167;stroke-dasharray:none;stroke-opacity:0.444653"
+       id="rect1"
+       width="541.86664"
+       height="541.86664"
+       x="1.4241537e-05"
+       y="1.4241537e-05"
+       ry="26.458334" />
+    <rect
+       style="display:inline;opacity:0.74123989;fill:#0000ff;fill-opacity:1;stroke:#ffffff;stroke-width:0.529167;stroke-dasharray:none;stroke-opacity:0.444653"
+       id="rect6"
+       width="541.86664"
+       height="541.86664"
+       x="1.4241537e-05"
+       y="1.4241537e-05"
+       ry="26.458334" />
+    <rect
+       style="opacity:0.38005391;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.529167;filter:url(#filter23)"
+       id="rect7"
+       width="541.86664"
+       height="106.75704"
+       x="0"
+       y="-7.1054274e-15"
+       ry="0" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Pentagram"
+     style="display:inline">
+    <g
+       inkscape:groupmode="layer"
+       id="layer3"
+       inkscape:label="Text">
+      <text
+         xml:space="preserve"
+         transform="scale(0.26458333)"
+         id="text21"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:96px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';white-space:pre;shape-inside:url(#rect21);display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:32;stroke-dasharray:none;stroke-opacity:0.444653"
+         inkscape:label="text21" />
+      <path
+         d="m 446.53477,243.7048 h -80.88876 l -19.96621,79.60887 h 72.18553 v 61.43449 h -87.54415 l -23.29392,90.61588 h -61.69047 l 22.78196,-90.61588 h -67.57794 l -22.78196,90.61588 H 115.04447 L 138.0824,384.74816 H 68.968595 V 323.31367 H 153.44103 L 173.15126,243.7048 H 98.14998 v -61.17852 h 90.3599 l 22.01403,-88.312085 h 62.71438 l -22.01403,88.312085 h 67.32197 l 22.27001,-88.312085 h 62.71438 l -22.27001,88.312085 h 65.27416 z M 304.21152,243.19285 H 235.60966 L 215.1315,324.0816 h 68.85783 z"
+         id="text23"
+         style="font-weight:bold;font-size:524.241px;-inkscape-font-specification:'sans-serif Bold';opacity:0.765499;fill:#ffffff;stroke-width:87.3743;stroke-opacity:0.444653"
+         inkscape:label="text23"
+         transform="scale(1.0511409,0.95134725)"
+         aria-label="#" />
+    </g>
+    <path
+       style="display:none;opacity:0.525606;mix-blend-mode:normal;fill:none;stroke:#000000;stroke-width:31.75;stroke-dasharray:none;filter:url(#filter25)"
+       d="M 315.36287,83.614186 440.27807,468.06375 113.24569,230.46083 h 404.2343 L 190.44756,468.06375 Z"
+       id="path6"
+       inkscape:label="path6" />
+  </g>
+</svg>

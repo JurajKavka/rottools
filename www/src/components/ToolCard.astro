@@ -6,12 +6,20 @@ interface Props {
 }
 
 const { tool } = Astro.props;
+
+// Same base-prefix handling as Layout.astro — the site is served from /rottools.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <article class="card">
   <header>
-    <h2>{tool.displayName}</h2>
-    <p class="tagline">{tool.tagline}</p>
+    {/* alt="" — the tool name sits right beside it, so announcing the icon
+        too would just repeat the heading for screen-reader users. */}
+    <img class="icon" src={`${base}/${tool.icon}`} alt="" width="56" height="56" />
+    <div>
+      <h2>{tool.displayName}</h2>
+      <p class="tagline">{tool.tagline}</p>
+    </div>
   </header>
 
   <p class="description">{tool.description}</p>
@@ -40,6 +48,20 @@ const { tool } = Astro.props;
     border: var(--rd-rule-width) solid var(--rd-border);
     border-radius: var(--rd-radius);
     padding: var(--rd-space-8);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: var(--rd-space-4);
+  }
+
+  .icon {
+    /* Fixed size: the art already carries its own rounded corners, so no
+       border-radius here — it would clip them. */
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
   }
 
   h2 {

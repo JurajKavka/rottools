@@ -5,7 +5,10 @@
   "private": true,
   "description": "Marketing and download site for the ROT tools suite.",
   "scripts": {
+    "copy-assets": "node scripts/copy-assets.mjs",
+    "predev": "npm run copy-assets",
     "dev": "astro dev",
+    "prebuild": "npm run copy-assets",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check"

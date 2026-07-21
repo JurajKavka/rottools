@@ -34,6 +34,10 @@ rottools_package_app(
     VERSION      "${ROTREADER_VERSION}"
     VENDOR       "Juraj Kavka"
     DESCRIPTION  "A native Markdown viewer"
-    ICON_PNG     "${CMAKE_CURRENT_SOURCE_DIR}/assets/logo.png"
+    # Branding lives in the repo-root assets/. The packaged icon is the opaque
+    # variant: the transparent master is right for the website, but the .app
+    # bundle wants a flat, fully opaque tile. rottools_SOURCE_DIR is set by
+    # project() in the umbrella file.
+    ICON_PNG     "${rottools_SOURCE_DIR}/assets/rotreader-rottools-notransparent.png"
     DESKTOP_CATEGORIES "Utility;TextTools;"
 )

@@ -54,7 +54,12 @@ called from each app's `CMakeLists.txt`. `cd build && cpack` (or `make dmg`) pro
 Version is single-sourced from `apps/<tool>/VERSION` and flows into a generated `version.h`,
 the macOS `Info.plist` ([packaging/macos/Info.plist.in](apps/rotreader/packaging/macos/Info.plist.in)),
 and the package name. The macOS `.app` icon is generated from
-`apps/rotreader/assets/logo.png` (1024×1024 master) into `AppIcon.icns` at build time.
+`assets/rotreader-rottools-notransparent.png` (1024×1024, opaque) into `AppIcon.icns` at build
+time. The transparent `assets/rotreader-rottools.png` is the website/Linux variant.
+
+Shared branding lives in the repo-root [assets/](assets/) — the app icons and the website read
+the same files. `www/public/` is generated from it by `www/scripts/copy-assets.mjs` (wired as
+npm `predev`/`prebuild`) and is gitignored, so never put a source file in `www/public/`.
 
 Two distinct names: `EXE_NAME` (`rotreader`) is the CMake target / binary / `CFBundleExecutable`;
 `DISPLAY_NAME` (`ℜ⛤𝔗 reader`) is the user-facing `.app`/`CFBundleName`/`.dmg` volume name.

@@ -11,8 +11,11 @@
  * packaging ever changes.
  */
 
-/** Where the release pipeline rsyncs packages to. No trailing slash. */
-export const DOWNLOAD_BASE = 'https://downloads.rottools.example';
+/**
+ * Packages are served straight off GitHub Releases — the assets that
+ * .github/workflows/release-<tool>.yml uploads. No separate download host.
+ */
+export const REPO_URL = 'https://github.com/JurajKavka/rottools';
 
 export type Platform = 'macos' | 'windows' | 'linux';
 
@@ -30,6 +33,11 @@ export interface Tool {
   slug: string;
   /** User-facing name (matches DISPLAY_NAME in the CMake packaging call). */
   displayName: string;
+  /**
+   * Icon file name inside the repo-root assets/ folder. copy-assets.mjs mirrors
+   * that folder into public/, so the file is served at <base>/<icon>.
+   */
+  icon: string;
   tagline: string;
   description: string;
   version: string;
@@ -40,8 +48,12 @@ function buildFileName(slug: string, version: string, os: string, arch: string, 
   return `${slug}-${version}-${os}-${arch}.${ext}`;
 }
 
-function downloadUrl(slug: string, file: string): string {
-  return `${DOWNLOAD_BASE}/${slug}/${file}`;
+/**
+ * Release tags are app-prefixed (`rotreader-v0.1.0`) so each tool versions
+ * independently — see the `tags:` filter in release-<tool>.yml.
+ */
+function downloadUrl(slug: string, version: string, file: string): string {
+  return `${REPO_URL}/releases/download/${slug}-v${version}/${file}`;
 }
 
 const ROTREADER_VERSION = '0.1.0';
@@ -50,6 +62,7 @@ export const tools: Tool[] = [
   {
     slug: 'rotreader',
     displayName: 'ℜ⛤𝔗 reader',
+    icon: 'rotreader-rottools-accent.svg',
     tagline: 'A native Markdown viewer.',
     description:
       'Source panels show the raw Markdown and the generated HTML side by side. Rendering happens locally in a native WebView — nothing is uploaded anywhere.',
@@ -61,6 +74,7 @@ export const tools: Tool[] = [
         note: 'Apple Silicon · .dmg',
         href: downloadUrl(
           'rotreader',
+          ROTREADER_VERSION,
           buildFileName('rotreader', ROTREADER_VERSION, 'macos', 'arm64', 'dmg'),
         ),
       },
@@ -70,6 +84,7 @@ export const tools: Tool[] = [
         note: '64-bit · installer',
         href: downloadUrl(
           'rotreader',
+          ROTREADER_VERSION,
           buildFileName('rotreader', ROTREADER_VERSION, 'windows', 'amd64', 'exe'),
         ),
       },
@@ -79,6 +94,7 @@ export const tools: Tool[] = [
         note: 'Debian / Ubuntu · .deb',
         href: downloadUrl(
           'rotreader',
+          ROTREADER_VERSION,
           buildFileName('rotreader', ROTREADER_VERSION, 'linux', 'x86_64', 'deb'),
         ),
       },

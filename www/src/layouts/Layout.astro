@@ -9,6 +9,12 @@ interface Props {
 
 const { title, description } = Astro.props;
 const year = new Date().getFullYear();
+
+// The site lives under a path prefix on GitHub Pages (/rottools). Build every
+// internal link from BASE_URL instead of writing "/..." by hand. BASE_URL may
+// or may not carry a trailing slash depending on config, so strip it first.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const ogImage = new URL(`${base}/rottools-logo.png`, Astro.site);
 ---
 
 <!doctype html>
@@ -18,10 +24,10 @@ const year = new Date().getFullYear();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="icon" type="image/png" href={`${base}/rottools-logo.png`} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content="/logo.png" />
+    <meta property="og:image" content={ogImage} />
     <meta property="og:type" content="website" />
     <meta name="generator" content={Astro.generator} />
 
@@ -38,7 +44,7 @@ const year = new Date().getFullYear();
   <body>
     <header class="site-header">
       <div class="wrap header-inner">
-        <a class="brand" href="/">ℜ⛤𝔗 tools</a>
+        <a class="brand" href={`${base}/`}>ℜ⛤𝔗 tools</a>
         <nav>
           <a href="https://github.com/JurajKavka/rottools">Source</a>
           <ThemeToggle />
