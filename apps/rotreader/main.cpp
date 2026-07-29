@@ -1,3 +1,4 @@
+#include <wx/filename.h>
 #include <wx/image.h>
 #include <wx/wx.h>
 
@@ -6,6 +7,10 @@
 class MyApp : public wxApp {
    public:
     bool OnInit() override;
+    void MacOpenFiles(const wxArrayString& fileNames) override;
+
+   private:
+    MainFrame* m_frame = nullptr;
 };
 
 wxIMPLEMENT_APP(MyApp);
@@ -13,7 +18,19 @@ wxIMPLEMENT_APP(MyApp);
 bool MyApp::OnInit() {
     wxImage::AddHandler(new wxPNGHandler());
 
-    MainFrame *frame = new MainFrame(nullptr);
-    frame->Show(true);
+    m_frame = new MainFrame(nullptr);
+    m_frame->Show(true);
+
+    if (argc > 1) {
+        m_frame->OpenMarkdownFile(wxFileName(argv[1]));
+    }
+
     return true;
+}
+
+void MyApp::MacOpenFiles(const wxArrayString& fileNames) {
+    if (fileNames.IsEmpty()) {
+        return;
+    }
+    m_frame->OpenMarkdownFile(wxFileName(fileNames[0]));
 }
