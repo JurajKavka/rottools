@@ -39,7 +39,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_sourceSplitter =
         new wxSplitterWindow(m_rightSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_htmlSourcePanel = new HtmlSourcePanel(m_sourceSplitter);
-    m_markdownSourcePanel = new MarkdownSourcePanel(m_sourceSplitter);
+    m_markdownSourcePanel =
+        new MarkdownSourcePanel(m_sourceSplitter, std::bind_front(&MainFrame::HandleMarkdownSourceSave, this));
     m_rightSplitter->SetMinimumPaneSize(100);
     m_sourceSplitter->SetMinimumPaneSize(100);
 
@@ -252,7 +253,7 @@ void MainFrame::RefreshWatchedPaths() {
 
 void MainFrame::HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData) {
     m_htmlSourcePanel->ShowHtml(markdownPreviewData.html);
-    m_markdownSourcePanel->ShowMarkdown(markdownPreviewData.markdown);
+    m_markdownSourcePanel->ShowMarkdown(markdownPreviewData.markdown, markdownPreviewData.scrollBehavior);
     statusBar->SetStatusText(markdownPreviewData.fileName.GetAbsolutePath());
 }
 
@@ -260,4 +261,26 @@ void MainFrame::HandleMarkdownError(const wxString& error) {
     wxString message = error.IsEmpty() ? wxString("Error parsing markdown!") : error;
     wxMessageBox(message, "Error", wxICON_ERROR);
     statusBar->SetStatusText(wxString(""));
+}
+
+void MainFrame::HandleMarkdownSourceSave(const wxString& markdown) {
+    if (!m_currentFile.IsOk()) {
+        return;
+    }
+    if (m_currentFile.FileExists() && !m_currentFile.IsFileWritable()) {
+        wxMessageBox(wxString("No permission to write file: ") + m_currentFile.GetFullPath(), "Error", wxICON_ERROR);
+        return;
+    }
+
+    const wxScopedCharBuffer utf8 = markdown.utf8_str();
+    std::ofstream out(m_currentFile.GetFullPath().fn_str(), std::ios::binary | std::ios::trunc);
+    if (out) {
+        out.write(utf8.data(), static_cast<std::streamsize>(utf8.length()));
+        out.close();
+    }
+    if (!out) {
+        wxMessageBox(wxString("Could not save file: ") + m_currentFile.GetFullPath(), "Error", wxICON_ERROR);
+        return;
+    }
+    statusBar->SetStatusText(wxString("Saved ") + m_currentFile.GetFullPath());
 }

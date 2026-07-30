@@ -1,6 +1,10 @@
 #include "MarkdownSourcePanel.h"
 
-MarkdownSourcePanel::MarkdownSourcePanel(wxWindow* parent) : MarkdownSourcePanelWx(parent) {
+#include <algorithm>
+#include <utility>
+
+MarkdownSourcePanel::MarkdownSourcePanel(wxWindow* parent, OnSaveCallback onSaveCallback)
+    : MarkdownSourcePanelWx(parent), m_onSaveCallback(std::move(onSaveCallback)) {
     m_styledTextCtrl->SetLexer(wxSTC_LEX_MARKDOWN);
 
     // Monospace font for every style; StyleClearAll propagates the default
@@ -34,12 +38,33 @@ MarkdownSourcePanel::MarkdownSourcePanel(wxWindow* parent) : MarkdownSourcePanel
     // margin the base panel enables
     m_styledTextCtrl->SetMarginWidth(1, 0);
 
-    // The panel is a viewer; ShowMarkdown() lifts read-only around updates
-    m_styledTextCtrl->SetReadOnly(true);
+    m_styledTextCtrl->SetEOLMode(wxSTC_EOL_LF);
+
+    m_styledTextCtrl->Bind(wxEVT_KEY_DOWN, &MarkdownSourcePanel::HandleKeyDown, this);
 }
 
-void MarkdownSourcePanel::ShowMarkdown(const wxString& markdown) {
-    m_styledTextCtrl->SetReadOnly(false);
+void MarkdownSourcePanel::ShowMarkdown(const wxString& markdown, ScrollBehavior scrollBehavior) {
+    if (scrollBehavior == ScrollBehavior::ResetToTop) {
+        m_styledTextCtrl->SetText(markdown);
+        return;
+    }
+
+    const int caret = m_styledTextCtrl->GetCurrentPos();
+    const int firstVisibleLine = m_styledTextCtrl->GetFirstVisibleLine();
+
     m_styledTextCtrl->SetText(markdown);
-    m_styledTextCtrl->SetReadOnly(true);
+
+    m_styledTextCtrl->GotoPos(std::min(caret, m_styledTextCtrl->GetLength()));
+    m_styledTextCtrl->SetFirstVisibleLine(firstVisibleLine);
+}
+
+void MarkdownSourcePanel::HandleKeyDown(wxKeyEvent& event) {
+    if (event.GetKeyCode() == 'S' && event.CmdDown() && !event.ShiftDown() && !event.AltDown()) {
+        if (m_onSaveCallback) {
+            m_onSaveCallback(m_styledTextCtrl->GetText());
+        }
+        m_styledTextCtrl->SetSavePoint();
+        return;
+    }
+    event.Skip();
 }
