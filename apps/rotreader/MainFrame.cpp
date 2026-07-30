@@ -88,7 +88,7 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
         "Open Markdown File",  // Dialog Title
         "",                    // Default directory (empty means current)
         "",                    // Default filename
-        "Markdown files (*.md;*.markdown)|*.md;*.markdown|All files (*.*)|*.*",  // File extensions filter
+        "Markdown files (*.md;*.markdown)|*.md;*.markdown",  // File extensions filter
         wxFD_OPEN | wxFD_FILE_MUST_EXIST  // Flags: Open mode & force file existence
     );
 
@@ -196,19 +196,30 @@ MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavio
 }
 
 void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
-    m_currentFile = filePath;
+    wxFileName absolutePath(filePath);
+    absolutePath.MakeAbsolute();
+
+    if (!absolutePath.FileExists()) {
+        wxMessageBox(wxString("File does not exist: ") + absolutePath.GetFullPath(), "Error", wxICON_ERROR);
+        return;
+    }
+    if (!absolutePath.IsFileReadable()) {
+        wxMessageBox(wxString("No permission to read file: ") + absolutePath.GetFullPath(), "Error", wxICON_ERROR);
+        return;
+    }
+    m_currentFile = absolutePath;
     RefreshWatchedPaths();
     // Follow the browser to the opened file's directory (drag&drop, the open
     // dialog, or a file picked elsewhere), unless it is already shown. This is
     // deliberately here and not in HandleMarkdownReady: a live reload after an
     // external save re-parses through LoadFile directly, and must not drag the
     // browser back to the document's folder while the user browses elsewhere.
-    if (!m_fileBrowserPanel->IsShowingDir(filePath.GetPath())) {
-        m_fileBrowserPanel->ListDir(filePath.GetPath());
+    if (!m_fileBrowserPanel->IsShowingDir(absolutePath.GetPath())) {
+        m_fileBrowserPanel->ListDir(absolutePath.GetPath());
     }
     statusBar->SetStatusText(wxString("Loading ..."));
     // A different file: start at the top (the ScrollBehavior default).
-    m_markdownPreviewPanel->LoadFile(filePath, GetPreviewOptions());
+    m_markdownPreviewPanel->LoadFile(absolutePath, GetPreviewOptions());
 }
 
 void MainFrame::ReloadOpenDocument() {
