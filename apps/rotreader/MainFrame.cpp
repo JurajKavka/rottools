@@ -88,7 +88,7 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
         "Open Markdown File",  // Dialog Title
         "",                    // Default directory (empty means current)
         "",                    // Default filename
-        "Markdown files (*.md;*.markdown)|*.md;*.markdown|All files (*.*)|*.*",  // File extensions filter
+        "Markdown files (*.md;*.markdown)|*.md;*.markdown",  // File extensions filter
         wxFD_OPEN | wxFD_FILE_MUST_EXIST  // Flags: Open mode & force file existence
     );
 
