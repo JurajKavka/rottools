@@ -1,6 +1,7 @@
 #include "MarkdownSourcePanel.h"
 
-MarkdownSourcePanel::MarkdownSourcePanel(wxWindow* parent) : MarkdownSourcePanelWx(parent) {
+MarkdownSourcePanel::MarkdownSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback)
+    : MarkdownSourcePanelWx(parent), m_onCloseCallback(std::move(onCloseCallback)) {
     m_styledTextCtrl->SetLexer(wxSTC_LEX_MARKDOWN);
 
     // Monospace font for every style; StyleClearAll propagates the default
@@ -36,10 +37,18 @@ MarkdownSourcePanel::MarkdownSourcePanel(wxWindow* parent) : MarkdownSourcePanel
 
     // The panel is a viewer; ShowMarkdown() lifts read-only around updates
     m_styledTextCtrl->SetReadOnly(true);
+
+    m_closeButton->Bind(wxEVT_BUTTON, &MarkdownSourcePanel::HandleCloseButtonClick, this);
 }
 
 void MarkdownSourcePanel::ShowMarkdown(const wxString& markdown) {
     m_styledTextCtrl->SetReadOnly(false);
     m_styledTextCtrl->SetText(markdown);
     m_styledTextCtrl->SetReadOnly(true);
+}
+
+void MarkdownSourcePanel::HandleCloseButtonClick(wxCommandEvent& event) {
+    if (m_onCloseCallback) {
+        m_onCloseCallback();
+    }
 }

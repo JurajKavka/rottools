@@ -38,8 +38,14 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
                                  std::bind_front(&MainFrame::HandleMarkdownError, this));
     m_sourceSplitter =
         new wxSplitterWindow(m_rightSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
-    m_htmlSourcePanel = new HtmlSourcePanel(m_sourceSplitter);
-    m_markdownSourcePanel = new MarkdownSourcePanel(m_sourceSplitter);
+    m_htmlSourcePanel = new HtmlSourcePanel(m_sourceSplitter, [this] {
+        m_htmlSourcePanel->Hide();
+        ApplySourcePanelVisibility();
+    });
+    m_markdownSourcePanel = new MarkdownSourcePanel(m_sourceSplitter, [this] {
+        m_markdownSourcePanel->Hide();
+        ApplySourcePanelVisibility();
+    });
     m_rightSplitter->SetMinimumPaneSize(100);
     m_sourceSplitter->SetMinimumPaneSize(100);
 
@@ -153,6 +159,7 @@ void MainFrame::ApplySourcePanelVisibility() {
     m_markdownSourcePanel->Hide();
 
     if (!showHtml && !showMarkdown) {
+        Layout();
         return;
     }
 
@@ -167,6 +174,8 @@ void MainFrame::ApplySourcePanelVisibility() {
         m_sourceSplitter->Initialize(sourceView);
     }
     m_rightSplitter->SplitVertically(m_markdownPreviewPanel, m_sourceSplitter);
+
+    Layout();
 }
 
 // Fills the (empty) Theme submenu from the CssThemes.h table, one radio item per
