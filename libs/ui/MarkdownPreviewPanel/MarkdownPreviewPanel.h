@@ -28,6 +28,7 @@ struct MarkdownPreviewData {
     const wxString& markdown;
     /// The file the markdown was read from
     const wxFileName& fileName;
+    ScrollBehavior scrollBehavior;
 };
 
 /**
