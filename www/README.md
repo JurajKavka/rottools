@@ -12,6 +12,7 @@ Run these from `www/`:
 |-------------------|-----------------------------------------------|
 | `npm install`     | Install dependencies (first time only)        |
 | `npm run dev`     | Dev server with live reload, `localhost:4321`  |
+| `npm start`       | Same, and opens the browser for you            |
 | `npm run build`   | Production build into `dist/`                  |
 | `npm run preview` | Serve `dist/` locally to check the real output |
 | `npm run check`   | Type-check `.astro` and `.ts` files            |
@@ -21,7 +22,8 @@ Run these from `www/`:
 ```
 www/
   astro.config.mjs        # static output, directory-style URLs
-  public/                 # copied verbatim: logo.svg, logo.png
+  public/                 # copied verbatim. GENERATED — do not edit by hand:
+                          #   make web-icons   (from docs/graphics/rottools/)
   src/
     data/tools.ts         # THE place to edit tools, versions, download URLs
     layouts/Layout.astro  # <head>, header, footer, global CSS
@@ -69,11 +71,71 @@ Download file names are built to match CPack's `CPACK_PACKAGE_FILE_NAME` from
 
 If the packaging naming changes, update `buildFileName()` to match.
 
-## Before going live
+## Publishing
 
-- `DOWNLOAD_BASE` in `src/data/tools.ts` is a placeholder
-  (`https://downloads.rottools.example`). Point it at the real download server.
-- `site` in `astro.config.mjs` is a placeholder too. It is used for absolute
-  URLs in metadata, so set it before publishing.
-- The download links are constructed, not verified. Until the rsync step exists
-  and has run, they will 404.
+Deployed to **https://jurajkavka.github.io/rottools/** by
+[.github/workflows/pages.yml](../.github/workflows/pages.yml) on every push to
+`main` that touches `www/`. It runs `npm ci`, `npm run check`, `npm run build`
+and uploads `dist/` to GitHub Pages. There is no server and no rsync.
+
+One-time repo setup: **Settings > Pages > Build and deployment > Source:
+"GitHub Actions"**. Until that is set, the workflow builds but the deploy step
+fails.
+
+### The subpath is build-only
+
+`astro.config.mjs` applies `base: '/rottools'` for `build` and `preview` only.
+`npm run dev` stays at plain `http://localhost:4321/`.
+
+The command is read from `process.argv`, not `NODE_ENV`: Vite sets `NODE_ENV`
+while resolving the config, which is *after* this file has been evaluated, so it
+is empty when we need it. `preview` gets the base because it serves the built
+`dist/`, whose URLs already carry the subpath.
+
+One consequence worth knowing: **a hand-written `/foo.png` works in dev and 404s
+in production.** Dev no longer catches that class of mistake. Two habits keep it
+from biting:
+
+- put every `public/` path through `asset()` (see below) — it is correct under
+  either base;
+- run `npm run preview` before pushing anything that touches markup. It serves
+  the real built output at the real subpath.
+
+### The site lives under a subpath
+
+A GitHub Pages *project* site is served from `<user>.github.io/<repo>/`, so
+`astro.config.mjs` sets `base: '/rottools'`, which must match the repository
+name. Astro prefixes the URLs it generates itself, but **not** paths written by
+hand in markup — a bare `src="/favicon.ico"` resolves to the domain root and
+404s.
+
+So every hand-written path to something in `public/` goes through
+[src/lib/url.ts](src/lib/url.ts):
+
+```astro
+---
+import { asset, home, absoluteAsset } from '../lib/url';
+---
+<img src={asset('rottools-logo.svg')} />   <!-- /rottools/rottools-logo.svg -->
+<a href={home()}>…</a>                     <!-- /rottools/ -->
+```
+
+`absoluteAsset()` is for metadata crawlers read: `og:image` must be a full URL,
+because scrapers ignore relative ones. `site.webmanifest` sidesteps the problem
+differently — its icon paths are relative, so the browser resolves them against
+the manifest's own URL.
+
+Moving to a domain root later is a one-line change: drop `base` from
+`astro.config.mjs`. Nothing else hardcodes it.
+
+## Verified, not assumed
+
+The download links point at real GitHub Release assets and were checked with
+`curl` — all three return 200. The tag format (`rotreader-v0.1.0`) comes from
+`.github/workflows/release-rotreader.yml`; the asset names come from CPack's
+`CPACK_PACKAGE_FILE_NAME`.
+
+`ROTREADER_VERSION` in `src/data/tools.ts` must match a **published** release,
+not `apps/rotreader/VERSION`. It is currently `0.1.0` while the app source is at
+`0.1.1`, because `rotreader-v0.1.1` has not been tagged yet. Bump it after that
+release exists, or every download button 404s.

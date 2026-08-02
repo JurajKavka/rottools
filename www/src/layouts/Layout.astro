@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import { asset, home, absoluteAsset } from '../lib/url';
 
 interface Props {
   title: string;
@@ -9,6 +10,9 @@ interface Props {
 
 const { title, description } = Astro.props;
 const year = new Date().getFullYear();
+
+// og:image has to be absolute — relative ones are ignored by social scrapers.
+const ogImage = absoluteAsset('rottools-logo-1024.png', Astro.site);
 ---
 
 <!doctype html>
@@ -18,10 +22,20 @@ const year = new Date().getFullYear();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    {/* Icons: generated from docs/graphics/rottools/rottools-logo.svg by
+        scripts/generate-icons.sh. Do not edit the files in public/ by hand. */}
+    <link rel="icon" type="image/svg+xml" href={asset('rottools-logo.svg')} />
+    <link rel="icon" type="image/png" sizes="32x32" href={asset('favicon-32x32.png')} />
+    <link rel="icon" type="image/png" sizes="16x16" href={asset('favicon-16x16.png')} />
+    <link rel="icon" href={asset('favicon.ico')} sizes="any" />
+    <link rel="apple-touch-icon" sizes="180x180" href={asset('apple-touch-icon.png')} />
+    <link rel="manifest" href={asset('site.webmanifest')} />
+    <meta name="theme-color" content="#424242" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content="/logo.png" />
+    {/* Square stand-in. Social cards want 1200x630 — replace with a purpose-made
+        og-image.png and set og:image:width/height when one exists. */}
+    <meta property="og:image" content={ogImage} />
     <meta property="og:type" content="website" />
     <meta name="generator" content={Astro.generator} />
 
@@ -38,9 +52,27 @@ const year = new Date().getFullYear();
   <body>
     <header class="site-header">
       <div class="wrap header-inner">
-        <a class="brand" href="/">ℜ⛤𝔗 tools</a>
+        {/* Mark inside the link so the whole brand is one click target.
+            alt="" because the wordmark beside it already says the name. */}
+        <a class="brand" href={home()}>
+          <img class="brand-mark" src={asset('rottools-logo.svg')} alt="" width="32" height="32" />
+          ℜ⛤𝔗 tools
+        </a>
         <nav>
-          <a href="https://github.com/JurajKavka/rottools">Source</a>
+          {/* Icon only, so it needs a name of its own: the GitHub mark is
+              aria-hidden and the label carries the meaning. */}
+          <a
+            class="source"
+            href="https://github.com/JurajKavka/rottools"
+            aria-label="Source on GitHub"
+            title="Source on GitHub"
+          >
+            <svg class="gh" viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+              ></path>
+            </svg>
+          </a>
           <ThemeToggle />
         </nav>
       </div>
@@ -74,10 +106,22 @@ const year = new Date().getFullYear();
       }
 
       .brand {
+        display: flex;
+        align-items: center;
+        gap: var(--rd-space-3);
         font-weight: var(--rd-weight-bold);
         color: var(--rd-ink);
         text-decoration: none;
         letter-spacing: 0.01em;
+      }
+
+      /* Same square source as the tool marks, but a tighter corner: at 2rem the
+         card's 8px reads as too round. */
+      .brand-mark {
+        flex: none;
+        width: 2rem;
+        height: 2rem;
+        border-radius: var(--rd-radius-small);
       }
 
       nav {
@@ -94,6 +138,35 @@ const year = new Date().getFullYear();
       nav > a:hover {
         color: var(--rd-ink);
         text-decoration: underline;
+      }
+
+      /* Matches the theme toggle beside it box for box: same height, same
+         padding, and a transparent border so the outer width lines up too
+         (the toggle's 1px border counts towards its size under border-box).
+         Only the fill differs, and that is deliberate — the toggle is painted
+         in the theme it switches to. */
+      .source {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 2rem;
+        padding: 0 var(--rd-space-2);
+        border: var(--rd-rule-width) solid transparent;
+        border-radius: var(--rd-radius);
+      }
+
+      /* No underline on hover — there is no text to underline. The icon still
+         brightens via the inherited nav > a:hover colour. */
+      .source:hover {
+        text-decoration: none;
+      }
+
+      /* 1rem, not 1.25: the mark is drawn on a 16x16 grid, so this is its
+         native size, and it matches the toggle's icon. */
+      .gh {
+        width: 1rem;
+        height: 1rem;
+        fill: currentColor;
       }
 
       .site-footer {

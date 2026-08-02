@@ -1,11 +1,23 @@
 # rottools_package_app(TARGET <t> DISPLAY_NAME <n> EXE_NAME <e> BUNDLE_ID <id>
 #                       VERSION <v> VENDOR <vendor> DESCRIPTION <d>
-#                       ICON_PNG <path> [DESKTOP_CATEGORIES <c>])
+#                       ICON_DIR <path> [DESKTOP_CATEGORIES <c>])
 #
-# One entry point that wires a tool's install rules + CPack packaging per OS:
-#   macOS   -> .app bundle (Info.plist + generated .icns) packed into a .dmg (DragNDrop)
-#   Windows -> NSIS installer + portable .zip
-#   Linux   -> .deb (Depends: libwebkit2gtk) + portable .tar.gz
+# One entry point that wires a tool's icons + install rules + CPack packaging per OS:
+#   macOS   -> .app bundle (Info.plist + AppIcon.icns) packed into a .dmg (DragNDrop)
+#   Windows -> .rc resource holding the .ico, NSIS installer + portable .zip
+#   Linux   -> hicolor icon theme + .desktop, .deb (Depends: libwebkit2gtk) + .tar.gz
+#
+# ICON_DIR points at a directory produced by scripts/generate-icons.sh:
+#
+#   <ICON_DIR>/macos/AppIcon.icns
+#   <ICON_DIR>/linux/<EXE_NAME>-{16,22,24,32,48,64,128,256,512}.png
+#   <ICON_DIR>/linux/<EXE_NAME>.svg
+#   <ICON_DIR>/windows/<EXE_NAME>.ico
+#
+# Those files are committed to git on purpose: the Linux and Windows CI runners
+# have no Inkscape, so the build only ever reads finished icons. Regenerate them
+# with scripts/generate-icons.sh <app> after editing the master SVG. Missing
+# icons warn rather than fail, so a new tool can build before it has artwork.
 #
 # CPACK_* are set as global cache vars so the single top-level include(CPack)
 # (in the umbrella CMakeLists) sees them. This fully supports one tool per build
@@ -13,12 +25,47 @@
 # tree and packaging each needs per-app cpack config files — a documented follow-up.
 include_guard(GLOBAL)
 
+include(RotToolsIcons)
+
 function(rottools_package_app)
-    set(oneValueArgs TARGET DISPLAY_NAME EXE_NAME BUNDLE_ID VERSION VENDOR DESCRIPTION ICON_PNG DESKTOP_CATEGORIES)
+    set(oneValueArgs TARGET DISPLAY_NAME EXE_NAME BUNDLE_ID VERSION VENDOR DESCRIPTION ICON_DIR DESKTOP_CATEGORIES)
     cmake_parse_arguments(APP "" "${oneValueArgs}" "" ${ARGN})
 
     if(NOT APP_DESKTOP_CATEGORIES)
         set(APP_DESKTOP_CATEGORIES "Utility;")
+    endif()
+
+    # Sizes installed into the freedesktop hicolor theme on Linux. 22 and 24 are
+    # the GTK toolbar/menu sizes; the rest are the standard launcher sizes.
+    set(_linux_icon_sizes 16 22 24 32 48 64 128 256 512)
+
+    # Sizes compiled into the executable for the runtime window icon (X11 and
+    # Windows pick whichever fits; macOS uses the bundle icon instead). Kept
+    # short on purpose — these bytes end up in the binary.
+    set(_window_icon_sizes 16 32 48 64 128 256)
+
+    # Substitution values shared by the per-OS templates in packaging/.
+    set(ROTTOOLS_APP_DISPLAY_NAME "${APP_DISPLAY_NAME}")
+    set(ROTTOOLS_APP_EXE_NAME     "${APP_EXE_NAME}")
+    set(ROTTOOLS_APP_BUNDLE_ID    "${APP_BUNDLE_ID}")
+    set(ROTTOOLS_APP_VERSION      "${APP_VERSION}")
+    set(ROTTOOLS_APP_DESCRIPTION  "${APP_DESCRIPTION}")
+    set(ROTTOOLS_APP_CATEGORIES   "${APP_DESKTOP_CATEGORIES}")
+
+    # --- window icon compiled into the binary --------------------------------
+    set(_window_icon_pngs "")
+    foreach(_size IN LISTS _window_icon_sizes)
+        set(_png "${APP_ICON_DIR}/linux/${APP_EXE_NAME}-${_size}.png")
+        if(EXISTS "${_png}")
+            list(APPEND _window_icon_pngs "${_png}")
+        endif()
+    endforeach()
+    if(_window_icon_pngs)
+        rottools_embed_window_icon(TARGET ${APP_TARGET} PNGS ${_window_icon_pngs})
+    else()
+        message(WARNING
+            "No square icon PNGs under ${APP_ICON_DIR}/linux — ${APP_TARGET} will have no "
+            "window icon. Run scripts/generate-icons.sh ${APP_EXE_NAME}.")
     endif()
 
     # --- OS / arch slug used in artifact file names --------------------------
@@ -40,37 +87,31 @@ function(rottools_package_app)
     # Platform bundling + install rules
     # ------------------------------------------------------------------------
     if(APPLE)
-        # Generate AppIcon.icns from the 1024px master (same sizes make-dmg.sh used).
-        if(APP_ICON_PNG AND EXISTS "${APP_ICON_PNG}")
-            set(_iconset "${CMAKE_CURRENT_BINARY_DIR}/AppIcon.iconset")
-            set(_icns "${CMAKE_CURRENT_BINARY_DIR}/AppIcon.icns")
-            add_custom_command(
-                OUTPUT "${_icns}"
-                COMMAND ${CMAKE_COMMAND} -E rm -rf "${_iconset}"
-                COMMAND ${CMAKE_COMMAND} -E make_directory "${_iconset}"
-                COMMAND sips -z 16 16     "${APP_ICON_PNG}" --out "${_iconset}/icon_16x16.png"
-                COMMAND sips -z 32 32     "${APP_ICON_PNG}" --out "${_iconset}/icon_16x16@2x.png"
-                COMMAND sips -z 32 32     "${APP_ICON_PNG}" --out "${_iconset}/icon_32x32.png"
-                COMMAND sips -z 64 64     "${APP_ICON_PNG}" --out "${_iconset}/icon_32x32@2x.png"
-                COMMAND sips -z 128 128   "${APP_ICON_PNG}" --out "${_iconset}/icon_128x128.png"
-                COMMAND sips -z 256 256   "${APP_ICON_PNG}" --out "${_iconset}/icon_128x128@2x.png"
-                COMMAND sips -z 256 256   "${APP_ICON_PNG}" --out "${_iconset}/icon_256x256.png"
-                COMMAND sips -z 512 512   "${APP_ICON_PNG}" --out "${_iconset}/icon_256x256@2x.png"
-                COMMAND sips -z 512 512   "${APP_ICON_PNG}" --out "${_iconset}/icon_512x512.png"
-                COMMAND sips -z 1024 1024 "${APP_ICON_PNG}" --out "${_iconset}/icon_512x512@2x.png"
-                COMMAND iconutil -c icns "${_iconset}" -o "${_icns}"
-                DEPENDS "${APP_ICON_PNG}"
-                COMMENT "Generating AppIcon.icns for ${APP_DISPLAY_NAME}"
-                VERBATIM)
+        # AppIcon.icns is generated ahead of time by scripts/generate-icons.sh:
+        # every size is rendered from the SVG at its own resolution, which is
+        # sharper than downscaling one 1024px PNG, and CFBundleIconFile in
+        # Info.plist names it.
+        set(_icns "${APP_ICON_DIR}/macos/AppIcon.icns")
+        if(EXISTS "${_icns}")
             target_sources(${APP_TARGET} PRIVATE "${_icns}")
             set_source_files_properties("${_icns}" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+        else()
+            message(WARNING "${_icns} is missing — the .app will use the generic icon. "
+                            "Run scripts/generate-icons.sh ${APP_EXE_NAME}.")
         endif()
 
+        # Finder and the Dock cache a bundle's icon and re-read it only when the
+        # bundle's own modification date changes. An incremental build replaces
+        # Contents/Resources/AppIcon.icns without touching the .app directory
+        # itself, so a new icon would keep showing as the old one until the
+        # bundle was deleted and rebuilt. Touching it closes that gap, so
+        # `make rebuild` is enough after `make icons`.
+        add_custom_command(TARGET ${APP_TARGET} POST_BUILD
+            COMMAND touch "$<TARGET_BUNDLE_DIR:${APP_TARGET}>"
+            COMMENT "Touching ${APP_EXE_NAME}.app so Finder re-reads its icon"
+            VERBATIM)
+
         # Configure Info.plist from the app's template.
-        set(ROTREADER_DISPLAY_NAME "${APP_DISPLAY_NAME}")
-        set(ROTREADER_EXE_NAME     "${APP_EXE_NAME}")
-        set(ROTREADER_BUNDLE_ID    "${APP_BUNDLE_ID}")
-        set(ROTREADER_VERSION      "${APP_VERSION}")
         set(_plist "${CMAKE_CURRENT_BINARY_DIR}/Info.plist")
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/packaging/macos/Info.plist.in" "${_plist}" @ONLY)
 
@@ -103,24 +144,48 @@ function(rottools_package_app)
 
     elseif(WIN32)
         set_target_properties(${APP_TARGET} PROPERTIES WIN32_EXECUTABLE TRUE)
+
+        # The .ico reaches Explorer and the taskbar through a resource script.
+        # app.rc.in is configured into the build tree so it can name the .ico by
+        # absolute path, and it pulls in wx/msw/wx.rc for wxWidgets' own cursors
+        # and wxSTD_* icons. RC is enabled in the root CMakeLists on Windows.
+        set(_ico "${APP_ICON_DIR}/windows/${APP_EXE_NAME}.ico")
+        if(EXISTS "${_ico}")
+            set(ROTTOOLS_APP_ICO "${_ico}")
+            set(_rc "${CMAKE_CURRENT_BINARY_DIR}/${APP_EXE_NAME}.rc")
+            configure_file("${CMAKE_CURRENT_SOURCE_DIR}/packaging/windows/app.rc.in" "${_rc}" @ONLY)
+            target_sources(${APP_TARGET} PRIVATE "${_rc}")
+        else()
+            message(WARNING "${_ico} is missing — the .exe will use the generic icon. "
+                            "Run scripts/generate-icons.sh ${APP_EXE_NAME}.")
+        endif()
+
         install(TARGETS ${APP_TARGET} RUNTIME DESTINATION "." COMPONENT ${APP_EXE_NAME})
 
     else() # Linux / other Unix
         install(TARGETS ${APP_TARGET} RUNTIME DESTINATION "bin" COMPONENT ${APP_EXE_NAME})
 
-        # .desktop entry
-        set(ROTREADER_DISPLAY_NAME "${APP_DISPLAY_NAME}")
-        set(ROTREADER_EXE_NAME     "${APP_EXE_NAME}")
-        set(ROTREADER_DESCRIPTION  "${APP_DESCRIPTION}")
-        set(ROTREADER_CATEGORIES   "${APP_DESKTOP_CATEGORIES}")
+        # .desktop entry. Its "Icon=" holds the bare name; the icon theme below
+        # resolves it, which is also how GNOME/Wayland picks the window icon.
         set(_desktop "${CMAKE_CURRENT_BINARY_DIR}/${APP_EXE_NAME}.desktop")
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/app.desktop.in" "${_desktop}" @ONLY)
         install(FILES "${_desktop}" DESTINATION "share/applications" COMPONENT ${APP_EXE_NAME})
 
-        if(APP_ICON_PNG AND EXISTS "${APP_ICON_PNG}")
-            install(FILES "${APP_ICON_PNG}"
-                    DESTINATION "share/icons/hicolor/512x512/apps"
-                    RENAME "${APP_EXE_NAME}.png"
+        # freedesktop hicolor theme: one PNG per size plus the scalable SVG.
+        foreach(_size IN LISTS _linux_icon_sizes)
+            set(_png "${APP_ICON_DIR}/linux/${APP_EXE_NAME}-${_size}.png")
+            if(EXISTS "${_png}")
+                install(FILES "${_png}"
+                        DESTINATION "share/icons/hicolor/${_size}x${_size}/apps"
+                        RENAME "${APP_EXE_NAME}.png"
+                        COMPONENT ${APP_EXE_NAME})
+            endif()
+        endforeach()
+
+        set(_svg "${APP_ICON_DIR}/linux/${APP_EXE_NAME}.svg")
+        if(EXISTS "${_svg}")
+            install(FILES "${_svg}"
+                    DESTINATION "share/icons/hicolor/scalable/apps"
                     COMPONENT ${APP_EXE_NAME})
         endif()
     endif()

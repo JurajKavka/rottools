@@ -19,6 +19,13 @@ endif()
 
 project(rottools LANGUAGES CXX)
 
+# The Windows app icon ships in a .rc resource script (see RotToolsPackaging).
+# project(... LANGUAGES CXX) alone leaves RC disabled, and a .rc added to a
+# target would then be treated as an unknown source type.
+if(WIN32)
+    enable_language(RC)
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)

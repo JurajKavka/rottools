@@ -7,12 +7,20 @@
 #include <fstream>  // For opening the file
 #include <sstream>  // For reading the file content
 
+#include "AppIcon.h"
+#include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
 #include "MarkdownSourcePanel.h"
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
+#ifndef __WXOSX__
+    // macOS takes the window and Dock icon from AppIcon.icns in the .app bundle,
+    // where SetIcons does nothing. Windows and X11 need it set explicitly.
+    SetIcons(rottools::MakeIconBundle(kAppIconPngs, kAppIconPngCount));
+#endif
+
     Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
     Bind(wxEVT_MENU, &MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick, this, wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM);

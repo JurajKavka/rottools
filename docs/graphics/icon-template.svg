@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1408"
+   height="1820"
+   viewBox="0 0 1408 1820"
+   version="1.1"
+   id="macOS-icon-template"
+   sodipodi:docname="macOS-Icon-Template.svg"
+   inkscape:version="1.3">
+
+  <sodipodi:namedview
+     id="namedview"
+     pagecolor="#e9e9ec"
+     bordercolor="#666666"
+     borderopacity="0.5"
+     inkscape:pageopacity="0"
+     inkscape:document-units="px"
+     showgrid="false">
+    <sodipodi:guide position="100,1720" orientation="1,0" id="guideL" />
+    <sodipodi:guide position="924,1720" orientation="1,0" id="guideR" />
+    <sodipodi:guide position="100,1820" orientation="0,1" id="guideT" />
+    <sodipodi:guide position="100,796" orientation="0,1" id="guideB" />
+  </sodipodi:namedview>
+
+  <defs id="defs">
+    <!-- Shape definitions only. NOTE: anything in <defs> is never rendered by
+         Inkscape, so the export target must NOT live here. -->
+    <path
+       id="squirclePath"
+       d="M 512,100
+          C 305.7,100 224,105.5 163,166.5
+          C 105.5,224 100,305.7 100,512
+          C 100,718.3 105.5,800 163,858.5
+          C 224,918.5 305.7,924 512,924
+          C 718.3,924 800,918.5 858.5,858.5
+          C 918.5,800 924,718.3 924,512
+          C 924,305.7 918.5,224 858.5,163
+          C 800,105.5 718.3,100 512,100 Z" />
+
+    <clipPath id="squircleClip" clipPathUnits="userSpaceOnUse">
+      <use href="#squirclePath" id="clipUse" />
+    </clipPath>
+  </defs>
+
+  <!-- ============ LAYER 1: GUIDES (hide or ignore; never exported) ============ -->
+  <g inkscape:label="01 - Guides" inkscape:groupmode="layer" id="layerGuides" style="display:inline">
+    <rect x="0" y="0" width="1024" height="1024" fill="#f4f4f6" id="canvasBg" />
+    <rect x="0.5" y="0.5" width="1023" height="1023" fill="none" stroke="#b3b3b8" stroke-width="1" id="canvasBorder" />
+    <rect x="100.5" y="100.5" width="823" height="823" fill="none" stroke="#c9c9ce" stroke-width="1" stroke-dasharray="6,6" id="safeZone" />
+    <use href="#squirclePath" fill="none" stroke="#8a8ae0" stroke-width="2" stroke-dasharray="10,6" id="squircleGuide" />
+    <text x="512" y="60" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="30px" fill="#333333" id="titleText">macOS App Icon Template</text>
+    <text x="512" y="980" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="16px" fill="#8a8a90" id="subtitleText">Design inside Layer 02. Export target = object id "iconExport".</text>
+  </g>
+
+  <!-- ============ LAYER 2: THE ICON — design here. This IS the export target. ============ -->
+  <g inkscape:label="02 - Icon (design here)" inkscape:groupmode="layer" id="layerIcon" style="display:inline">
+
+    <g id="iconExport">
+
+      <!-- Transparent spacer: forces the export bounding box to the full 1024x1024
+           canvas so the icon keeps Apple's 100px margin around the squircle.
+           Do not delete or move this. -->
+      <rect x="0" y="0" width="1024" height="1024" id="exportSpacer"
+            style="fill:none;stroke:none" />
+
+      <!-- Everything below is clipped to the squircle -->
+      <g id="iconClipped" clip-path="url(#squircleClip)">
+
+        <!-- White base so partially transparent colours composite predictably -->
+        <use href="#squirclePath" fill="#ffffff" id="squircleBase" />
+
+        <!-- Blue background -->
+        <rect x="0" y="0" width="1024" height="1024" id="bgBlue"
+              style="fill:#0000ff;fill-opacity:0.7" />
+
+        <!-- Your glyph -->
+        <path
+           id="glyph"
+           aria-label="#"
+           style="font-weight:bold;font-size:192px;font-family:Helvetica, Arial, sans-serif;-inkscape-font-specification:'Helvetica, Arial, sans-serif Bold';text-anchor:middle;fill:#ffffff;stroke-width:3.54951"
+           d="m 421.2091,469.43788 h -76.69292 l 16.91755,-49.48397 h 76.69293 l 40.97808,-118.70264 h 74.81318 L 512.93985,419.9539 h 62.40699 l 39.85023,-118.70264 h 74.81321 L 650.16003,419.9539 h 75.5651 l -16.91755,49.48398 h -75.56509 l -30.4516,86.00787 h 76.69291 l -16.91755,49.48397 h -76.69294 l -40.22619,117.81902 h -74.81319 l 40.2262,-117.81902 h -61.65511 l -40.97807,117.81902 h -74.81319 l 40.97808,-117.81902 h -76.31697 l 16.91755,-49.48397 h 76.31696 z m 106.76858,86.00787 30.4516,-86.00787 H 496.0223 l -29.32377,86.00787 z" />
+
+      </g>
+    </g>
+  </g>
+
+  <!-- ============ LAYER 3: LIVE SIZE PREVIEWS (reference only, never exported) ============ -->
+  <g inkscape:label="03 - Size Previews" inkscape:groupmode="layer" id="layerPreviews" style="display:inline">
+    <text x="0" y="1120" font-family="Helvetica, Arial, sans-serif" font-size="20px" fill="#333333" id="previewsTitle">Export sizes (iconutil / .iconset naming)</text>
+
+    <svg x="0" y="1160" width="512" height="512" viewBox="0 0 1024 1024" id="prev512" version="1.1"><use href="#iconExport" id="use4" /></svg>
+    <text x="256" y="1692" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="15px" fill="#666666" id="text4">icon_512x512.png / icon_256x256@2x.png</text>
+
+    <svg x="572" y="1416" width="256" height="256" viewBox="0 0 1024 1024" id="prev256" version="1.1"><use href="#iconExport" id="use5" /></svg>
+    <text x="700" y="1692" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="15px" fill="#666666" id="text5">icon_256x256.png / icon_128x128@2x.png</text>
+
+    <svg x="888" y="1544" width="128" height="128" viewBox="0 0 1024 1024" id="prev128" version="1.1"><use href="#iconExport" id="use6" /></svg>
+    <text x="952" y="1692" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14px" fill="#666666" id="text6">icon_128x128.png</text>
+
+    <svg x="1076" y="1608" width="64" height="64" viewBox="0 0 1024 1024" id="prev64" version="1.1"><use href="#iconExport" id="use7" /></svg>
+    <text x="1108" y="1692" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13px" fill="#666666" id="text7">icon_32x32@2x.png</text>
+
+    <svg x="1200" y="1640" width="32" height="32" viewBox="0 0 1024 1024" id="prev32" version="1.1"><use href="#iconExport" id="use8" /></svg>
+    <text x="1216" y="1692" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="12px" fill="#666666" id="text8">icon_32x32.png</text>
+
+    <svg x="1292" y="1656" width="16" height="16" viewBox="0 0 1024 1024" id="prev16" version="1.1"><use href="#iconExport" id="use9" /></svg>
+    <text x="1300" y="1692" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11px" fill="#666666" id="text9">icon_16x16.png / icon_16x16@2x.png</text>
+  </g>
+
+</svg>

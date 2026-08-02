@@ -56,7 +56,8 @@
   --rd-page-padding-y: clamp(var(--rd-space-6), 4vw, var(--rd-space-12));
 
   /* Lines and corners ------------------------------------------------------ */
-  --rd-radius: 6px;
+  --rd-radius: 0.5rem; /* 8px */
+  --rd-radius-small: 0.25rem; /* 4px — for small marks, where 8px looks too round */
   --rd-rule-width: 1px;
   --rd-quote-rule-width: 3px;
 
