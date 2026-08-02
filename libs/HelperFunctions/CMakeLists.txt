@@ -1,5 +1,6 @@
-# rottools::helpers — logging, wxString std::formatter, GetAssetPath (generic).
-add_library(rottools_helpers STATIC HelperFunctions.cpp)
+# rottools::helpers — logging, wxString std::formatter, GetAssetPath, and the
+# window-icon bundle built from PNGs compiled into the app (generic).
+add_library(rottools_helpers STATIC HelperFunctions.cpp AppIcon.cpp)
 add_library(rottools::helpers ALIAS rottools_helpers)
 
 target_include_directories(rottools_helpers PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

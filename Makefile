@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help all dev build run run-fg rebuild dmg \
+.PHONY: help all dev build run run-fg rebuild dmg icons web-icons \
         run-filetree run-htmlsource run-mdsource run-dirscan run-md2html run-helpers \
         build-webview build-filedrop \
         format check clean _demos
@@ -30,6 +30,16 @@ rebuild:               ## Incremental build of the whole tree
 
 dmg: build             ## Package rotreader as a macOS .dmg (CPack)
 	cd build && cpack -G DragNDrop
+
+# Rasterises docs/graphics/rotreader/rotreader-logo.svg into every platform icon.
+# Manual step: the output is committed because CI has no Inkscape.
+icons:                 ## Regenerate rotreader's icons from its master SVG
+	./scripts/generate-icons.sh rotreader --name "ROT Reader"
+
+# The suite logo has no binary, so it produces only the favicon set and the
+# square PNGs the website uses.
+web-icons:             ## Regenerate the rottools suite icons into www/public
+	./scripts/generate-icons.sh rottools --name "ROT Tools" --web-out www/public
 
 ##@ Components — build & run a shared library in isolation
 run-filetree: _demos   ## FileBrowserTreePanel   (rottools::ui_filetree)

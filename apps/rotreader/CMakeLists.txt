@@ -34,6 +34,6 @@ rottools_package_app(
     VERSION      "${ROTREADER_VERSION}"
     VENDOR       "Juraj Kavka"
     DESCRIPTION  "A native Markdown viewer"
-    ICON_PNG     "${CMAKE_CURRENT_SOURCE_DIR}/assets/logo.png"
+    ICON_DIR     "${CMAKE_CURRENT_SOURCE_DIR}/assets/icons"
     DESKTOP_CATEGORIES "Utility;TextTools;"
 )

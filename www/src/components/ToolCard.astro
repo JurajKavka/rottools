@@ -1,5 +1,6 @@
 ---
 import type { Tool } from '../data/tools';
+import { asset } from '../lib/url';
 
 interface Props {
   tool: Tool;
@@ -10,8 +11,13 @@ const { tool } = Astro.props;
 
 <article class="card">
   <header>
-    <h2>{tool.displayName}</h2>
-    <p class="tagline">{tool.tagline}</p>
+    {/* alt="" on purpose: the heading beside it already names the tool, so a
+        described icon would just repeat it to a screen reader. */}
+    <img class="mark" src={asset(tool.icon)} alt="" width="56" height="56" />
+    <div>
+      <h2>{tool.displayName}</h2>
+      <p class="tagline">{tool.tagline}</p>
+    </div>
   </header>
 
   <p class="description">{tool.description}</p>
@@ -40,6 +46,28 @@ const { tool } = Astro.props;
     border: var(--rd-rule-width) solid var(--rd-border);
     border-radius: var(--rd-radius);
     padding: var(--rd-space-8);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: var(--rd-space-4);
+  }
+
+  /* Lets the name/tagline block shrink instead of pushing the card wide when a
+     future tool has a longer display name. */
+  header > div {
+    min-width: 0;
+  }
+
+  /* The generated mark is a full-bleed square; the rounding is the page's
+     choice, not baked into the file, so it uses the same corner as everything
+     else on the card. */
+  .mark {
+    flex: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--rd-radius);
   }
 
   h2 {

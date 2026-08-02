@@ -2,8 +2,11 @@
 // Switches between the two Rotdown themes the app ships.
 //
 // The button advertises the action, never the current state: in Rotdown Light it
-// reads "Rotdown Dark", shows a moon, and is painted in the dark palette, so it
-// is a preview of what you get by pressing it. In Rotdown Dark, the reverse.
+// shows a moon and is painted in the dark palette, so it is a preview of what you
+// get by pressing it. In Rotdown Dark, the reverse.
+//
+// Icon only. The theme name lives in aria-label and title, so screen readers and
+// a hover tooltip still say which theme the press switches to.
 //
 // The choice is stored in localStorage; the inline script in Layout.astro
 // applies it before first paint so the page never flashes the wrong theme.
@@ -23,7 +26,6 @@
   <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
     <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"></path>
   </svg>
-  <span class="label"></span>
 </button>
 
 <script>
@@ -31,14 +33,12 @@
   const THEME_NAMES = { light: 'Rotdown Light', dark: 'Rotdown Dark' } as const;
 
   const button = document.getElementById('theme-toggle');
-  const label = button?.querySelector('.label');
 
   function apply(theme: 'light' | 'dark') {
     document.documentElement.dataset.theme = theme;
 
-    // Everything on the button names the theme you'd switch *to*.
+    // The icon and the accessible name both describe the theme you'd switch *to*.
     const target = theme === 'dark' ? 'light' : 'dark';
-    if (label) label.textContent = THEME_NAMES[target];
     button?.setAttribute('aria-label', `Switch to ${THEME_NAMES[target]}`);
     button?.setAttribute('title', `Switch to ${THEME_NAMES[target]}`);
   }
@@ -57,7 +57,7 @@
   #theme-toggle:not([hidden]) {
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
+    justify-content: center;
   }
 
   /* Painted in the palette it switches to, so the button previews the result.
@@ -68,9 +68,11 @@
 
      Default state is Rotdown Light active, so the button wears Rotdown Dark. */
   #theme-toggle {
-    padding: var(--rd-space-2) var(--rd-space-3);
-    font: inherit;
-    font-size: var(--rd-size-small);
+    /* Fixed height rather than vertical padding, so the button's size does not
+       drift if the icon changes. box-sizing is border-box globally, so 2rem is
+       the outer height, border included. */
+    height: 2rem;
+    padding: 0 var(--rd-space-2);
     background: #17171a;
     color: #e6e4e0;
     border: var(--rd-rule-width) solid #34333a;
@@ -119,12 +121,5 @@
 
   :global(:root[data-theme='dark']) .moon {
     display: none;
-  }
-
-  /* The name is long; on a narrow screen the icon carries it alone. */
-  @media (max-width: 30rem) {
-    .label {
-      display: none;
-    }
   }
 </style>

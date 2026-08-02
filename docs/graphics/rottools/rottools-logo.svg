@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1408"
+   height="1820"
+   viewBox="0 0 1408 1820"
+   version="1.1"
+   id="macOS-icon-template"
+   sodipodi0:docname="rottools-logo.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+   sodipodi:docname="rottools-logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:sodipodi0="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.4140625"
+     inkscape:cx="699.16981"
+     inkscape:cy="712.45283"
+     inkscape:window-width="1392"
+     inkscape:window-height="969"
+     inkscape:window-x="612"
+     inkscape:window-y="61"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="iconClipped" />
+  <sodipodi0:namedview
+     id="namedview"
+     pagecolor="#e9e9ec"
+     bordercolor="#666666"
+     borderopacity="0.5"
+     inkscape:pageopacity="0"
+     inkscape:document-units="px"
+     showgrid="false">
+    <sodipodi0:guide
+       position="100,1720"
+       orientation="1,0"
+       id="guideL" />
+    <sodipodi0:guide
+       position="924,1720"
+       orientation="1,0"
+       id="guideR" />
+    <sodipodi0:guide
+       position="100,1820"
+       orientation="0,1"
+       id="guideT" />
+    <sodipodi0:guide
+       position="100,796"
+       orientation="0,1"
+       id="guideB" />
+  </sodipodi0:namedview>
+  <defs
+     id="defs">
+    <!-- Shape definitions only. NOTE: anything in <defs> is never rendered by
+         Inkscape, so the export target must NOT live here. -->
+    <path
+       id="squirclePath"
+       d="M 512,100           C 305.7,100 224,105.5 163,166.5           C 105.5,224 100,305.7 100,512           C 100,718.3 105.5,800 163,858.5           C 224,918.5 305.7,924 512,924           C 718.3,924 800,918.5 858.5,858.5           C 918.5,800 924,718.3 924,512           C 924,305.7 918.5,224 858.5,163           C 800,105.5 718.3,100 512,100 Z" />
+    <clipPath
+       id="squircleClip"
+       clipPathUnits="userSpaceOnUse">
+      <use
+         href="#squirclePath"
+         id="clipUse" />
+    </clipPath>
+  </defs>
+  <!-- ============ LAYER 1: GUIDES (hide or ignore; never exported) ============ -->
+  <g
+     inkscape:label="01 - Guides"
+     inkscape:groupmode="layer"
+     id="layerGuides"
+     style="display:inline">
+    <rect
+       x="0"
+       y="0"
+       width="1024"
+       height="1024"
+       fill="#f4f4f6"
+       id="canvasBg" />
+    <rect
+       x="0.5"
+       y="0.5"
+       width="1023"
+       height="1023"
+       fill="none"
+       stroke="#b3b3b8"
+       stroke-width="1"
+       id="canvasBorder" />
+    <rect
+       x="100.5"
+       y="100.5"
+       width="823"
+       height="823"
+       fill="none"
+       stroke="#c9c9ce"
+       stroke-width="1"
+       stroke-dasharray="6,6"
+       id="safeZone" />
+    <use
+       href="#squirclePath"
+       fill="none"
+       stroke="#8a8ae0"
+       stroke-width="2"
+       stroke-dasharray="10,6"
+       id="squircleGuide" />
+    <text
+       x="512"
+       y="60"
+       text-anchor="middle"
+       font-family="Helvetica, Arial, sans-serif"
+       font-size="30px"
+       fill="#333333"
+       id="titleText">rottools — suite icon</text>
+    <text
+       x="512"
+       y="980"
+       text-anchor="middle"
+       font-family="Helvetica, Arial, sans-serif"
+       font-size="16px"
+       fill="#8a8a90"
+       id="subtitleText">Design inside Layer 02. Export target = object id &quot;iconExport&quot;.</text>
+  </g>
+  <!-- ============ LAYER 2: THE ICON — design here. This IS the export target. ============ -->
+  <g
+     inkscape:label="02 - Icon (design here)"
+     inkscape:groupmode="layer"
+     id="layerIcon"
+     style="display:inline">
+    <g
+       id="iconExport">
+      <!-- Transparent spacer: forces the export bounding box to the full 1024x1024
+           canvas so the icon keeps Apple's 100px margin around the squircle.
+           Do not delete or move this. -->
+      <rect
+         x="0"
+         y="0"
+         width="1024"
+         height="1024"
+         id="exportSpacer"
+         style="fill:none;stroke:none" />
+      <!-- Everything below is clipped to the squircle -->
+      <g
+         id="iconClipped"
+         clip-path="url(#squircleClip)"
+         style="display:inline">
+        <!-- White base so partially transparent colours composite predictably -->
+        <use
+           href="#squirclePath"
+           fill="#ffffff"
+           id="squircleBase" />
+        <!-- Background: dark grey (= black at 74.124% over white) -->
+        <rect
+           x="0"
+           y="0"
+           width="1024"
+           height="1024"
+           id="bgFill"
+           style="fill:#424242;fill-opacity:1" />
+        <!-- The ℜ goes here. Draw or type it, then Path > Object to Path:
+             live text makes every renderer depend on a font being installed.
+             Keep it inside this group and inside the dashed safe zone. -->
+        <path
+           d="m 704.00008,655.73781 -67.24617,50.71957 q -23.36519,-17.09649 -32.76826,-35.04779 -9.11812,-17.95131 -9.11812,-56.13346 l 1.70964,-59.26781 q 0,-36.75745 -33.90802,-63.257 l -55.84852,22.22543 v 21.08567 q 0,27.35437 -7.12353,54.13886 -7.12354,26.49956 -19.09108,42.45627 -11.96754,15.67178 -39.03697,33.05321 l -63.82688,40.74662 -41.88638,-44.45086 -19.37602,12.25248 -7.12353,-7.97836 66.67629,-42.17133 41.88638,43.88098 q 14.24707,-6.8386 20.51578,-14.53201 6.26872,-7.69342 10.25789,-27.06944 4.27413,-19.66095 4.27413,-48.44004 V 434.05339 q 0,-51.57439 -5.12895,-75.50947 -5.12894,-23.93508 -20.80072,-35.61767 -15.67178,-11.6826 -36.4725,-11.6826 -25.07485,0 -45.59063,18.23625 -20.23084,17.95131 -20.23084,39.60685 0,13.67719 8.54825,25.35979 8.83318,11.6826 27.63931,26.49955 36.18756,29.06402 36.18756,65.53652 0,42.45627 -47.87016,71.80524 l -2.56447,-9.40307 q 21.08567,-11.39766 21.08567,-26.78449 0,-10.54283 -6.26872,-19.66096 -5.98376,-9.11812 -21.65554,-24.22002 -23.93508,-21.94049 -34.47791,-39.03697 -10.54283,-17.38143 -10.54283,-35.04779 0,-18.80614 12.82236,-45.02074 13.1073,-26.49956 38.46709,-42.74122 25.35978,-16.5266 60.69252,-16.5266 35.90262,0 55.84851,13.39225 19.9459,13.1073 33.62309,43.02615 82.06312,-37.61226 114.2615,-61.83228 50.14969,27.92425 62.40217,47.87015 12.25248,19.66096 12.25248,36.75744 0,54.70875 -74.65465,89.18666 18.52119,11.6826 29.91885,37.89721 11.6826,25.92967 11.6826,52.71416 l -1.42471,50.14969 q 0,31.62849 5.41389,41.3165 5.69883,9.40307 17.38142,9.40307 10.25789,0 25.07485,-11.6826 z M 506.82063,502.15439 q 82.63301,-32.19838 103.71867,-51.85934 21.08567,-19.94589 21.08567,-48.44003 0,-27.63932 -15.67178,-43.59604 -15.38684,-15.95672 -42.17133,-15.95672 -31.62849,0 -74.08476,25.07485 7.12353,25.07484 7.12353,47.87015 z"
+           id="glyph"
+           style="font-weight:bold;font-size:583.56px;font-family:Helvetica, Arial, sans-serif;-inkscape-font-specification:'Helvetica, Arial, sans-serif Bold';opacity:0.99823;fill:#e6ddf0;stroke-width:364.725"
+           aria-label="ℜ"
+           inkscape:label="glyph" />
+      </g>
+    </g>
+  </g>
+  <!-- ============ LAYER 3: LIVE SIZE PREVIEWS (reference only, never exported) ============ -->
+  <g
+     inkscape:label="03 - Size Previews"
+     inkscape:groupmode="layer"
+     id="layerPreviews"
+     style="display:inline">
+    <text
+       x="0"
+       y="1120"
+       font-family="Helvetica, Arial, sans-serif"
+       font-size="20px"
+       fill="#333333"
+       id="previewsTitle">Export sizes (iconutil / .iconset naming)</text>
+    <svg
+       x="0"
+       y="1160"
+       width="512"
+       height="512"
+       viewBox="0 0 1024 1024"
+       id="prev512"
+       version="1.1">
+      <use
+         href="#iconExport"
+         id="use4" />
+    </svg>
+    <text
+       x="256"
+       y="1692"
+       text-anchor="middle"
+       font-family="Helvetica, Arial, sans-serif"
+       font-size="15px"
+       fill="#666666"
+       id="text4">icon_512x512.png / icon_256x256@2x.png</text>
+    <svg
+       x="572"
+       y="1416"
+       width="256"
+       height="256"
+       viewBox="0 0 1024 1024"
+       id="prev256"
+       version="1.1">
+      <use
+         href="#iconExport"
+         id="use5" />
+    </svg>
+    <text
+       x="700"
+       y="1692"
+       text-anchor="middle"
+       font-family="Helvetica, Arial, sans-serif"
+       font-size="15px"
+       fill="#666666"
+       id="text5">icon_256x256.png / icon_128x128@2x.png</text>
+    <svg
+       x="888"
+       y="1544"
+       width="128"
+       height="128"
+       viewBox="0 0 1024 1024"
+       id="prev128"
+       version="1.1">
+      <use
+         href="#iconExport"
+         id="use6" />
+    </svg>
+    <text
+       x="952"
+       y="1692"
+       text-anchor="middle"
+       font-family="Helvetica, Arial, sans-serif"
+       font-size="14px"
+       fill="#666666"
+       id="text6">icon_128x128.png</text>
+    <svg
+       x="1076"
+       y="1608"
+       width="64"
+       height="64"
+       viewBox="0 0 1024 1024"
+       id="prev64"
+       version="1.1">
+      <use
+         href="#iconExport"
+         id="use7" />
+    </svg>
+    <text
+       x="1108"
+       y="1692"
+       text-anchor="middle"
+       font-family="Helvetica, Arial, sans-serif"
+       font-size="13px"
+       fill="#666666"
+       id="text7">icon_32x32@2x.png</text>
+    <svg
+       x="1200"
+       y="1640"
+       width="32"
+       height="32"
+       viewBox="0 0 1024 1024"
+       id="prev32"
+       version="1.1">
+      <use
+         href="#iconExport"
+         id="use8" />
+    </svg>
+    <text
+       x="1216"
+       y="1692"
+       text-anchor="middle"
+       font-family="Helvetica, Arial, sans-serif"
+       font-size="12px"
+       fill="#666666"
+       id="text8">icon_32x32.png</text>
+    <svg
+       x="1292"
+       y="1656"
+       width="16"
+       height="16"
+       viewBox="0 0 1024 1024"
+       id="prev16"
+       version="1.1">
+      <use
+         href="#iconExport"
+         id="use9" />
+    </svg>
+    <text
+       x="1300"
+       y="1692"
+       text-anchor="middle"
+       font-family="Helvetica, Arial, sans-serif"
+       font-size="11px"
+       fill="#666666"
+       id="text9">icon_16x16.png / icon_16x16@2x.png</text>
+  </g>
+</svg>
