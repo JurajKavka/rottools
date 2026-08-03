@@ -1,0 +1,13 @@
+// Windows resource script — configured by rottools_package_app() into the build
+// tree, so @ROTTOOLS_APP_ICO@ is an absolute path (forward slashes, which the
+// resource compiler takes as-is; backslashes would need escaping).
+//
+// IDI_APPICON must stay first. Explorer and the taskbar show the icon that
+// sorts first in the resource table, and wx's own wxSTD_* icons come from the
+// include below.
+IDI_APPICON ICON "@ROTTOOLS_APP_ICO@"
+
+// wxWidgets' standard resources (cursors, the wxSTD_* frame icons). The app
+// manifest inside it is opt-in via wxUSE_RC_MANIFEST, which we leave off so it
+// cannot clash with the manifest the linker generates.
+#include "wx/msw/wx.rc"

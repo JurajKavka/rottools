@@ -1,0 +1,70 @@
+# Publishes the Astro site at https://jurajkavka.github.io/rottools/
+#
+# One-time setup in the repo: Settings > Pages > Build and deployment >
+# Source: "GitHub Actions". Without that this workflow builds fine and the
+# deploy step fails.
+#
+# The subpath matters: `base: '/rottools'` in www/astro.config.mjs has to match
+# the repository name, because a project site is always served from
+# <user>.github.io/<repo>/. Renaming the repo means changing that too.
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+    # Only the site affects the published output; a C++ change should not
+    # redeploy it.
+    paths:
+      - 'www/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race. Queue instead of cancelling, so a run that is
+# already publishing finishes rather than leaving Pages half-updated.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: www
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: www/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      # Catches a broken .astro or .ts template before it reaches the site.
+      - name: Type-check
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: www/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

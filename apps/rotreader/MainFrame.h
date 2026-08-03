@@ -53,6 +53,7 @@ class MainFrame : public MainFrameWx {
 
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
     void HandleMarkdownError(const wxString& error);
+    void HandleMarkdownSourceSave(const wxString& markdown);
 
    public:
     explicit MainFrame(wxWindow* parent);

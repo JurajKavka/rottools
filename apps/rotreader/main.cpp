@@ -7,7 +7,9 @@
 class MyApp : public wxApp {
    public:
     bool OnInit() override;
+#ifdef __WXOSX__
     void MacOpenFiles(const wxArrayString& fileNames) override;
+#endif
 
    private:
     MainFrame* m_frame = nullptr;
@@ -28,9 +30,11 @@ bool MyApp::OnInit() {
     return true;
 }
 
+#ifdef __WXOSX__
 void MyApp::MacOpenFiles(const wxArrayString& fileNames) {
     if (fileNames.IsEmpty()) {
         return;
     }
     m_frame->OpenMarkdownFile(wxFileName(fileNames[0]));
 }
+#endif

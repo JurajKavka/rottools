@@ -47,7 +47,10 @@ void MarkdownPreviewPanel::Paint() {
     this->LoadHtml(m_htmlPage, m_options.scrollBehavior);
 
     if (m_onMarkdownReadyCallback) {
-        MarkdownPreviewData markdownPreviewData = {.html = m_htmlPage, .markdown = m_markdown, .fileName = m_fileName};
+        MarkdownPreviewData markdownPreviewData = {.html = m_htmlPage,
+                                                   .markdown = m_markdown,
+                                                   .fileName = m_fileName,
+                                                   .scrollBehavior = m_options.scrollBehavior};
         m_onMarkdownReadyCallback(markdownPreviewData);
     }
 }

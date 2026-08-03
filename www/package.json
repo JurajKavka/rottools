@@ -6,6 +6,7 @@
   "description": "Marketing and download site for the ROT tools suite.",
   "scripts": {
     "dev": "astro dev",
+    "start": "astro dev --open",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check"

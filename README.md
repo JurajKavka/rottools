@@ -31,6 +31,9 @@ rottools/
       FileDropTarget/        rottools::ui_filedrop
   apps/
     rotreader/           # first tool: sources, VERSION, packaging/ inputs
+      assets/icons/          generated icons (committed) — see "Icons"
+  docs/graphics/         # icon masters (Inkscape) + README.md: how to change an icon
+  scripts/               # generate-icons.sh and its helper
 ```
 
 ## Build and run (local dev)
@@ -56,6 +59,20 @@ Build/run a single shared component in isolation (`make help` lists them all):
 
 The other demos follow the same pattern: `run-htmlsource`, `run-mdsource`,
 `run-dirscan`, `run-md2html`, `run-helpers` (and `build-filedrop`).
+
+## Icons
+
+Each tool has one hand-drawn master SVG at `docs/graphics/<tool>/<tool>-logo.svg`.
+Every platform icon is generated from it — macOS `.icns`, the Linux hicolor PNGs
+and scalable SVG, the Windows `.ico`:
+
+```sh
+make icons        # edit the master in Inkscape first, then rebuild as usual
+```
+
+The generated files live in `apps/<tool>/assets/icons/` and are committed, so the
+Linux and Windows CI runners never have to rasterise anything. Never edit them by
+hand. Full process and reference: [docs/graphics/README.md](docs/graphics/README.md).
 
 ## Installing on macOS
 
@@ -112,4 +129,7 @@ publishes a GitHub Release. Other tools are untouched.
    need, then call `rottools_apply_version(...)` and `rottools_package_app(...)`.
 3. Add a `ROTTOOLS_BUILD_<TOOL>` option in the umbrella `CMakeLists.txt` and an
    `add_subdirectory` guard in `apps/CMakeLists.txt`.
-4. Add a `release-<tool>.yml` workflow and a `<tool>` path filter in `ci.yml`.
+4. Draw its icon: copy `docs/graphics/icon-template.svg` to
+   `docs/graphics/<tool>/<tool>-logo.svg` and run
+   `scripts/generate-icons.sh <tool>`. Missing icons only warn, so this can wait.
+5. Add a `release-<tool>.yml` workflow and a `<tool>` path filter in `ci.yml`.

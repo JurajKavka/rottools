@@ -53,8 +53,7 @@ called from each app's `CMakeLists.txt`. `cd build && cpack` (or `make dmg`) pro
 
 Version is single-sourced from `apps/<tool>/VERSION` and flows into a generated `version.h`,
 the macOS `Info.plist` ([packaging/macos/Info.plist.in](apps/rotreader/packaging/macos/Info.plist.in)),
-and the package name. The macOS `.app` icon is generated from
-`apps/rotreader/assets/logo.png` (1024×1024 master) into `AppIcon.icns` at build time.
+and the package name.
 
 Two distinct names: `EXE_NAME` (`rotreader`) is the CMake target / binary / `CFBundleExecutable`;
 `DISPLAY_NAME` (`ℜ⛤𝔗 reader`) is the user-facing `.app`/`CFBundleName`/`.dmg` volume name.
@@ -64,6 +63,21 @@ call in [apps/rotreader/CMakeLists.txt](apps/rotreader/CMakeLists.txt).
 macOS signing is still ad-hoc (CPack default); Developer-ID cert + notarization is a follow-up.
 For a fully self-contained `.dmg` (deps statically linked, not against Homebrew), configure with
 `--preset ci-macos` (vcpkg).
+
+## Icons
+
+Each tool has one hand-drawn master SVG at `docs/graphics/<tool>/<tool>-logo.svg`, copied from
+the shared [docs/graphics/icon-template.svg](docs/graphics/icon-template.svg). Every platform
+icon comes from it:
+
+```
+scripts/generate-icons.sh rotreader --name "ROT Reader"   # or: make icons
+```
+
+Output lands in `apps/<tool>/assets/icons/` (`.icns`, hicolor PNGs + scalable SVG, `.ico`) and
+**is committed** — the Linux and Windows CI runners have no Inkscape, so the build only ever
+reads finished files. Never hand-edit anything under `assets/icons/`; edit the master SVG in
+Inkscape and re-run the script. Full reference: [docs/graphics/README.md](docs/graphics/README.md).
 
 ## Naming conventions
 
