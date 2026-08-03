@@ -12,7 +12,15 @@ MarkdownPreviewPanel::MarkdownPreviewPanel(wxWindow* parent, OnMarkdownReadyCall
 
 void MarkdownPreviewPanel::LoadFile(const wxFileName& fileName, MarkdownPreviewOptions options) {
     m_options = std::move(options);
+    m_origin = MarkdownOrigin::Disk;
     m_markdownParser.ParseFile(fileName);
+}
+
+void MarkdownPreviewPanel::LoadMarkdown(const wxString& markdown, const wxFileName& fileName,
+                                        MarkdownPreviewOptions options) {
+    m_options = std::move(options);
+    m_origin = MarkdownOrigin::Memory;
+    m_markdownParser.ParseText(markdown, fileName);
 }
 
 void MarkdownPreviewPanel::Render(MarkdownPreviewOptions options) {
@@ -50,7 +58,8 @@ void MarkdownPreviewPanel::Paint() {
         MarkdownPreviewData markdownPreviewData = {.html = m_htmlPage,
                                                    .markdown = m_markdown,
                                                    .fileName = m_fileName,
-                                                   .scrollBehavior = m_options.scrollBehavior};
+                                                   .scrollBehavior = m_options.scrollBehavior,
+                                                   .origin = m_origin};
         m_onMarkdownReadyCallback(markdownPreviewData);
     }
 }

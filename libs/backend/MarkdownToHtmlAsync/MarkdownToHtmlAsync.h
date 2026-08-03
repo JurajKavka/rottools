@@ -17,6 +17,19 @@ class MarkdownToHtmlAsync {
     ~MarkdownToHtmlAsync();
 
     void ParseFile(const wxFileName& filePath);
+
+    /**
+     * @brief Parses markdown already held in memory, without touching the disk.
+     *
+     * Used after the editor saves: the text is already there, so re-reading the
+     * file we just wrote would only add latency and a chance of reading a
+     * half-written file.
+     *
+     * @param markdown The markdown to parse
+     * @param filePath The file the markdown belongs to; travels on the result event
+     */
+    void ParseText(const wxString& markdown, const wxFileName& filePath);
+
     void AbortParseFile();  // New method to trigger cancellation
 
    private:
@@ -26,5 +39,15 @@ class MarkdownToHtmlAsync {
     std::thread m_workerThread;  // Store the thread as a member
     std::atomic<bool> m_stopRequested{false};
     void StopWorker();  // request stop + join (std::thread must be joined before reuse/destruction)
+
+    /**
+     * @brief Starts the parse worker, the one code path behind ParseFile and ParseText.
+     *
+     * @param filePath The file the markdown belongs to; travels on the result event
+     * @param readFromDisk true reads filePath on the worker thread, false parses markdown as given
+     * @param markdown The UTF-8 markdown to parse; ignored when readFromDisk is true
+     */
+    void StartWorker(const wxFileName& filePath, bool readFromDisk, std::string markdown);
+
     [[nodiscard]] static wxString ConvertMarkdownToHtml(const std::string& markdownContent);
 };

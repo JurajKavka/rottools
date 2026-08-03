@@ -20,8 +20,8 @@ MarkdownSourcePanelWx::MarkdownSourcePanelWx( wxWindow* parent, wxWindowID id, c
 
 	bSizer2->Add( 0, 0, 0, 0, 0 );
 
-	m_button2 = new wxButton( this, wxID_ANY, _("💾"), wxDefaultPosition, wxSize( 15,15 ), wxBORDER_NONE );
-	bSizer2->Add( m_button2, 0, wxALL, 5 );
+	m_saveButton = new wxButton( this, wxID_ANY, _("💾"), wxDefaultPosition, wxSize( 15,15 ), wxBORDER_NONE );
+	bSizer2->Add( m_saveButton, 0, wxALL, 5 );
 
 	m_closeButton = new wxButton( this, wxID_ANY, _("✕"), wxDefaultPosition, wxSize( 15,15 ), wxBORDER_NONE );
 	bSizer2->Add( m_closeButton, 0, wxALL, 4 );

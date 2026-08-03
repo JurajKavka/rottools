@@ -33,7 +33,7 @@ class MarkdownSourcePanelWx : public wxPanel
 	private:
 
 	protected:
-		wxButton* m_button2;
+		wxButton* m_saveButton;
 		wxButton* m_closeButton;
 		wxStyledTextCtrl* m_styledTextCtrl;
 

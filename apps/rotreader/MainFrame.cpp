@@ -4,9 +4,6 @@
 #include <wx/filedlg.h>  // Required for wxFileDialog
 #include <wx/msgdlg.h>   // Required for wxMessageBox
 
-#include <fstream>  // For opening the file
-#include <sstream>  // For reading the file content
-
 #include "AppIcon.h"
 #include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
 #include "FileDropTarget.h"
@@ -229,6 +226,8 @@ void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
         return;
     }
     m_currentFile = absolutePath;
+    // Unknown until the load reports back in HandleMarkdownReady
+    m_loadedText.clear();
     RefreshWatchedPaths();
     // Follow the browser to the opened file's directory (drag&drop, the open
     // dialog, or a file picked elsewhere), unless it is already shown. This is
@@ -243,14 +242,40 @@ void MainFrame::OpenMarkdownFile(const wxFileName& filePath) {
     m_markdownPreviewPanel->LoadFile(absolutePath, GetPreviewOptions());
 }
 
+// Handles changes made by other programs (an external editor, git, a second
+// window). Our own save does not come through here: it renders directly, and the
+// file-system event it triggers is dropped by the content comparison below.
 void MainFrame::ReloadOpenDocument() {
-    if (m_currentFile.IsOk() && m_currentFile.FileExists()) {
-        printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
-        // Load directly (not OpenMarkdownFile) to avoid status-bar flicker on
-        // every save; HandleMarkdownReady refreshes the status bar anyway.
-        // Same file reloaded live: keep the reader's scroll position.
-        m_markdownPreviewPanel->LoadFile(m_currentFile, GetPreviewOptions(ScrollBehavior::KeepPosition));
+    if (!m_currentFile.IsOk() || !m_currentFile.FileExists()) {
+        return;
     }
+
+    wxString onDisk;
+    if (!ReadFileUtf8(m_currentFile, onDisk)) {
+        printError("[Watcher] Could not read changed file: {}", m_currentFile.GetFullPath());
+        return;
+    }
+
+    // The echo of our own save, or a repeated event for a change already loaded
+    if (onDisk == m_loadedText) {
+        return;
+    }
+
+    // Never discard what the user typed. They keep their version; the file on
+    // disk is left alone and picked up by the next save or reopen.
+    if (m_markdownSourcePanel->HasUnsavedChanges()) {
+        statusBar->SetStatusText(wxString("File changed on disk - your unsaved edits were kept: ") +
+                                 m_currentFile.GetFullPath());
+        return;
+    }
+
+    printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
+    m_loadedText = onDisk;
+    // The text is already in hand, so render it directly instead of reading the
+    // file a second time. That means HandleMarkdownReady will not fill the
+    // editor, so do it here. Same file reloaded live: keep the scroll positions.
+    m_markdownSourcePanel->ShowMarkdown(onDisk, ScrollBehavior::KeepPosition);
+    m_markdownPreviewPanel->LoadMarkdown(onDisk, m_currentFile, GetPreviewOptions(ScrollBehavior::KeepPosition));
 }
 
 void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
@@ -273,7 +298,20 @@ void MainFrame::RefreshWatchedPaths() {
 
 void MainFrame::HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData) {
     m_htmlSourcePanel->ShowHtml(markdownPreviewData.html);
-    m_markdownSourcePanel->ShowMarkdown(markdownPreviewData.markdown, markdownPreviewData.scrollBehavior);
+    // Only a render that read the file fills the editor. Text that came from the
+    // editor itself must not be written back into it: the round trip takes long
+    // enough to swallow anything typed in the meantime, and it would clear the
+    // buffer's saved state.
+    if (markdownPreviewData.origin == MarkdownOrigin::Disk) {
+        m_loadedText = markdownPreviewData.markdown;
+        // ResetToTop means a different document, which always replaces the
+        // editor. KeepPosition means a repaint of the same one - a theme change
+        // re-renders the last parse - and must not throw away edits in progress.
+        if (markdownPreviewData.scrollBehavior == ScrollBehavior::ResetToTop ||
+            !m_markdownSourcePanel->HasUnsavedChanges()) {
+            m_markdownSourcePanel->ShowMarkdown(markdownPreviewData.markdown, markdownPreviewData.scrollBehavior);
+        }
+    }
     statusBar->SetStatusText(markdownPreviewData.fileName.GetAbsolutePath());
 }
 
@@ -292,15 +330,17 @@ void MainFrame::HandleMarkdownSourceSave(const wxString& markdown) {
         return;
     }
 
-    const wxScopedCharBuffer utf8 = markdown.utf8_str();
-    std::ofstream out(m_currentFile.GetFullPath().fn_str(), std::ios::binary | std::ios::trunc);
-    if (out) {
-        out.write(utf8.data(), static_cast<std::streamsize>(utf8.length()));
-        out.close();
-    }
-    if (!out) {
+    if (!WriteFileUtf8(m_currentFile, markdown)) {
         wxMessageBox(wxString("Could not save file: ") + m_currentFile.GetFullPath(), "Error", wxICON_ERROR);
         return;
     }
     statusBar->SetStatusText(wxString("Saved ") + m_currentFile.GetFullPath());
+
+    // Repaint straight from the text we just wrote. The document watcher will
+    // also report this write, but ReloadOpenDocument drops it as its own echo:
+    // waiting for that event would delay the repaint by the debounce, fail
+    // whenever the operating system merges or loses the event, and overwrite
+    // anything typed in the meantime.
+    m_loadedText = markdown;
+    m_markdownPreviewPanel->LoadMarkdown(markdown, m_currentFile, GetPreviewOptions(ScrollBehavior::KeepPosition));
 }

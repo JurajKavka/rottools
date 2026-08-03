@@ -2,8 +2,10 @@
 
 #include <wx/stdpaths.h>
 
+#include <fstream>
 #include <iostream>
 #include <mutex>
+#include <sstream>
 
 namespace detail {
 void WriteLogLine(std::ostream& stream, const std::string& line) {
@@ -50,6 +52,28 @@ void printCppVersion() {
             std::cout << "Unknown/Experimental (" << __cplusplus << ")" << std::endl;
             break;
     }
+}
+
+bool ReadFileUtf8(const wxFileName& filePath, wxString& contents) {
+    std::ifstream in(filePath.GetFullPath().fn_str(), std::ios::binary);
+    if (!in) {
+        return false;
+    }
+    std::stringstream buffer;
+    buffer << in.rdbuf();
+    contents = wxString::FromUTF8(buffer.str());
+    return true;
+}
+
+bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents) {
+    const wxScopedCharBuffer utf8 = contents.utf8_str();
+    std::ofstream out(filePath.GetFullPath().fn_str(), std::ios::binary | std::ios::trunc);
+    if (!out) {
+        return false;
+    }
+    out.write(utf8.data(), static_cast<std::streamsize>(utf8.length()));
+    out.close();
+    return static_cast<bool>(out);
 }
 
 wxFileName GetAssetPath(const wxString& filename) {

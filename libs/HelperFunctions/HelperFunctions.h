@@ -31,6 +31,24 @@ void printCppVersion();
 std::string trimToStdString(const wxString& str);
 wxFileName GetAssetPath(const wxString& filename);
 
+/**
+ * @brief Reads a whole file as UTF-8 text.
+ *
+ * @param filePath File to read
+ * @param contents Receives the text; untouched when the read fails
+ * @return false when the file could not be opened or read
+ */
+bool ReadFileUtf8(const wxFileName& filePath, wxString& contents);
+
+/**
+ * @brief Writes text to a file as UTF-8, replacing anything already there.
+ *
+ * @param filePath File to write
+ * @param contents Text to write
+ * @return false when the file could not be opened or written
+ */
+bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents);
+
 // 1. Keep this for simple, single wxString prints: printLog(myWxString);
 void printLog(const wxString& msg);
 void printError(const wxString& msg);

@@ -32,6 +32,10 @@ class MainFrame : public MainFrameWx {
     std::unique_ptr<FsWatcher> m_documentWatcher;
     wxFileName m_currentFile;
     wxFileName m_browsedDirectory;
+    // The document text already loaded and rendered, i.e. what we believe is on
+    // disk. ReloadOpenDocument compares against it to ignore the file-system
+    // event our own save triggers, which has already been rendered directly.
+    wxString m_loadedText;
     // First of the CssThemeCount consecutive ids given to the Theme menu items
     wxWindowID m_themeMenuBaseId = wxID_ANY;
     // Index into cssThemes; the frame owns the theme, the preview panel does not

@@ -16,6 +16,19 @@ struct MarkdownPreviewOptions {
 };
 
 /**
+ * @brief Where the markdown behind a repaint came from.
+ *
+ * The owner needs this to decide whether to push the text into an editor: text
+ * that came out of that editor must not be written back into it.
+ */
+enum class MarkdownOrigin {
+    /// Read from the file (LoadFile)
+    Disk,
+    /// Handed in already in memory (LoadMarkdown)
+    Memory,
+};
+
+/**
  * @brief The rendered document, reported to the owner on every repaint.
  *
  * The members are references to storage owned by the panel and are only valid
@@ -29,6 +42,7 @@ struct MarkdownPreviewData {
     /// The file the markdown was read from
     const wxFileName& fileName;
     ScrollBehavior scrollBehavior;
+    MarkdownOrigin origin = MarkdownOrigin::Disk;
 };
 
 /**
@@ -62,6 +76,19 @@ class MarkdownPreviewPanel : public WebViewPanel {
     void LoadFile(const wxFileName& fileName, MarkdownPreviewOptions options = {});
 
     /**
+     * @brief Parses and renders markdown the caller already holds, without reading the file.
+     *
+     * Same asynchronous contract as LoadFile. The repaint it produces is reported
+     * with MarkdownOrigin::Memory, so an owner that also drives an editor knows
+     * not to write the text back into it.
+     *
+     * @param markdown Markdown to render
+     * @param fileName The file this markdown belongs to, reported back in MarkdownPreviewData
+     * @param options Styling to apply to this and any later render, until changed
+     */
+    void LoadMarkdown(const wxString& markdown, const wxFileName& fileName, MarkdownPreviewOptions options = {});
+
+    /**
      * @brief Re-renders the file already parsed with new options, e.g. a theme change.
      *
      * The markdown is not read or parsed again, only wrapped in a new page.
@@ -82,6 +109,9 @@ class MarkdownPreviewPanel : public WebViewPanel {
     wxString m_parsedHtml;
     wxString m_markdown;
     wxFileName m_fileName;
+    /// Where the last parse request took its markdown from; a restyle via
+    /// Render() keeps it, since the document itself did not change.
+    MarkdownOrigin m_origin = MarkdownOrigin::Disk;
     /// The page currently shown; MarkdownPreviewData::html refers to it
     wxString m_htmlPage;
 
