@@ -184,6 +184,9 @@ void MainFrame::ApplySourcePanelVisibility() {
     }
     m_rightSplitter->SplitVertically(m_markdownPreviewPanel, m_sourceSplitter);
 
+    m_rightSplitter->UpdateSize();
+    m_sourceSplitter->UpdateSize();
+
     Layout();
 }
 
