@@ -47,6 +47,8 @@ class MainFrame : public MainFrameWx {
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event);
+    void HandleHtmlSourcePanelClose();
+    void HandleMarkdownSourcePanelClose();
     void ApplySourcePanelVisibility();
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);

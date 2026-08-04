@@ -20,6 +20,9 @@ prints a "Bypassed rule violations" warning, stop and report it rather than cont
 
 ## Build system
 
+Never run `cmake`, `make build`, `make rebuild`, or any other build command. The user builds
+and verifies changes themselves. The commands below document the project for reference only.
+
 CMake monorepo (`rottools` suite). The umbrella [CMakeLists.txt](CMakeLists.txt) builds the
 whole tree: shared code lives under `libs/` as `rottools::*` targets, each tool under
 `apps/<tool>/` (currently `apps/rotreader`). The root `Makefile` wraps the common commands:

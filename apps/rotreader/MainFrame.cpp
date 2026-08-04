@@ -43,15 +43,11 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
                                  std::bind_front(&MainFrame::HandleMarkdownError, this));
     m_sourceSplitter =
         new wxSplitterWindow(m_rightSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
-    m_htmlSourcePanel = new HtmlSourcePanel(m_sourceSplitter, [this] {
-        m_htmlSourcePanel->Hide();
-        ApplySourcePanelVisibility();
-    });
-    m_markdownSourcePanel =
-        new MarkdownSourcePanel(m_sourceSplitter, std::bind_front(&MainFrame::HandleMarkdownSourceSave, this), [this] {
-            m_markdownSourcePanel->Hide();
-            ApplySourcePanelVisibility();
-        });
+    m_htmlSourcePanel =
+        new HtmlSourcePanel(m_sourceSplitter, std::bind_front(&MainFrame::HandleHtmlSourcePanelClose, this));
+    m_markdownSourcePanel = new MarkdownSourcePanel(
+        m_sourceSplitter, std::bind_front(&MainFrame::HandleMarkdownSourceSave, this),
+        std::bind_front(&MainFrame::HandleMarkdownSourcePanelClose, this));
     m_rightSplitter->SetMinimumPaneSize(100);
     m_sourceSplitter->SetMinimumPaneSize(100);
 
@@ -141,6 +137,16 @@ void MainFrame::HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event) 
 
 void MainFrame::HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event) {
     m_markdownSourcePanel->Show(!m_markdownSourcePanel->IsShown());
+    ApplySourcePanelVisibility();
+}
+
+void MainFrame::HandleHtmlSourcePanelClose() {
+    m_htmlSourcePanel->Hide();
+    ApplySourcePanelVisibility();
+}
+
+void MainFrame::HandleMarkdownSourcePanelClose() {
+    m_markdownSourcePanel->Hide();
     ApplySourcePanelVisibility();
 }
 
