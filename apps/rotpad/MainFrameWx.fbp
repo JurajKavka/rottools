@@ -117,19 +117,6 @@
           <property name="label">View</property>
           <property name="name">m_menu2</property>
           <property name="permission">protected</property>
-          <object class="wxMenuItem" expanded="true">
-            <property name="bitmap"></property>
-            <property name="checked">0</property>
-            <property name="enabled">1</property>
-            <property name="help"></property>
-            <property name="id">wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM</property>
-            <property name="kind">wxITEM_NORMAL</property>
-            <property name="label">Solo Markdown Prevew</property>
-            <property name="name">m_soloWebViewPanelMenuItem</property>
-            <property name="permission">none</property>
-            <property name="shortcut"></property>
-            <property name="unchecked_bitmap"></property>
-          </object>
           <object class="wxMenuItem" expanded="false">
             <property name="bitmap"></property>
             <property name="checked">0</property>
@@ -142,38 +129,6 @@
             <property name="permission">none</property>
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
-          </object>
-          <object class="wxMenuItem" expanded="false">
-            <property name="bitmap"></property>
-            <property name="checked">0</property>
-            <property name="enabled">1</property>
-            <property name="help"></property>
-            <property name="id">wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM</property>
-            <property name="kind">wxITEM_NORMAL</property>
-            <property name="label">Toggle HTML Source</property>
-            <property name="name">m_toggleHtmlSourcePanelMenuItem</property>
-            <property name="permission">none</property>
-            <property name="shortcut"></property>
-            <property name="unchecked_bitmap"></property>
-          </object>
-          <object class="wxMenuItem" expanded="false">
-            <property name="bitmap"></property>
-            <property name="checked">0</property>
-            <property name="enabled">1</property>
-            <property name="help"></property>
-            <property name="id">wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM</property>
-            <property name="kind">wxITEM_NORMAL</property>
-            <property name="label">Toggle Markdown Source</property>
-            <property name="name">m_toggleMarkdownSourcePanelMenuItem</property>
-            <property name="permission">none</property>
-            <property name="shortcut"></property>
-            <property name="unchecked_bitmap"></property>
-          </object>
-          <object class="submenu" expanded="true">
-            <property name="bitmap"></property>
-            <property name="label">Theme</property>
-            <property name="name">m_themeSubmenu</property>
-            <property name="permission">protected</property>
           </object>
         </object>
       </object>
@@ -246,7 +201,29 @@
           <property name="id">wxID_ANY</property>
           <property name="kind">wxITEM_NORMAL</property>
           <property name="label">Open file</property>
-          <property name="name">fileOpenTool</property>
+          <property name="name">m_fileOpenTool</property>
+          <property name="permission">protected</property>
+          <property name="statusbar"></property>
+          <property name="tooltip"></property>
+        </object>
+        <object class="tool" expanded="true">
+          <property name="bitmap">Load From Art Provider; wxART_FILE_SAVE; wxART_TOOLBAR</property>
+          <property name="context_menu">0</property>
+          <property name="id">wxID_ANY</property>
+          <property name="kind">wxITEM_NORMAL</property>
+          <property name="label">tool</property>
+          <property name="name">m_saveTool</property>
+          <property name="permission">protected</property>
+          <property name="statusbar"></property>
+          <property name="tooltip"></property>
+        </object>
+        <object class="tool" expanded="true">
+          <property name="bitmap">Load From Art Provider; wxART_FILE_SAVE_AS; wxART_TOOLBAR</property>
+          <property name="context_menu">0</property>
+          <property name="id">wxID_ANY</property>
+          <property name="kind">wxITEM_NORMAL</property>
+          <property name="label">tool</property>
+          <property name="name">m_saveAsTool</property>
           <property name="permission">protected</property>
           <property name="statusbar"></property>
           <property name="tooltip"></property>

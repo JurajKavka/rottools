@@ -37,18 +37,16 @@ class MainFrameWx : public wxFrame
 		enum
 		{
 			wxID_NEW_WINDOW_MENU_ITEM = 6000,
-			wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM,
 			wxID_TOGGLE_FILE_BROWSER_MENU_ITEM,
-			wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM,
-			wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM,
 		};
 
 		wxMenuBar* MenuBar;
 		wxMenu* m_menu1;
 		wxMenu* m_menu2;
-		wxMenu* m_themeSubmenu;
 		wxToolBar* toolBar;
-		wxToolBarToolBase* fileOpenTool;
+		wxToolBarToolBase* m_fileOpenTool;
+		wxToolBarToolBase* m_saveTool;
+		wxToolBarToolBase* m_saveAsTool;
 		wxStatusBar* statusBar;
 
 	public:

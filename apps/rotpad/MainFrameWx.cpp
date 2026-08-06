@@ -28,25 +28,9 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	MenuBar->Append( m_menu1, _("File") );
 
 	m_menu2 = new wxMenu();
-	wxMenuItem* m_soloWebViewPanelMenuItem;
-	m_soloWebViewPanelMenuItem = new wxMenuItem( m_menu2, wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM, wxString( _("Solo Markdown Prevew") ) , wxEmptyString, wxITEM_NORMAL );
-	m_menu2->Append( m_soloWebViewPanelMenuItem );
-
 	wxMenuItem* m_toggleFileBrowserMenuItem;
 	m_toggleFileBrowserMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu2->Append( m_toggleFileBrowserMenuItem );
-
-	wxMenuItem* m_toggleHtmlSourcePanelMenuItem;
-	m_toggleHtmlSourcePanelMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM, wxString( _("Toggle HTML Source") ) , wxEmptyString, wxITEM_NORMAL );
-	m_menu2->Append( m_toggleHtmlSourcePanelMenuItem );
-
-	wxMenuItem* m_toggleMarkdownSourcePanelMenuItem;
-	m_toggleMarkdownSourcePanelMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM, wxString( _("Toggle Markdown Source") ) , wxEmptyString, wxITEM_NORMAL );
-	m_menu2->Append( m_toggleMarkdownSourcePanelMenuItem );
-
-	m_themeSubmenu = new wxMenu();
-	wxMenuItem* m_themeSubmenuItem = new wxMenuItem( m_menu2, wxID_ANY, _("Theme"), wxEmptyString, wxITEM_NORMAL, m_themeSubmenu );
-	m_menu2->Append( m_themeSubmenuItem );
 
 	MenuBar->Append( m_menu2, _("View") );
 
@@ -59,7 +43,11 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	this->SetSizer( MainFrameSizer );
 	this->Layout();
 	toolBar = this->CreateToolBar( wxTB_HORIZONTAL, wxID_ANY );
-	fileOpenTool = toolBar->AddTool( wxID_ANY, _("Open file"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+	m_fileOpenTool = toolBar->AddTool( wxID_ANY, _("Open file"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+
+	m_saveTool = toolBar->AddTool( wxID_ANY, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+
+	m_saveAsTool = toolBar->AddTool( wxID_ANY, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE_AS), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
 
 	toolBar->Realize();
 

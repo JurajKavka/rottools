@@ -27,8 +27,13 @@ TextEditorPanel::TextEditorPanel(wxWindow* parent) : TextEditorPanelWx(parent) {
     m_textEditor->StyleSetFont(wxSTC_STYLE_DEFAULT, wxFontInfo(12).Family(wxFONTFAMILY_TELETYPE));
     m_textEditor->StyleClearAll();
     m_textEditor->SetCaretForeground(foreground);
+#ifndef __WXOSX__
+    // Cocoa supplies Scintilla's native selection appearance. Overriding its
+    // text colour splits selected text into separate shaped runs, which can
+    // make glyphs appear to shift as the selection changes.
     m_textEditor->SetSelBackground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
     m_textEditor->SetSelForeground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
+#endif
 
     wxSizer* mainSizer = GetSizer();
     mainSizer->Add(m_textEditor, 1, wxEXPAND | wxALL, 0);

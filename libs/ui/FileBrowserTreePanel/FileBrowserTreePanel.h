@@ -1,6 +1,8 @@
 #pragma once
 
 #include <functional>
+#include <string>
+#include <vector>
 
 #include "DirectoryScanner.h"
 #include "FileBrowserTreePanelWx.h"
@@ -10,8 +12,14 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
    public:
     using FileOpenedCallback = std::function<void(const wxFileName&)>;
     using DirectoryChangedCallback = std::function<void(const wxFileName&)>;
+
+    /**
+     * @param extensions Case-insensitive file extensions to show. An empty
+     *        collection shows all ordinary files.
+     */
     explicit FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened = nullptr,
-                                  DirectoryChangedCallback onDirectoryChanged = nullptr);
+                                  DirectoryChangedCallback onDirectoryChanged = nullptr,
+                                  std::vector<std::string> extensions = {});
     ~FileBrowserTreePanel();
 
     /**

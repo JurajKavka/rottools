@@ -4,6 +4,9 @@
 #include <wx/filedlg.h>  // Required for wxFileDialog
 #include <wx/msgdlg.h>   // Required for wxMessageBox
 
+#include <string>
+#include <vector>
+
 #include "AppIcon.h"
 #include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
 #include "FileDropTarget.h"
@@ -34,7 +37,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     // nested splitter holding the rendered preview and the HTML source view
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_fileBrowserPanel = new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::OpenMarkdownFile, this),
-                                                  std::bind_front(&MainFrame::HandleDirectoryChanged, this));
+                                                  std::bind_front(&MainFrame::HandleDirectoryChanged, this),
+                                                  std::vector<std::string>{".md"});
 
     m_rightSplitter =
         new wxSplitterWindow(m_mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
