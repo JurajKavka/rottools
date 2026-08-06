@@ -9,6 +9,7 @@ and its own macOS / Linux / Windows builds, and is released independently.
 | Tool         | Description                                                        |
 |--------------|-------------------------------------------------------------------|
 | **rotreader** | A native Markdown viewer (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ℜ⛤𝔗 reader**. |
+| **rotpad**    | A small native plain-text editor inspired by classic Notepad. UI name: **ℜ⛤𝔗 pad**. |
 
 ## Repository layout
 
@@ -27,11 +28,14 @@ rottools/
       WebViewPanel/          rottools::ui_webview
       HtmlSourcePanel/       rottools::ui_htmlsource
       MarkdownSourcePanel/   rottools::ui_mdsource
+      TextEditorPanel/       rottools::ui_texteditor
       FileBrowserTreePanel/  rottools::ui_filetree
       FileDropTarget/        rottools::ui_filedrop
   apps/
-    rotreader/           # first tool: sources, VERSION, packaging/ inputs
-      assets/icons/          generated icons (committed) — see "Icons"
+    rotreader/           # Markdown reader: sources, VERSION, packaging inputs
+    rotpad/              # plain-text editor: sources, VERSION, packaging inputs
+      Makefile           # app-specific build/run/package workflow
+      assets/            # generated icons eventually live under assets/icons/
   docs/graphics/         # icon masters (Inkscape) + README.md: how to change an icon
   scripts/               # generate-icons.sh and its helper
 ```
@@ -39,16 +43,21 @@ rottools/
 ## Build and run (local dev)
 
 Uses system-provided wxWidgets (e.g. `brew install wxwidgets`) and fetches md4c.
-`make help` prints the full menu; the common targets and their raw CMake
-equivalents are:
+`make help` prints the full menu. Root targets operate on the complete suite;
+app-prefixed targets use an isolated build directory and operate on one app:
 
-| `make`         | Does                             | Equivalent CMake |
-|----------------|----------------------------------|------------------|
-| `make build`   | Configure + build the whole tree | `cmake --preset dev && cmake --build build` |
-| `make run`     | Launch rotreader (`.app`)        | `open ./build/apps/rotreader/rotreader.app` |
-| `make rebuild` | Incremental build                | `cmake --build build` |
-| `make all`     | Clean + build + run              | `make clean build run` |
-| `make dev`     | Rebuild + run (fast inner loop)  | `make rebuild run` |
+| `make`                  | Does                                      |
+|-------------------------|-------------------------------------------|
+| `make build`            | Configure and build the complete suite    |
+| `make rotreader-dev`    | Configure, build, and run only rotreader  |
+| `make rotpad-dev`       | Configure, build, and run only rotpad     |
+| `make rotpad-build`     | Configure and build only rotpad           |
+| `make rotpad-package`   | Build and package only rotpad             |
+
+Each app also has the same shorter workflow from its own directory, for example
+`make -C apps/rotpad dev`, `make -C apps/rotpad build`, or
+`make -C apps/rotpad package`. Isolated builds land in `build/<app>/`; the suite
+build remains in `build/`.
 
 Build/run a single shared component in isolation (`make help` lists them all):
 
@@ -58,7 +67,8 @@ Build/run a single shared component in isolation (`make help` lists them all):
 | `make build-webview` | WebViewPanel (lib only) | `cmake --build build --target rottools_ui_webview` |
 
 The other demos follow the same pattern: `run-htmlsource`, `run-mdsource`,
-`run-dirscan`, `run-md2html`, `run-helpers` (and `build-filedrop`).
+`run-texteditor`, `run-dirscan`, `run-md2html`, `run-helpers` (and
+`build-filedrop`).
 
 ## Icons
 
@@ -67,7 +77,7 @@ Every platform icon is generated from it — macOS `.icns`, the Linux hicolor PN
 and scalable SVG, the Windows `.ico`:
 
 ```sh
-make icons        # edit the master in Inkscape first, then rebuild as usual
+make rotreader-icons  # edit the master in Inkscape first, then rebuild as usual
 ```
 
 The generated files live in `apps/<tool>/assets/icons/` and are committed, so the

@@ -1,7 +1,11 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help all dev build run run-fg rebuild dmg icons web-icons \
-        run-filetree run-htmlsource run-mdsource run-dirscan run-md2html run-helpers \
+.PHONY: help all dev configure build rebuild web-icons \
+        rotreader rotreader-all rotreader-dev rotreader-build rotreader-rebuild \
+        rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
+        rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
+        rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
+        run-filetree run-htmlsource run-mdsource run-texteditor run-dirscan run-md2html run-helpers \
         build-webview build-filedrop \
         format check clean _demos
 
@@ -9,33 +13,83 @@
 help: ## Show this help (default target)
 	@awk 'BEGIN {FS = ":.*##"} \
 	  /^##@/ {printf "\n\033[1m%s\033[0m\n", substr($$0, 5)} \
-	  /^[a-zA-Z0-9_-]+:.*##/ {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	  /^[a-zA-Z0-9_-]+:.*##/ {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
-##@ App — rotreader (the whole tree)
-all: clean build run-fg   ## Clean, build, and run rotreader (foreground)
-dev: rebuild run-fg       ## Rebuild and run in foreground (fast inner loop)
+##@ Suite
+all: build                ## Configure and build the complete suite
+dev: build                ## Configure and incrementally build the complete suite
 
-build:                 ## Configure + build the whole tree (system wx)
-	cmake -S . -B build -G Ninja && cmake --build build
+configure:                ## Configure the complete suite (system wx)
+	cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 
-run:                   ## Launch rotreader (.app bundle)
-	open ./build/apps/rotreader/rotreader.app
-
-run-fg:                ## Launch rotreader in foreground (see printLog output)
-	./build/apps/rotreader/rotreader.app/Contents/MacOS/rotreader
-
-rebuild:               ## Incremental build of the whole tree
+build: configure          ## Build the complete suite
 	cmake --build build
 
-dmg: build             ## Package rotreader as a macOS .dmg (CPack)
-	cd build && cpack -G DragNDrop
+rebuild:                  ## Rebuild the configured complete suite
+	cmake --build build
 
-# Rasterises docs/graphics/rotreader/rotreader-logo.svg into every platform icon.
-# Manual step: the output is committed because CI has no Inkscape.
-icons:                 ## Regenerate rotreader's icons from its master SVG
-	./scripts/generate-icons.sh rotreader --name "ROT Reader"
+##@ App — rotreader
+rotreader: rotreader-dev  ## Configure, build, and run rotreader
 
+rotreader-all:           ## Clean, build, and run rotreader
+	$(MAKE) -C apps/rotreader all
+
+rotreader-dev:           ## Incrementally build and run rotreader
+	$(MAKE) -C apps/rotreader dev
+
+rotreader-build:         ## Configure and build only rotreader
+	$(MAKE) -C apps/rotreader build
+
+rotreader-rebuild:       ## Rebuild rotreader without explicitly reconfiguring
+	$(MAKE) -C apps/rotreader rebuild
+
+rotreader-run:           ## Launch rotreader
+	$(MAKE) -C apps/rotreader run
+
+rotreader-run-fg:        ## Run rotreader in the foreground
+	$(MAKE) -C apps/rotreader run-fg
+
+rotreader-package:       ## Build and package only rotreader
+	$(MAKE) -C apps/rotreader package
+
+rotreader-icons:         ## Regenerate rotreader's icons from its master SVG
+	$(MAKE) -C apps/rotreader icons
+
+rotreader-clean:         ## Remove only rotreader's isolated build
+	$(MAKE) -C apps/rotreader clean
+
+##@ App — rotpad
+rotpad: rotpad-dev        ## Configure, build, and run rotpad
+
+rotpad-all:               ## Clean, build, and run rotpad
+	$(MAKE) -C apps/rotpad all
+
+rotpad-dev:               ## Incrementally build and run rotpad
+	$(MAKE) -C apps/rotpad dev
+
+rotpad-build:             ## Configure and build only rotpad
+	$(MAKE) -C apps/rotpad build
+
+rotpad-rebuild:           ## Rebuild rotpad without explicitly reconfiguring
+	$(MAKE) -C apps/rotpad rebuild
+
+rotpad-run:               ## Launch rotpad
+	$(MAKE) -C apps/rotpad run
+
+rotpad-run-fg:            ## Run rotpad in the foreground
+	$(MAKE) -C apps/rotpad run-fg
+
+rotpad-package:           ## Build and package only rotpad
+	$(MAKE) -C apps/rotpad package
+
+rotpad-icons:             ## Generate rotpad's icons after its master SVG exists
+	$(MAKE) -C apps/rotpad icons
+
+rotpad-clean:             ## Remove only rotpad's isolated build
+	$(MAKE) -C apps/rotpad clean
+
+##@ Graphics
 # The suite logo has no binary, so it produces only the favicon set and the
 # square PNGs the website uses.
 web-icons:             ## Regenerate the rottools suite icons into www/public
@@ -57,6 +111,10 @@ run-markdownpreview: _demos ## MarkdownPreviewPanel        (rottools::ui_markdow
 run-mdsource: _demos   ## MarkdownSourcePanel    (rottools::ui_mdsource)
 	cmake --build build --target rottools_ui_mdsource_app
 	./build/libs/ui/MarkdownSourcePanel/rottools_ui_mdsource_app
+
+run-texteditor: _demos ## TextEditorPanel        (rottools::ui_texteditor)
+	cmake --build build --target rottools_ui_texteditor_app
+	./build/libs/ui/TextEditorPanel/rottools_ui_texteditor_app
 
 run-dirscan: _demos    ## DirectoryScanner       (rottools::dirscan)
 	cmake --build build --target rottools_dirscan_app
