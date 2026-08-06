@@ -14,6 +14,20 @@ HtmlSourcePanelWx::HtmlSourcePanelWx( wxWindow* parent, wxWindowID id, const wxP
 	wxBoxSizer* bSizer1;
 	bSizer1 = new wxBoxSizer( wxVERTICAL );
 
+	wxBoxSizer* bSizer2;
+	bSizer2 = new wxBoxSizer( wxHORIZONTAL );
+
+
+	bSizer2->Add( 0, 0, 0, wxEXPAND, 0 );
+
+	m_closeButton = new wxBitmapButton( this, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 15,15 ), wxBU_AUTODRAW|0 );
+
+	m_closeButton->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_TOOLBAR) ) );
+	bSizer2->Add( m_closeButton, 0, wxALL, 4 );
+
+
+	bSizer1->Add( bSizer2, 0, wxALIGN_RIGHT|wxALIGN_TOP, 0 );
+
 	m_styledTextCtrl = new wxStyledTextCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, wxEmptyString );
 	m_styledTextCtrl->SetUseTabs( true );
 	m_styledTextCtrl->SetTabWidth( 4 );

@@ -3,8 +3,11 @@
 #include <algorithm>
 #include <utility>
 
-MarkdownSourcePanel::MarkdownSourcePanel(wxWindow* parent, OnSaveCallback onSaveCallback)
-    : MarkdownSourcePanelWx(parent), m_onSaveCallback(std::move(onSaveCallback)) {
+MarkdownSourcePanel::MarkdownSourcePanel(wxWindow* parent, OnSaveCallback onSaveCallback,
+                                         OnCloseCallback onCloseCallback)
+    : MarkdownSourcePanelWx(parent),
+      m_onSaveCallback(std::move(onSaveCallback)),
+      m_onCloseCallback(std::move(onCloseCallback)) {
     m_styledTextCtrl->SetLexer(wxSTC_LEX_MARKDOWN);
 
     // Monospace font for every style; StyleClearAll propagates the default
@@ -41,11 +44,16 @@ MarkdownSourcePanel::MarkdownSourcePanel(wxWindow* parent, OnSaveCallback onSave
     m_styledTextCtrl->SetEOLMode(wxSTC_EOL_LF);
 
     m_styledTextCtrl->Bind(wxEVT_KEY_DOWN, &MarkdownSourcePanel::HandleKeyDown, this);
+    m_saveButton->Bind(wxEVT_BUTTON, &MarkdownSourcePanel::HandleSaveButtonClick, this);
+    m_closeButton->Bind(wxEVT_BUTTON, &MarkdownSourcePanel::HandleCloseButtonClick, this);
 }
 
 void MarkdownSourcePanel::ShowMarkdown(const wxString& markdown, ScrollBehavior scrollBehavior) {
     if (scrollBehavior == ScrollBehavior::ResetToTop) {
         m_styledTextCtrl->SetText(markdown);
+        // A different document: nothing to undo back into, and it starts unmodified
+        m_styledTextCtrl->EmptyUndoBuffer();
+        m_styledTextCtrl->SetSavePoint();
         return;
     }
 
@@ -56,15 +64,32 @@ void MarkdownSourcePanel::ShowMarkdown(const wxString& markdown, ScrollBehavior 
 
     m_styledTextCtrl->GotoPos(std::min(caret, m_styledTextCtrl->GetLength()));
     m_styledTextCtrl->SetFirstVisibleLine(firstVisibleLine);
+    // SetText counts as an edit; the text now matches what is on disk, so the
+    // buffer must not be left looking modified.
+    m_styledTextCtrl->SetSavePoint();
+}
+
+bool MarkdownSourcePanel::HasUnsavedChanges() const { return m_styledTextCtrl->GetModify(); }
+
+void MarkdownSourcePanel::Save() {
+    if (m_onSaveCallback) {
+        m_onSaveCallback(m_styledTextCtrl->GetText());
+    }
+    m_styledTextCtrl->SetSavePoint();
 }
 
 void MarkdownSourcePanel::HandleKeyDown(wxKeyEvent& event) {
     if (event.GetKeyCode() == 'S' && event.CmdDown() && !event.ShiftDown() && !event.AltDown()) {
-        if (m_onSaveCallback) {
-            m_onSaveCallback(m_styledTextCtrl->GetText());
-        }
-        m_styledTextCtrl->SetSavePoint();
+        Save();
         return;
     }
     event.Skip();
+}
+
+void MarkdownSourcePanel::HandleSaveButtonClick(wxCommandEvent& event) { Save(); }
+
+void MarkdownSourcePanel::HandleCloseButtonClick(wxCommandEvent& event) {
+    if (m_onCloseCallback) {
+        m_onCloseCallback();
+    }
 }

@@ -186,6 +186,15 @@ wxString MarkdownToHtmlAsync::ConvertMarkdownToHtml(const std::string& markdownC
 }
 
 void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
+    StartWorker(filePath, /*readFromDisk=*/true, {});
+}
+
+void MarkdownToHtmlAsync::ParseText(const wxString& markdown, const wxFileName& filePath) {
+    const wxScopedCharBuffer utf8 = markdown.utf8_str();
+    StartWorker(filePath, /*readFromDisk=*/false, std::string(utf8.data(), utf8.length()));
+}
+
+void MarkdownToHtmlAsync::StartWorker(const wxFileName& filePath, bool readFromDisk, std::string markdown) {
     std::filesystem::path path = filePath.GetFullPath().ToStdWstring();
 
     // Retire any in-flight parse first: assigning over a joinable std::thread
@@ -197,20 +206,23 @@ void MarkdownToHtmlAsync::ParseFile(const wxFileName& filePath) {
     // The parser is owned by the MainFrame; ~MarkdownToHtmlAsync (running on the
     // owner's thread) requests stop and joins this thread before we are destroyed,
     // so the worker can never end up destroying/joining itself.
-    m_workerThread = std::thread([this, path, filePath] {
+    m_workerThread = std::thread([this, path, filePath, readFromDisk, markdown = std::move(markdown)]() mutable {
         // An exception escaping the worker thread calls std::terminate, so guard the body
         try {
-            std::ifstream file(path);
-            if (!file.is_open()) {
-                MarkdownToHtmlAsyncEvent* event = new MarkdownToHtmlAsyncEvent(EVT_MARKDOWN_ERROR, wxID_ANY);
-                event->error = wxString("Could not open file: ") + filePath.GetFullPath();
-                event->filePath = filePath;
-                wxQueueEvent(m_parent, event);
-                return;
+            std::string markdownStr = std::move(markdown);
+            if (readFromDisk) {
+                std::ifstream file(path);
+                if (!file.is_open()) {
+                    MarkdownToHtmlAsyncEvent* event = new MarkdownToHtmlAsyncEvent(EVT_MARKDOWN_ERROR, wxID_ANY);
+                    event->error = wxString("Could not open file: ") + filePath.GetFullPath();
+                    event->filePath = filePath;
+                    wxQueueEvent(m_parent, event);
+                    return;
+                }
+                std::stringstream buffer;
+                buffer << file.rdbuf();
+                markdownStr = buffer.str();
             }
-            std::stringstream buffer;
-            buffer << file.rdbuf();
-            std::string markdownStr = buffer.str();
 
             // Bail out cheaply if a newer request or shutdown superseded this one,
             // so the join/reassign doesn't block on a stale parse

@@ -14,6 +14,21 @@ MarkdownSourcePanelWx::MarkdownSourcePanelWx( wxWindow* parent, wxWindowID id, c
 	wxBoxSizer* bSizer1;
 	bSizer1 = new wxBoxSizer( wxVERTICAL );
 
+	wxBoxSizer* bSizer2;
+	bSizer2 = new wxBoxSizer( wxHORIZONTAL );
+
+
+	bSizer2->Add( 0, 0, 0, 0, 0 );
+
+	m_saveButton = new wxButton( this, wxID_ANY, _("💾"), wxDefaultPosition, wxSize( 15,15 ), wxBORDER_NONE );
+	bSizer2->Add( m_saveButton, 0, wxALL, 5 );
+
+	m_closeButton = new wxButton( this, wxID_ANY, _("✕"), wxDefaultPosition, wxSize( 15,15 ), wxBORDER_NONE );
+	bSizer2->Add( m_closeButton, 0, wxALL, 4 );
+
+
+	bSizer1->Add( bSizer2, 0, wxALIGN_RIGHT|wxALIGN_TOP, 0 );
+
 	m_styledTextCtrl = new wxStyledTextCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, wxEmptyString );
 	m_styledTextCtrl->SetUseTabs( true );
 	m_styledTextCtrl->SetTabWidth( 4 );

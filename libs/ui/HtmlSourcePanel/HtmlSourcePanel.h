@@ -1,12 +1,23 @@
 #pragma once
 
+#include <functional>
+
 #include "HtmlSourcePanelWx.h"
 
 class HtmlSourcePanel : public HtmlSourcePanelWx {
    public:
-    explicit HtmlSourcePanel(wxWindow* parent);
+    using OnCloseCallback = std::function<void()>;
+
+    /**
+     * @param parent Parent window
+     * @param onCloseCallback Called when the user clicks the panel's close button
+     */
+    explicit HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback = nullptr);
     void ShowHtml(const wxString& html);
 
    private:
+    OnCloseCallback m_onCloseCallback;
+
     void HandleMarginClick(wxStyledTextEvent& event);
+    void HandleCloseButtonClick(wxCommandEvent& event);
 };

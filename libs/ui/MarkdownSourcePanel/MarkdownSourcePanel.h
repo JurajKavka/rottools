@@ -8,13 +8,32 @@
 class MarkdownSourcePanel : public MarkdownSourcePanelWx {
    public:
     using OnSaveCallback = std::function<void(const wxString& markdown)>;
+    using OnCloseCallback = std::function<void()>;
 
-    explicit MarkdownSourcePanel(wxWindow* parent, OnSaveCallback onSaveCallback = nullptr);
+    /**
+     * @param parent Parent window
+     * @param onSaveCallback Called with the edited text when the user saves (save button or Cmd/Ctrl+S)
+     * @param onCloseCallback Called when the user clicks the panel's close button
+     */
+    explicit MarkdownSourcePanel(wxWindow* parent, OnSaveCallback onSaveCallback = nullptr,
+                                 OnCloseCallback onCloseCallback = nullptr);
 
+    /**
+     * @brief Replaces the editor text. The buffer counts as saved afterwards.
+     *
+     * @param markdown The text to show
+     * @param scrollBehavior ResetToTop treats this as a new document and clears the undo history
+     */
     void ShowMarkdown(const wxString& markdown, ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop);
+
+    /// True when the text was edited since the last save or ShowMarkdown
+    [[nodiscard]] bool HasUnsavedChanges() const;
 
    private:
     OnSaveCallback m_onSaveCallback;
-
+    OnCloseCallback m_onCloseCallback;
+    void Save();
     void HandleKeyDown(wxKeyEvent& event);
+    void HandleSaveButtonClick(wxCommandEvent& event);
+    void HandleCloseButtonClick(wxCommandEvent& event);
 };
