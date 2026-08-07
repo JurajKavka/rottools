@@ -38,6 +38,7 @@ class MainFrameWx : public wxFrame
 		{
 			wxID_NEW_WINDOW_MENU_ITEM = 6000,
 			wxID_TOGGLE_FILE_BROWSER_MENU_ITEM,
+			wxID_WORDWRAP,
 		};
 
 		wxMenuBar* MenuBar;

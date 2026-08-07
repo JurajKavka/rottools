@@ -33,6 +33,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateUndoMenuItem, this, wxID_UNDO);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateRedoMenuItem, this, wxID_REDO);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
+    Bind(wxEVT_MENU, &MainFrame::HandleWordWrapMenuItemClick, this, wxID_WORDWRAP);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveAsMenuItemClick, this, m_saveAsTool->GetId());
@@ -131,6 +132,11 @@ void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
         m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_textEditorPanel, m_fileBrowserWidth);
     }
 
+    m_textEditorPanel->FocusEditor();
+}
+
+void MainFrame::HandleWordWrapMenuItemClick(wxCommandEvent& event) {
+    m_textEditorPanel->SetWordWrap(event.IsChecked());
     m_textEditorPanel->FocusEditor();
 }
 

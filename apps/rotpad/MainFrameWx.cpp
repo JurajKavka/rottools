@@ -53,6 +53,10 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_toggleFileBrowserMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_NORMAL );
 	m_viewMenu->Append( m_toggleFileBrowserMenuItem );
 
+	wxMenuItem* m_wordWrap;
+	m_wordWrap = new wxMenuItem( m_viewMenu, wxID_WORDWRAP, wxString( _("Word Wrap") ) , wxEmptyString, wxITEM_CHECK );
+	m_viewMenu->Append( m_wordWrap );
+
 	MenuBar->Append( m_viewMenu, _("View") );
 
 	this->SetMenuBar( MenuBar );
