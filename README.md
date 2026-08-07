@@ -29,6 +29,7 @@ rottools/
       HtmlSourcePanel/       rottools::ui_htmlsource
       MarkdownSourcePanel/   rottools::ui_mdsource
       TextEditorPanel/       rottools::ui_texteditor
+      ScintillaTextEditorPanel/ rottools::ui_scintillatexteditor
       FileBrowserTreePanel/  rottools::ui_filetree
       FileDropTarget/        rottools::ui_filedrop
   apps/
@@ -67,8 +68,9 @@ Build/run a single shared component in isolation (`make help` lists them all):
 | `make build-webview` | WebViewPanel (lib only) | `cmake --build build --target rottools_ui_webview` |
 
 The other demos follow the same pattern: `run-htmlsource`, `run-mdsource`,
-`run-texteditor`, `run-dirscan`, `run-md2html`, `run-helpers` (and
-`build-filedrop`).
+`run-texteditor`, `run-scintillatexteditor`, `run-dirscan`, `run-md2html`,
+`run-helpers` (and `build-filedrop`). Build-only editor smoke targets are also
+available as `build-texteditor` and `build-scintillatexteditor`.
 
 ## Icons
 

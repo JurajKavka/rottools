@@ -1,4 +1,4 @@
-# rottools::ui_texteditor — reusable plain-text editor panel.
+# rottools::ui_texteditor — reusable native plain-text editor panel.
 add_library(rottools_ui_texteditor STATIC TextEditorPanel.cpp TextEditorPanelWx.cpp)
 add_library(rottools::ui_texteditor ALIAS rottools_ui_texteditor)
 

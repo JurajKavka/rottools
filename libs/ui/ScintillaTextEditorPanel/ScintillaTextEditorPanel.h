@@ -1,20 +1,17 @@
 #pragma once
 
-#include "TextEditorPanelWx.h"
+#include "ScintillaTextEditorPanelWx.h"
 
+// Forward declarations keep the Scintilla headers out of consumers.
 class wxFont;
-class wxTextCtrl;
+class wxStyledTextCtrl;
 
-class TextEditorPanel : public TextEditorPanelWx {
+class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
    private:
-    wxTextCtrl* m_textEditor = nullptr;
-    wxString m_savedText;
-    bool m_wordWrapEnabled = false;
-
-    void RecreateTextEditor(bool wordWrapEnabled);
+    wxStyledTextCtrl* m_textEditor = nullptr;
 
    public:
-    explicit TextEditorPanel(wxWindow* parent);
+    explicit ScintillaTextEditorPanel(wxWindow* parent);
 
     /** Replace the current document and start it with an empty undo history. */
     void LoadText(const wxString& text);

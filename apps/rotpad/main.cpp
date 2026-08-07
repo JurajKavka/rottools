@@ -20,6 +20,10 @@ bool RotpadApp::OnInit() {
     SetAppName("rotpad-rottools");
     SetVendorName("Juraj Kavka");
 
+#ifdef __WXOSX__
+    OSXEnableAutomaticTabbing(false);
+#endif
+
     m_frame = new MainFrame(nullptr);
     m_frame->Show(true);
 

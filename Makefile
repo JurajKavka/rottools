@@ -5,7 +5,9 @@
         rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
-        run-filetree run-htmlsource run-mdsource run-texteditor run-dirscan run-md2html run-helpers \
+        run-filetree run-htmlsource run-mdsource run-texteditor run-scintillatexteditor \
+        run-dirscan run-md2html run-helpers \
+        build-texteditor build-scintillatexteditor \
         build-webview build-filedrop \
         format check clean _demos
 
@@ -112,8 +114,16 @@ run-mdsource: _demos   ## MarkdownSourcePanel    (rottools::ui_mdsource)
 	cmake --build build --target rottools_ui_mdsource_app
 	./build/libs/ui/MarkdownSourcePanel/rottools_ui_mdsource_app
 
-run-texteditor: _demos ## TextEditorPanel        (rottools::ui_texteditor)
+build-scintillatexteditor: _demos ## Build ScintillaTextEditorPanel smoke app
+	cmake --build build --target rottools_ui_scintillatexteditor_app
+
+run-scintillatexteditor: build-scintillatexteditor ## Run ScintillaTextEditorPanel smoke app
+	./build/libs/ui/ScintillaTextEditorPanel/rottools_ui_scintillatexteditor_app
+
+build-texteditor: _demos ## Build TextEditorPanel smoke app
 	cmake --build build --target rottools_ui_texteditor_app
+
+run-texteditor: build-texteditor ## Run TextEditorPanel smoke app
 	./build/libs/ui/TextEditorPanel/rottools_ui_texteditor_app
 
 run-dirscan: _demos    ## DirectoryScanner       (rottools::dirscan)
