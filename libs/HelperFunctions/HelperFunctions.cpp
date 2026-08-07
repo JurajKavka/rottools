@@ -1,11 +1,16 @@
 #include "HelperFunctions.h"
 
+#include <wx/config.h>
 #include <wx/stdpaths.h>
 
 #include <fstream>
 #include <iostream>
 #include <mutex>
 #include <sstream>
+
+namespace {
+constexpr auto kEditorFontSetting = "/editor/font";
+}
 
 namespace detail {
 void WriteLogLine(std::ostream& stream, const std::string& line) {
@@ -74,6 +79,27 @@ bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents) {
     out.write(utf8.data(), static_cast<std::streamsize>(utf8.length()));
     out.close();
     return static_cast<bool>(out);
+}
+
+wxFont LoadEditorFont(const wxFont& fallback) {
+    wxString nativeFontInfo;
+    if (!wxConfigBase::Get()->Read(kEditorFontSetting, &nativeFontInfo)) {
+        return fallback;
+    }
+
+    wxFont font;
+    if (!font.SetNativeFontInfo(nativeFontInfo) || !font.IsOk()) {
+        return fallback;
+    }
+
+    return font;
+}
+
+void SaveEditorFont(const wxFont& font) {
+    wxConfigBase* config = wxConfigBase::Get();
+    if (config->Write(kEditorFontSetting, font.GetNativeFontInfoDesc())) {
+        config->Flush();
+    }
 }
 
 wxFileName GetAssetPath(const wxString& filename) {

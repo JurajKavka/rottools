@@ -1,5 +1,5 @@
-# rottools::helpers — logging, wxString std::formatter, GetAssetPath, and the
-# window-icon bundle built from PNGs compiled into the app (generic).
+# rottools::helpers — logging, wxString std::formatter, shared file/config
+# helpers, and the window-icon bundle built from PNGs compiled into the app.
 add_library(rottools_helpers STATIC HelperFunctions.cpp AppIcon.cpp)
 add_library(rottools::helpers ALIAS rottools_helpers)
 

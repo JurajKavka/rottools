@@ -60,6 +60,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_fileBrowserPanel =
         new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::OpenTextFile, this), nullptr);
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
+    m_textEditorPanel->SetEditorFont(LoadEditorFont(m_textEditorPanel->GetEditorFont()));
     m_textEditorPanel->SetWordWrap(true);
     m_viewMenu->Check(wxID_WORDWRAP, true);
 
@@ -190,6 +191,7 @@ void MainFrame::HandleFontMenuItemClick(wxCommandEvent& event) {
         const wxFont chosenFont = fontDialog.GetFontData().GetChosenFont();
         if (chosenFont.IsOk()) {
             m_textEditorPanel->SetEditorFont(chosenFont);
+            SaveEditorFont(chosenFont);
         }
     }
 

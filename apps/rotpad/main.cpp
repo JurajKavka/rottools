@@ -17,6 +17,9 @@ class RotpadApp final : public wxApp {
 wxIMPLEMENT_APP(RotpadApp);
 
 bool RotpadApp::OnInit() {
+    SetAppName("rotpad-rottools");
+    SetVendorName("Juraj Kavka");
+
     m_frame = new MainFrame(nullptr);
     m_frame->Show(true);
 
