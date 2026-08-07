@@ -49,6 +49,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_fileBrowserPanel =
         new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::OpenTextFile, this), nullptr);
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
+    m_textEditorPanel->SetWordWrap(true);
+    m_viewMenu->Check(wxID_WORDWRAP, true);
 
     m_mainSplitter->SetMinimumPaneSize(100);
     m_mainSplitter->Initialize(m_textEditorPanel);
