@@ -4,8 +4,8 @@
   "configurePresets": [
     {
       "name": "dev",
-      "displayName": "Local dev (system wxWidgets, no vcpkg)",
-      "description": "Uses Homebrew/apt-provided wxWidgets and fetches md4c. No vcpkg toolchain.",
+      "displayName": "Local dev (system wxWidgets)",
+      "description": "Uses Homebrew/apt-provided wxWidgets and fetches md4c.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
@@ -14,42 +14,37 @@
       }
     },
     {
-      "name": "vcpkg-base",
+      "name": "ci-base",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/vcpkg-triplets",
-        "VCPKG_INSTALL_OPTIONS": "--clean-after-build"
+        "FETCHCONTENT_BASE_DIR": "${sourceDir}/.cache/fetchcontent/${presetName}"
       }
     },
     {
       "name": "ci-macos",
-      "inherits": "vcpkg-base",
-      "displayName": "CI macOS (vcpkg, arm64)",
+      "inherits": "ci-base",
+      "displayName": "CI macOS (bundled wxWidgets, arm64)",
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "arm64-osx-release",
+        "ROTTOOLS_USE_BUNDLED_WXWIDGETS": "ON",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
         "CMAKE_OSX_DEPLOYMENT_TARGET": "14.0"
       }
     },
     {
       "name": "ci-linux",
+      "inherits": "ci-base",
       "displayName": "CI Linux (system wxWidgets from apt)",
-      "description": "No vcpkg. vcpkg's wxwidgets port depends on gtk3/cairo/pango, which drags the whole GTK+X11 stack in as ~100 source builds; the .deb depends on the system libgtk/libwebkit at runtime anyway, so building our own is wasted work. md4c falls back to FetchContent.",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
+      "description": "Uses Ubuntu's wxGTK and WebKitGTK packages; md4c falls back to FetchContent."
     },
     {
       "name": "ci-windows",
-      "inherits": "vcpkg-base",
-      "displayName": "CI Windows (vcpkg, x64 static CRT)",
+      "inherits": "ci-base",
+      "displayName": "CI Windows (bundled wxWidgets, x64 static CRT)",
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-windows-static-release",
+        "ROTTOOLS_USE_BUNDLED_WXWIDGETS": "ON",
         "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
       }
     }

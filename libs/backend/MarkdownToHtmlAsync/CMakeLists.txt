@@ -1,7 +1,6 @@
 # rottools::md2html — async md4c-based Markdown -> HTML worker.
 
-# md4c: prefer a package (vcpkg port / system), fall back to fetching the source
-# so a plain system build (no vcpkg toolchain) still works.
+# md4c: prefer a system package and fall back to fetching the source.
 find_package(md4c CONFIG QUIET)
 if(md4c_FOUND)
     set(ROTTOOLS_MD4C_HTML md4c::md4c-html)
