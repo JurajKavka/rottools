@@ -20,6 +20,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
 #endif
 
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
+    Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
 
     // The browser and editor are siblings in one splitter, matching rotreader's
@@ -29,7 +30,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
         new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::OpenTextFile, this), nullptr);
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
 
-    m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_textEditorPanel, 200);
+    m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_textEditorPanel, m_fileBrowserWidth);
     m_mainSplitter->SetMinimumPaneSize(100);
 
     wxSizer* mainSizer = GetSizer();
@@ -54,6 +55,22 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
     }
 
     OpenTextFile(wxFileName(openFileDialog.GetPath()));
+}
+
+void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
+    if (m_mainSplitter->IsSplit()) {
+        // Restore the user's last sash position rather than resetting the
+        // browser to its initial width every time it is shown.
+        int sashPosition = m_mainSplitter->GetSashPosition();
+        if (sashPosition > 0) {
+            m_fileBrowserWidth = sashPosition;
+        }
+        m_mainSplitter->Unsplit(m_fileBrowserPanel);
+    } else {
+        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_textEditorPanel, m_fileBrowserWidth);
+    }
+
+    m_textEditorPanel->FocusEditor();
 }
 
 void MainFrame::OpenTextFile(const wxFileName& filePath) {

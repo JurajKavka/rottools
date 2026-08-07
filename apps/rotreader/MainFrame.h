@@ -22,6 +22,7 @@ class MainFrame : public MainFrameWx {
     MarkdownSourcePanel* m_markdownSourcePanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
     wxSplitterWindow* m_mainSplitter = nullptr;
+    int m_fileBrowserWidth = 100;
     // Right of the always-visible preview it holds the source-views area
     wxSplitterWindow* m_rightSplitter = nullptr;
     // Divides the source area into HTML source and markdown source columns
@@ -49,6 +50,7 @@ class MainFrame : public MainFrameWx {
     void HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event);
     void HandleHtmlSourcePanelClose();
     void HandleMarkdownSourcePanelClose();
+    void HideFileBrowser();
     void ApplySourcePanelVisibility();
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);

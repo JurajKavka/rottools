@@ -13,8 +13,10 @@ class MainFrame final : public MainFrameWx {
     wxSplitterWindow* m_mainSplitter = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
     TextEditorPanel* m_textEditorPanel = nullptr;
+    int m_fileBrowserWidth = 100;
 
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
+    void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
 
    public:
     explicit MainFrame(wxWindow* parent);

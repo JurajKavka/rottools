@@ -61,7 +61,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_htmlSourcePanel->Hide();
     m_markdownSourcePanel->Hide();
 
-    m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, 100);
+    m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, m_fileBrowserWidth);
     m_mainSplitter->SetMinimumPaneSize(100);
 
     wxSizer* mainSizer = this->GetSizer();
@@ -114,9 +114,7 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
 // Collapses every panel except the always-visible markdown preview so it fills
 // the window. The individual toggle items then bring the others back one by one.
 void MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& event) {
-    if (m_mainSplitter->IsSplit()) {
-        m_mainSplitter->Unsplit(m_fileBrowserPanel);
-    }
+    HideFileBrowser();
     m_htmlSourcePanel->Hide();
     m_markdownSourcePanel->Hide();
     ApplySourcePanelVisibility();
@@ -124,14 +122,24 @@ void MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& even
 
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
     if (m_mainSplitter->IsSplit()) {
-        // Hides the file browser panel and expands the web view
-        m_mainSplitter->Unsplit(m_fileBrowserPanel);
+        HideFileBrowser();
     } else {
-        // Restores the file browser on the left with a width of 200 pixels.
         // The right pane is the nested preview/source splitter, not the web
         // view itself, which is no longer a direct child of m_mainSplitter.
-        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, 200);
+        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, m_fileBrowserWidth);
     }
+}
+
+void MainFrame::HideFileBrowser() {
+    if (!m_mainSplitter->IsSplit()) {
+        return;
+    }
+
+    int sashPosition = m_mainSplitter->GetSashPosition();
+    if (sashPosition > 0) {
+        m_fileBrowserWidth = sashPosition;
+    }
+    m_mainSplitter->Unsplit(m_fileBrowserPanel);
 }
 
 void MainFrame::HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event) {
