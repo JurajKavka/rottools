@@ -19,6 +19,7 @@ jobs:
       contents: read
     outputs:
       rotreader: ${{ steps.filter.outputs.rotreader }}
+      rotpad: ${{ steps.filter.outputs.rotpad }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -36,6 +37,9 @@ jobs:
             rotreader:
               - *shared
               - 'apps/rotreader/**'
+            rotpad:
+              - *shared
+              - 'apps/rotpad/**'
 
   rotreader:
     needs: changes
@@ -44,4 +48,13 @@ jobs:
     uses: ./.github/workflows/_build.yml
     with:
       app: rotreader
+      upload-artifacts: true
+
+  rotpad:
+    needs: changes
+    # A manual run always builds; path filtering only gates automatic push runs.
+    if: needs.changes.outputs.rotpad == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/_build.yml
+    with:
+      app: rotpad
       upload-artifacts: true

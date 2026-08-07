@@ -6,7 +6,8 @@
 #include <algorithm>
 
 FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened,
-                                           DirectoryChangedCallback onDirectoryChanged)
+                                           DirectoryChangedCallback onDirectoryChanged,
+                                           std::vector<std::string> extensions)
     : FileBrowserTreePanelWx(parent),
       m_onFileOpened(std::move(onFileOpened)),
       m_onDirectoryChanged(std::move(onDirectoryChanged)) {
@@ -14,7 +15,7 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback 
     m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
 
-    m_scanOptions.extensions = {".md"};
+    m_scanOptions.extensions = std::move(extensions);
     m_scanOptions.showHiddenFiles = m_hiddenFilesCheckbox->IsChecked();
 
     // 2. Create an Image List (16x16 is the standard size for tree nodes)

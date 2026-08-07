@@ -3,3 +3,7 @@
 if(ROTTOOLS_BUILD_ROTREADER)
     add_subdirectory(rotreader)
 endif()
+
+if(ROTTOOLS_BUILD_ROTPAD)
+    add_subdirectory(rotpad)
+endif()

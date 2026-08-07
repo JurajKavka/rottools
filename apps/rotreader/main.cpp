@@ -18,6 +18,10 @@ class MyApp : public wxApp {
 wxIMPLEMENT_APP(MyApp);
 
 bool MyApp::OnInit() {
+#ifdef __WXOSX__
+    OSXEnableAutomaticTabbing(false);
+#endif
+
     wxImage::AddHandler(new wxPNGHandler());
 
     m_frame = new MainFrame(nullptr);

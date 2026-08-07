@@ -4,6 +4,21 @@
 
 This project is written in C++20.
 
+## Platform-native UI — discuss exceptions
+
+Prefer platform-native controls, dialogs, appearance, and behavior. It is acceptable—and often
+desirable—for the application to look or behave slightly differently on macOS, Linux, and Windows.
+Do not normalize system selection colours, fonts, shortcuts, dialog conventions, or similar UI
+details merely to make the platforms look identical. When a custom control is already justified,
+prefer its platform defaults and system-derived settings over hard-coded styling.
+
+This is a design preference, not an absolute prohibition. A custom or cross-platform solution may
+still be the right choice for performance, functionality, or maintainability (for example,
+`wxStyledTextCtrl` for editor capabilities). Before introducing custom behavior, replacing a native
+solution, or deliberately normalizing behavior across platforms, discuss the trade-offs with the
+user and get direction. Do not silently reverse an established decision solely because of this
+preference.
+
 ## Git — never commit or push on your own
 
 Never run `git commit` or `git push` unless the user asks for it in that message. Make the
@@ -20,8 +35,11 @@ prints a "Bypassed rule violations" warning, stop and report it rather than cont
 
 ## Build system
 
-Never run `cmake`, `make build`, `make rebuild`, or any other build command. The user builds
-and verifies changes themselves. The commands below document the project for reference only.
+Do not run `cmake`, `make build`, `make rebuild`, or any other configure/build command without
+the user's explicit approval. When a build would help, first state the exact command and why it is
+needed, then wait for approval before running it. Approval is scoped to the command or verification
+described in that request and does not carry over to later builds. Without approval, leave building
+and verification to the user. The commands below document the project for reference.
 
 CMake monorepo (`rottools` suite). The umbrella [CMakeLists.txt](CMakeLists.txt) builds the
 whole tree: shared code lives under `libs/` as `rottools::*` targets, each tool under

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <wx/filename.h>
+#include <wx/font.h>
 #include <wx/string.h>
 
 #include <format>
@@ -48,6 +49,12 @@ bool ReadFileUtf8(const wxFileName& filePath, wxString& contents);
  * @return false when the file could not be opened or written
  */
 bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents);
+
+/** Load the persisted editor font, or return fallback if none is valid. */
+[[nodiscard]] wxFont LoadEditorFont(const wxFont& fallback);
+
+/** Persist the editor font in the current application's settings store. */
+void SaveEditorFont(const wxFont& font);
 
 // 1. Keep this for simple, single wxString prints: printLog(myWxString);
 void printLog(const wxString& msg);

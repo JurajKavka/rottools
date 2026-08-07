@@ -35,6 +35,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # --- Per-tool build toggles (each tool builds/releases independently) --------
 option(ROTTOOLS_BUILD_ROTREADER "Build the rotreader tool" ON)
+option(ROTTOOLS_BUILD_ROTPAD    "Build the rotpad tool" ON)
 # Optional per-library standalone smoke-test executables (was the old
 # `if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)` app-per-folder trick).
 option(ROTTOOLS_BUILD_LIB_APPS  "Build per-library standalone smoke-test apps" OFF)
