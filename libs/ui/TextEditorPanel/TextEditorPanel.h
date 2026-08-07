@@ -19,6 +19,10 @@ class TextEditorPanel : public TextEditorPanelWx {
     [[nodiscard]] wxString GetText() const;
     [[nodiscard]] bool HasUnsavedChanges() const;
     void MarkSaved();
+    void Undo();
+    void Redo();
+    [[nodiscard]] bool CanUndo() const;
+    [[nodiscard]] bool CanRedo() const;
 
     void SetWordWrap(bool enabled);
     [[nodiscard]] bool IsWordWrapEnabled() const;

@@ -2,6 +2,7 @@
 
 #include <wx/filedlg.h>
 #include <wx/msgdlg.h>
+#include <wx/stockitem.h>
 
 #include <functional>
 #ifndef __WXOSX__
@@ -27,10 +28,19 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
     Bind(wxEVT_MENU, &MainFrame::HandleSaveMenuItemClick, this, wxID_SAVE);
     Bind(wxEVT_MENU, &MainFrame::HandleSaveAsMenuItemClick, this, wxID_SAVEAS);
+    Bind(wxEVT_MENU, &MainFrame::HandleUndoMenuItemClick, this, wxID_UNDO);
+    Bind(wxEVT_MENU, &MainFrame::HandleRedoMenuItemClick, this, wxID_REDO);
+    Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateUndoMenuItem, this, wxID_UNDO);
+    Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateRedoMenuItem, this, wxID_REDO);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveAsMenuItemClick, this, m_saveAsTool->GetId());
+
+    // Let the active wxWidgets port supply its standard labels and accelerators.
+    const long stockLabelFlags = wxSTOCK_WITH_MNEMONIC | wxSTOCK_WITH_ACCELERATOR;
+    m_editMenu->FindItem(wxID_UNDO)->SetItemLabel(wxGetStockLabel(wxID_UNDO, stockLabelFlags));
+    m_editMenu->FindItem(wxID_REDO)->SetItemLabel(wxGetStockLabel(wxID_REDO, stockLabelFlags));
 
     // The browser and editor are siblings in one splitter, matching rotreader's
     // top-level layout. FileBrowserTreePanel shows every ordinary file by default.
@@ -87,6 +97,24 @@ void MainFrame::HandleSaveAsMenuItemClick(wxCommandEvent& event) {
     }
 
     SaveTextFile(wxFileName(saveFileDialog.GetPath()));
+}
+
+void MainFrame::HandleUndoMenuItemClick(wxCommandEvent& event) {
+    m_textEditorPanel->Undo();
+    m_textEditorPanel->FocusEditor();
+}
+
+void MainFrame::HandleRedoMenuItemClick(wxCommandEvent& event) {
+    m_textEditorPanel->Redo();
+    m_textEditorPanel->FocusEditor();
+}
+
+void MainFrame::HandleUpdateUndoMenuItem(wxUpdateUIEvent& event) {
+    event.Enable(m_textEditorPanel->CanUndo());
+}
+
+void MainFrame::HandleUpdateRedoMenuItem(wxUpdateUIEvent& event) {
+    event.Enable(m_textEditorPanel->CanRedo());
 }
 
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {

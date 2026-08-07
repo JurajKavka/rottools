@@ -16,33 +16,44 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
 
 	MenuBar = new wxMenuBar( 0 );
-	m_menu1 = new wxMenu();
+	m_fileMenu = new wxMenu();
 	wxMenuItem* OpenFileMenuItem;
-	OpenFileMenuItem = new wxMenuItem( m_menu1, wxID_OPEN, wxString( _("&Open...") ) , wxEmptyString, wxITEM_NORMAL );
-	m_menu1->Append( OpenFileMenuItem );
+	OpenFileMenuItem = new wxMenuItem( m_fileMenu, wxID_OPEN, wxString( _("&Open...") ) , wxEmptyString, wxITEM_NORMAL );
+	m_fileMenu->Append( OpenFileMenuItem );
 
 	wxMenuItem* m_newWindowMenuItem;
-	m_newWindowMenuItem = new wxMenuItem( m_menu1, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window\tCtrl+N") ) , wxEmptyString, wxITEM_NORMAL );
-	m_menu1->Append( m_newWindowMenuItem );
+	m_newWindowMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window\tCtrl+N") ) , wxEmptyString, wxITEM_NORMAL );
+	m_fileMenu->Append( m_newWindowMenuItem );
 
-	m_menu1->AppendSeparator();
+	m_fileMenu->AppendSeparator();
 
 	wxMenuItem* m_saveMenuItem;
-	m_saveMenuItem = new wxMenuItem( m_menu1, wxID_SAVE, wxString( _("&Save") ) + wxT('\t') + wxT("CTRL+S"), wxEmptyString, wxITEM_NORMAL );
-	m_menu1->Append( m_saveMenuItem );
+	m_saveMenuItem = new wxMenuItem( m_fileMenu, wxID_SAVE, wxString( _("&Save") ) + wxT('\t') + wxT("CTRL+S"), wxEmptyString, wxITEM_NORMAL );
+	m_fileMenu->Append( m_saveMenuItem );
 
 	wxMenuItem* m_saveAsMenuItem;
-	m_saveAsMenuItem = new wxMenuItem( m_menu1, wxID_SAVEAS, wxString( _("Save As...") ) + wxT('\t') + wxT("CTRL+SHIFT+S"), wxEmptyString, wxITEM_NORMAL );
-	m_menu1->Append( m_saveAsMenuItem );
+	m_saveAsMenuItem = new wxMenuItem( m_fileMenu, wxID_SAVEAS, wxString( _("Save As...") ) + wxT('\t') + wxT("CTRL+SHIFT+S"), wxEmptyString, wxITEM_NORMAL );
+	m_fileMenu->Append( m_saveAsMenuItem );
 
-	MenuBar->Append( m_menu1, _("File") );
+	MenuBar->Append( m_fileMenu, _("File") );
 
-	m_menu2 = new wxMenu();
+	m_editMenu = new wxMenu();
+	wxMenuItem* m_undoMenuItem;
+	m_undoMenuItem = new wxMenuItem( m_editMenu, wxID_UNDO, wxString( _("Undo") ) + wxT('\t') + wxT("CTRL+Z"), wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_undoMenuItem );
+
+	wxMenuItem* m_redoMenuItem;
+	m_redoMenuItem = new wxMenuItem( m_editMenu, wxID_REDO, wxString( _("Redo") ) , wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_redoMenuItem );
+
+	MenuBar->Append( m_editMenu, _("Edit") );
+
+	m_viewMenu = new wxMenu();
 	wxMenuItem* m_toggleFileBrowserMenuItem;
-	m_toggleFileBrowserMenuItem = new wxMenuItem( m_menu2, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_NORMAL );
-	m_menu2->Append( m_toggleFileBrowserMenuItem );
+	m_toggleFileBrowserMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_NORMAL );
+	m_viewMenu->Append( m_toggleFileBrowserMenuItem );
 
-	MenuBar->Append( m_menu2, _("View") );
+	MenuBar->Append( m_viewMenu, _("View") );
 
 	this->SetMenuBar( MenuBar );
 

@@ -62,6 +62,26 @@ void TextEditorPanel::MarkSaved() {
     m_textEditor->SetSavePoint();
 }
 
+void TextEditorPanel::Undo() {
+    if (m_textEditor->CanUndo()) {
+        m_textEditor->Undo();
+    }
+}
+
+void TextEditorPanel::Redo() {
+    if (m_textEditor->CanRedo()) {
+        m_textEditor->Redo();
+    }
+}
+
+bool TextEditorPanel::CanUndo() const {
+    return m_textEditor->CanUndo();
+}
+
+bool TextEditorPanel::CanRedo() const {
+    return m_textEditor->CanRedo();
+}
+
 void TextEditorPanel::SetWordWrap(bool enabled) {
     m_textEditor->SetWrapMode(enabled ? wxSTC_WRAP_WORD : wxSTC_WRAP_NONE);
 }
