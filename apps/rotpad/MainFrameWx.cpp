@@ -46,6 +46,20 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_redoMenuItem = new wxMenuItem( m_editMenu, wxID_REDO, wxString( _("Redo") ) , wxEmptyString, wxITEM_NORMAL );
 	m_editMenu->Append( m_redoMenuItem );
 
+	m_editMenu->AppendSeparator();
+
+	wxMenuItem* m_copyMenuItem;
+	m_copyMenuItem = new wxMenuItem( m_editMenu, wxID_COPY, wxString( _("Copy") ) + wxT('\t') + wxT("CTRL+C"), wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_copyMenuItem );
+
+	wxMenuItem* m_cutMenuItem;
+	m_cutMenuItem = new wxMenuItem( m_editMenu, wxID_CUT, wxString( _("Cut") ) + wxT('\t') + wxT("CTRL+X"), wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_cutMenuItem );
+
+	wxMenuItem* m_pasteMenuItem;
+	m_pasteMenuItem = new wxMenuItem( m_editMenu, wxID_PASTE, wxString( _("Paste") ) , wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_pasteMenuItem );
+
 	MenuBar->Append( m_editMenu, _("Edit") );
 
 	m_viewMenu = new wxMenu();

@@ -74,12 +74,42 @@ void TextEditorPanel::Redo() {
     }
 }
 
+void TextEditorPanel::Copy() {
+    if (CanCopy()) {
+        m_textEditor->Copy();
+    }
+}
+
+void TextEditorPanel::Cut() {
+    if (CanCut()) {
+        m_textEditor->Cut();
+    }
+}
+
+void TextEditorPanel::Paste() {
+    if (CanPaste()) {
+        m_textEditor->Paste();
+    }
+}
+
 bool TextEditorPanel::CanUndo() const {
     return m_textEditor->CanUndo();
 }
 
 bool TextEditorPanel::CanRedo() const {
     return m_textEditor->CanRedo();
+}
+
+bool TextEditorPanel::CanCopy() const {
+    return m_textEditor->GetSelectionStart() != m_textEditor->GetSelectionEnd();
+}
+
+bool TextEditorPanel::CanCut() const {
+    return CanCopy() && !m_textEditor->GetReadOnly();
+}
+
+bool TextEditorPanel::CanPaste() const {
+    return m_textEditor->CanPaste();
 }
 
 void TextEditorPanel::SetWordWrap(bool enabled) {

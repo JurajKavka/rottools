@@ -21,8 +21,14 @@ class MainFrame final : public MainFrameWx {
     void HandleSaveAsMenuItemClick(wxCommandEvent& event);
     void HandleUndoMenuItemClick(wxCommandEvent& event);
     void HandleRedoMenuItemClick(wxCommandEvent& event);
+    void HandleCopyMenuItemClick(wxCommandEvent& event);
+    void HandleCutMenuItemClick(wxCommandEvent& event);
+    void HandlePasteMenuItemClick(wxCommandEvent& event);
     void HandleUpdateUndoMenuItem(wxUpdateUIEvent& event);
     void HandleUpdateRedoMenuItem(wxUpdateUIEvent& event);
+    void HandleUpdateCopyMenuItem(wxUpdateUIEvent& event);
+    void HandleUpdateCutMenuItem(wxUpdateUIEvent& event);
+    void HandleUpdatePasteMenuItem(wxUpdateUIEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void HandleWordWrapMenuItemClick(wxCommandEvent& event);
     bool SaveTextFile(const wxFileName& filePath);

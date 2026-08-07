@@ -30,8 +30,14 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_MENU, &MainFrame::HandleSaveAsMenuItemClick, this, wxID_SAVEAS);
     Bind(wxEVT_MENU, &MainFrame::HandleUndoMenuItemClick, this, wxID_UNDO);
     Bind(wxEVT_MENU, &MainFrame::HandleRedoMenuItemClick, this, wxID_REDO);
+    Bind(wxEVT_MENU, &MainFrame::HandleCopyMenuItemClick, this, wxID_COPY);
+    Bind(wxEVT_MENU, &MainFrame::HandleCutMenuItemClick, this, wxID_CUT);
+    Bind(wxEVT_MENU, &MainFrame::HandlePasteMenuItemClick, this, wxID_PASTE);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateUndoMenuItem, this, wxID_UNDO);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateRedoMenuItem, this, wxID_REDO);
+    Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateCopyMenuItem, this, wxID_COPY);
+    Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateCutMenuItem, this, wxID_CUT);
+    Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdatePasteMenuItem, this, wxID_PASTE);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleWordWrapMenuItemClick, this, wxID_WORDWRAP);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
@@ -42,6 +48,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     const long stockLabelFlags = wxSTOCK_WITH_MNEMONIC | wxSTOCK_WITH_ACCELERATOR;
     m_editMenu->FindItem(wxID_UNDO)->SetItemLabel(wxGetStockLabel(wxID_UNDO, stockLabelFlags));
     m_editMenu->FindItem(wxID_REDO)->SetItemLabel(wxGetStockLabel(wxID_REDO, stockLabelFlags));
+    m_editMenu->FindItem(wxID_COPY)->SetItemLabel(wxGetStockLabel(wxID_COPY, stockLabelFlags));
+    m_editMenu->FindItem(wxID_CUT)->SetItemLabel(wxGetStockLabel(wxID_CUT, stockLabelFlags));
+    m_editMenu->FindItem(wxID_PASTE)->SetItemLabel(wxGetStockLabel(wxID_PASTE, stockLabelFlags));
 
     // The browser and editor are siblings in one splitter, matching rotreader's
     // top-level layout. FileBrowserTreePanel shows every ordinary file by default.
@@ -113,12 +122,39 @@ void MainFrame::HandleRedoMenuItemClick(wxCommandEvent& event) {
     m_textEditorPanel->FocusEditor();
 }
 
+void MainFrame::HandleCopyMenuItemClick(wxCommandEvent& event) {
+    m_textEditorPanel->Copy();
+    m_textEditorPanel->FocusEditor();
+}
+
+void MainFrame::HandleCutMenuItemClick(wxCommandEvent& event) {
+    m_textEditorPanel->Cut();
+    m_textEditorPanel->FocusEditor();
+}
+
+void MainFrame::HandlePasteMenuItemClick(wxCommandEvent& event) {
+    m_textEditorPanel->Paste();
+    m_textEditorPanel->FocusEditor();
+}
+
 void MainFrame::HandleUpdateUndoMenuItem(wxUpdateUIEvent& event) {
     event.Enable(m_textEditorPanel->CanUndo());
 }
 
 void MainFrame::HandleUpdateRedoMenuItem(wxUpdateUIEvent& event) {
     event.Enable(m_textEditorPanel->CanRedo());
+}
+
+void MainFrame::HandleUpdateCopyMenuItem(wxUpdateUIEvent& event) {
+    event.Enable(m_textEditorPanel->CanCopy());
+}
+
+void MainFrame::HandleUpdateCutMenuItem(wxUpdateUIEvent& event) {
+    event.Enable(m_textEditorPanel->CanCut());
+}
+
+void MainFrame::HandleUpdatePasteMenuItem(wxUpdateUIEvent& event) {
+    event.Enable(m_textEditorPanel->CanPaste());
 }
 
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {

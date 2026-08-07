@@ -21,8 +21,14 @@ class TextEditorPanel : public TextEditorPanelWx {
     void MarkSaved();
     void Undo();
     void Redo();
+    void Copy();
+    void Cut();
+    void Paste();
     [[nodiscard]] bool CanUndo() const;
     [[nodiscard]] bool CanRedo() const;
+    [[nodiscard]] bool CanCopy() const;
+    [[nodiscard]] bool CanCut() const;
+    [[nodiscard]] bool CanPaste() const;
 
     void SetWordWrap(bool enabled);
     [[nodiscard]] bool IsWordWrapEnabled() const;
