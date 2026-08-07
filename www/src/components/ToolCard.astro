@@ -20,7 +20,7 @@ const { tool } = Astro.props;
     </div>
   </header>
 
-  <p class="description">{tool.description}</p>
+  {tool.description && <p class="description">{tool.description}</p>}
 
   <ul class="downloads">
     {
@@ -45,7 +45,13 @@ const { tool } = Astro.props;
     background: var(--rd-surface);
     border: var(--rd-rule-width) solid var(--rd-border);
     border-radius: var(--rd-radius);
-    padding: var(--rd-space-8);
+    padding: var(--rd-space-4) var(--rd-space-6);
+  }
+
+  @media (min-width: 64rem) {
+    .card {
+      padding: var(--rd-space-6) var(--rd-space-8);
+    }
   }
 
   header {

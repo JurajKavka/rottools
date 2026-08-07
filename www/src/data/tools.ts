@@ -36,10 +36,10 @@ export interface Download {
 export interface Tool {
   /** CMake target / binary name, and the URL slug. */
   slug: string;
-  /** User-facing name (matches DISPLAY_NAME in the CMake packaging call). */
+  /** User-facing marketing name; the packaged app name may use plain ASCII. */
   displayName: string;
   tagline: string;
-  description: string;
+  description?: string;
   version: string;
   /**
    * File name of the tool's mark in public/, shown next to its name. Copied
@@ -67,14 +67,13 @@ function downloadUrl(slug: string, version: string, file: string): string {
 }
 
 const ROTREADER_VERSION = '0.1.0';
+const ROTPAD_VERSION = '0.1.0';
 
 export const tools: Tool[] = [
   {
     slug: 'rotreader',
     displayName: 'ℜ⛤𝔗 reader',
-    tagline: 'A native Markdown viewer.',
-    description:
-      'Source panels show the raw Markdown and the generated HTML side by side. Rendering happens locally in a native WebView — nothing is uploaded anywhere.',
+    tagline: 'A Markdown reader that can edit too.',
     version: ROTREADER_VERSION,
     icon: 'rotreader-rottools-logo.svg',
     downloads: [
@@ -106,6 +105,45 @@ export const tools: Tool[] = [
           'rotreader',
           ROTREADER_VERSION,
           buildFileName('rotreader', ROTREADER_VERSION, 'linux', 'x86_64', 'deb'),
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'rotpad',
+    displayName: 'ℜ⛤𝔗 pad',
+    tagline: 'The very simple, enjoyable text editor.',
+    version: ROTPAD_VERSION,
+    icon: 'rotpad-rottools-logo.svg',
+    downloads: [
+      {
+        platform: 'macos',
+        label: 'macOS',
+        note: 'Apple Silicon · .dmg',
+        href: downloadUrl(
+          'rotpad',
+          ROTPAD_VERSION,
+          buildFileName('rotpad', ROTPAD_VERSION, 'macos', 'arm64', 'dmg'),
+        ),
+      },
+      {
+        platform: 'windows',
+        label: 'Windows',
+        note: '64-bit · installer',
+        href: downloadUrl(
+          'rotpad',
+          ROTPAD_VERSION,
+          buildFileName('rotpad', ROTPAD_VERSION, 'windows', 'amd64', 'exe'),
+        ),
+      },
+      {
+        platform: 'linux',
+        label: 'Linux',
+        note: 'Debian / Ubuntu · .deb',
+        href: downloadUrl(
+          'rotpad',
+          ROTPAD_VERSION,
+          buildFileName('rotpad', ROTPAD_VERSION, 'linux', 'x86_64', 'deb'),
         ),
       },
     ],
