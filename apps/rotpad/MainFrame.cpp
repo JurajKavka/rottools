@@ -1,5 +1,6 @@
 #include "MainFrame.h"
 
+#include <wx/filedlg.h>
 #include <wx/msgdlg.h>
 
 #include <functional>
@@ -18,11 +19,14 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     SetIcons(rottools::MakeIconBundle(kAppIconPngs, kAppIconPngCount));
 #endif
 
+    Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
+    Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
+
     // The browser and editor are siblings in one splitter, matching rotreader's
     // top-level layout. FileBrowserTreePanel shows every ordinary file by default.
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
-    m_fileBrowserPanel = new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::OpenTextFile, this),
-                                                  nullptr);
+    m_fileBrowserPanel =
+        new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::OpenTextFile, this), nullptr);
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
 
     m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_textEditorPanel, 200);
@@ -37,6 +41,19 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
 
     Layout();
     m_textEditorPanel->FocusEditor();
+}
+
+void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
+    wxFileDialog openFileDialog(
+        this, "Open Text File", "", "",
+        "Supported text files (*.txt;*.json;*.csv;*.md;*.sql)|*.txt;*.json;*.csv;*.md;*.sql|All files (*.*)|*.*",
+        wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+    if (openFileDialog.ShowModal() == wxID_CANCEL) {
+        return;
+    }
+
+    OpenTextFile(wxFileName(openFileDialog.GetPath()));
 }
 
 void MainFrame::OpenTextFile(const wxFileName& filePath) {
@@ -56,6 +73,12 @@ void MainFrame::OpenTextFile(const wxFileName& filePath) {
     if (!ReadFileUtf8(absolutePath, text)) {
         wxMessageBox(wxString("Could not read file: ") + absolutePath.GetFullPath(), "Error", wxICON_ERROR);
         return;
+    }
+
+    // Keep the browser in sync for files opened by the desktop shell, the Open
+    // dialog, or another component rather than from the browser itself.
+    if (!m_fileBrowserPanel->IsShowingDir(absolutePath.GetPath())) {
+        m_fileBrowserPanel->ListDir(absolutePath.GetPath());
     }
 
     m_textEditorPanel->LoadText(text);

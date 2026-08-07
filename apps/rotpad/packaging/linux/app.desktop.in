@@ -6,4 +6,4 @@ Exec=@ROTTOOLS_APP_EXE_NAME@ %f
 Icon=@ROTTOOLS_APP_EXE_NAME@
 Terminal=false
 Categories=@ROTTOOLS_APP_CATEGORIES@
-MimeType=text/plain;
+MimeType=text/plain;application/json;text/csv;text/markdown;application/sql;

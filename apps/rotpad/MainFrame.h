@@ -14,8 +14,10 @@ class MainFrame final : public MainFrameWx {
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
     TextEditorPanel* m_textEditorPanel = nullptr;
 
-    void OpenTextFile(const wxFileName& filePath);
+    void HandleOpenFileMenuItemClick(wxCommandEvent& event);
 
    public:
     explicit MainFrame(wxWindow* parent);
+
+    void OpenTextFile(const wxFileName& filePath);
 };

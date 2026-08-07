@@ -31,3 +31,32 @@ rottools_package_app(
     ICON_DIR     "${CMAKE_CURRENT_SOURCE_DIR}/assets/icons"
     DESKTOP_CATEGORIES "Utility;TextEditor;"
 )
+
+# Advertise rotpad in Windows' Open with list for its supported text formats
+# without changing the user's current defaults. Linux uses the desktop file's
+# MIME declarations; macOS uses CFBundleDocumentTypes in Info.plist.
+if(WIN32)
+    # Preserve NSIS quotes, backslashes, and $INSTDIR while CPack writes and
+    # reloads CPackConfig.cmake.
+    set(CPACK_VERBATIM_VARIABLES TRUE CACHE INTERNAL "")
+    set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS [[
+        WriteRegStr HKCR "com.jurajkavka.rotpad.text" "" "ROT Pad Text Document"
+        WriteRegStr HKCR "com.jurajkavka.rotpad.text\DefaultIcon" "" "$INSTDIR\rotpad.exe,0"
+        WriteRegStr HKCR "com.jurajkavka.rotpad.text\shell\open\command" "" '"$INSTDIR\rotpad.exe" "%1"'
+        WriteRegStr HKCR ".txt\OpenWithProgids" "com.jurajkavka.rotpad.text" ""
+        WriteRegStr HKCR ".json\OpenWithProgids" "com.jurajkavka.rotpad.text" ""
+        WriteRegStr HKCR ".csv\OpenWithProgids" "com.jurajkavka.rotpad.text" ""
+        WriteRegStr HKCR ".md\OpenWithProgids" "com.jurajkavka.rotpad.text" ""
+        WriteRegStr HKCR ".sql\OpenWithProgids" "com.jurajkavka.rotpad.text" ""
+        System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
+    ]] CACHE INTERNAL "")
+    set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS [[
+        DeleteRegValue HKCR ".txt\OpenWithProgids" "com.jurajkavka.rotpad.text"
+        DeleteRegValue HKCR ".json\OpenWithProgids" "com.jurajkavka.rotpad.text"
+        DeleteRegValue HKCR ".csv\OpenWithProgids" "com.jurajkavka.rotpad.text"
+        DeleteRegValue HKCR ".md\OpenWithProgids" "com.jurajkavka.rotpad.text"
+        DeleteRegValue HKCR ".sql\OpenWithProgids" "com.jurajkavka.rotpad.text"
+        DeleteRegKey HKCR "com.jurajkavka.rotpad.text"
+        System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
+    ]] CACHE INTERNAL "")
+endif()
