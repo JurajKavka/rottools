@@ -12,18 +12,8 @@ set(wxBUILD_DEMOS OFF CACHE BOOL "Skip wxWidgets demos" FORCE)
 set(wxBUILD_BENCHMARKS OFF CACHE BOOL "Skip wxWidgets benchmarks" FORCE)
 set(wxBUILD_LOCALES OFF CACHE BOOL "Skip wxWidgets locale catalogs" FORCE)
 
-# rottools only links core, base, STC and WebView. Disabling the other optional
-# libraries keeps release builds focused while leaving all core controls native.
-set(wxUSE_AUI OFF CACHE BOOL "Disable unused wxAUI library" FORCE)
-set(wxUSE_DEBUGREPORT OFF CACHE BOOL "Disable unused wxDebugReport library" FORCE)
-set(wxUSE_HTML OFF CACHE BOOL "Disable unused wxHTML library" FORCE)
-set(wxUSE_MEDIACTRL OFF CACHE BOOL "Disable unused wxMediaCtrl library" FORCE)
-set(wxUSE_OPENGL OFF CACHE BOOL "Disable unused wxGLCanvas library" FORCE)
-set(wxUSE_PROPGRID OFF CACHE BOOL "Disable unused wxPropertyGrid library" FORCE)
-set(wxUSE_RIBBON OFF CACHE BOOL "Disable unused wxRibbon library" FORCE)
-set(wxUSE_RICHTEXT OFF CACHE BOOL "Disable unused wxRichText library" FORCE)
-set(wxUSE_XRC OFF CACHE BOOL "Disable unused wxXRC library" FORCE)
-set(wxUSE_XML OFF CACHE BOOL "Disable unused wxXML library" FORCE)
+# Keep wxWidgets' feature defaults internally consistent. rottools explicitly
+# requires these two optional libraries and otherwise accepts upstream defaults.
 set(wxUSE_STC ON CACHE BOOL "Build wxStyledTextCtrl" FORCE)
 set(wxUSE_WEBVIEW ON CACHE BOOL "Build wxWebView" FORCE)
 
