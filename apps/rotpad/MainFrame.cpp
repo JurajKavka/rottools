@@ -49,8 +49,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
         new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::OpenTextFile, this), nullptr);
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
 
-    m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_textEditorPanel, m_fileBrowserWidth);
     m_mainSplitter->SetMinimumPaneSize(100);
+    m_mainSplitter->Initialize(m_textEditorPanel);
+    m_fileBrowserPanel->Hide();
 
     wxSizer* mainSizer = GetSizer();
     mainSizer->Add(m_mainSplitter, 1, wxEXPAND | wxALL, 0);
