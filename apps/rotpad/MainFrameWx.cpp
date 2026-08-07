@@ -73,6 +73,13 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 
 	MenuBar->Append( m_viewMenu, _("View") );
 
+	m_settingsMenu = new wxMenu();
+	wxMenuItem* m_fontMenuItem;
+	m_fontMenuItem = new wxMenuItem( m_settingsMenu, wxID_FONT, wxString( _("Font") ) , wxEmptyString, wxITEM_NORMAL );
+	m_settingsMenu->Append( m_fontMenuItem );
+
+	MenuBar->Append( m_settingsMenu, _("Settings") );
+
 	this->SetMenuBar( MenuBar );
 
 	wxBoxSizer* MainFrameSizer;

@@ -125,6 +125,10 @@ void TextEditorPanel::SetEditorFont(const wxFont& font) {
     m_textEditor->StyleClearAll();
 }
 
+wxFont TextEditorPanel::GetEditorFont() const {
+    return m_textEditor->StyleGetFont(wxSTC_STYLE_DEFAULT);
+}
+
 void TextEditorPanel::FocusEditor() {
     m_textEditor->SetFocus();
 }

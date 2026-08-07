@@ -31,6 +31,7 @@ class MainFrame final : public MainFrameWx {
     void HandleUpdatePasteMenuItem(wxUpdateUIEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void HandleWordWrapMenuItemClick(wxCommandEvent& event);
+    void HandleFontMenuItemClick(wxCommandEvent& event);
     bool SaveTextFile(const wxFileName& filePath);
 
    public:

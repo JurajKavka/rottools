@@ -1,6 +1,7 @@
 #include "MainFrame.h"
 
 #include <wx/filedlg.h>
+#include <wx/fontdlg.h>
 #include <wx/msgdlg.h>
 #include <wx/stockitem.h>
 
@@ -40,6 +41,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdatePasteMenuItem, this, wxID_PASTE);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleWordWrapMenuItemClick, this, wxID_WORDWRAP);
+    Bind(wxEVT_MENU, &MainFrame::HandleFontMenuItemClick, this, wxID_FONT);
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveAsMenuItemClick, this, m_saveAsTool->GetId());
@@ -175,6 +177,22 @@ void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
 
 void MainFrame::HandleWordWrapMenuItemClick(wxCommandEvent& event) {
     m_textEditorPanel->SetWordWrap(event.IsChecked());
+    m_textEditorPanel->FocusEditor();
+}
+
+void MainFrame::HandleFontMenuItemClick(wxCommandEvent& event) {
+    wxFontData fontData;
+    fontData.EnableEffects(false);
+    fontData.SetInitialFont(m_textEditorPanel->GetEditorFont());
+
+    wxFontDialog fontDialog(this, fontData);
+    if (fontDialog.ShowModal() == wxID_OK) {
+        const wxFont chosenFont = fontDialog.GetFontData().GetChosenFont();
+        if (chosenFont.IsOk()) {
+            m_textEditorPanel->SetEditorFont(chosenFont);
+        }
+    }
+
     m_textEditorPanel->FocusEditor();
 }
 

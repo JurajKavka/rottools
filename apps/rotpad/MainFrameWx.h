@@ -39,12 +39,14 @@ class MainFrameWx : public wxFrame
 			wxID_NEW_WINDOW_MENU_ITEM = 6000,
 			wxID_TOGGLE_FILE_BROWSER_MENU_ITEM,
 			wxID_WORDWRAP,
+			wxID_FONT,
 		};
 
 		wxMenuBar* MenuBar;
 		wxMenu* m_fileMenu;
 		wxMenu* m_editMenu;
 		wxMenu* m_viewMenu;
+		wxMenu* m_settingsMenu;
 		wxToolBar* toolBar;
 		wxToolBarToolBase* m_fileOpenTool;
 		wxToolBarToolBase* m_saveTool;

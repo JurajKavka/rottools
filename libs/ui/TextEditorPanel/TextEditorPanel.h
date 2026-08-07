@@ -33,5 +33,6 @@ class TextEditorPanel : public TextEditorPanelWx {
     void SetWordWrap(bool enabled);
     [[nodiscard]] bool IsWordWrapEnabled() const;
     void SetEditorFont(const wxFont& font);
+    [[nodiscard]] wxFont GetEditorFont() const;
     void FocusEditor();
 };
