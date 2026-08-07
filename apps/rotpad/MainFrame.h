@@ -14,9 +14,13 @@ class MainFrame final : public MainFrameWx {
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
     TextEditorPanel* m_textEditorPanel = nullptr;
     int m_fileBrowserWidth = 100;
+    wxFileName m_currentFile;
 
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
+    void HandleSaveMenuItemClick(wxCommandEvent& event);
+    void HandleSaveAsMenuItemClick(wxCommandEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
+    bool SaveTextFile(const wxFileName& filePath);
 
    public:
     explicit MainFrame(wxWindow* parent);

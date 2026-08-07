@@ -18,12 +18,22 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	MenuBar = new wxMenuBar( 0 );
 	m_menu1 = new wxMenu();
 	wxMenuItem* OpenFileMenuItem;
-	OpenFileMenuItem = new wxMenuItem( m_menu1, wxID_OPEN, wxString( _("&Open...\tCtrl+O") ) , wxEmptyString, wxITEM_NORMAL );
+	OpenFileMenuItem = new wxMenuItem( m_menu1, wxID_OPEN, wxString( _("&Open...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu1->Append( OpenFileMenuItem );
 
 	wxMenuItem* m_newWindowMenuItem;
 	m_newWindowMenuItem = new wxMenuItem( m_menu1, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window\tCtrl+N") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu1->Append( m_newWindowMenuItem );
+
+	m_menu1->AppendSeparator();
+
+	wxMenuItem* m_saveMenuItem;
+	m_saveMenuItem = new wxMenuItem( m_menu1, wxID_SAVE, wxString( _("&Save") ) + wxT('\t') + wxT("CTRL+S"), wxEmptyString, wxITEM_NORMAL );
+	m_menu1->Append( m_saveMenuItem );
+
+	wxMenuItem* m_saveAsMenuItem;
+	m_saveAsMenuItem = new wxMenuItem( m_menu1, wxID_SAVEAS, wxString( _("Save As...") ) + wxT('\t') + wxT("CTRL+SHIFT+S"), wxEmptyString, wxITEM_NORMAL );
+	m_menu1->Append( m_saveAsMenuItem );
 
 	MenuBar->Append( m_menu1, _("File") );
 
