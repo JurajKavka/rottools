@@ -36,6 +36,7 @@ jobs:
             preset: ci-windows
     runs-on: ${{ matrix.os }}
     env:
+      VCPKG_DISABLE_METRICS: "1"
       # vcpkg binary caching. The old 'x-gha' backend was removed upstream; with
       # it configured vcpkg warned and silently cached nothing, so every run
       # rebuilt wxWidgets from source (~10-30 min). The supported replacement is
