@@ -16,8 +16,9 @@ and its own macOS / Linux / Windows builds, and is released independently.
 ```
 rottools/
   CMakeLists.txt         # umbrella build (selects tools via ROTTOOLS_BUILD_<TOOL>)
-  CMakePresets.json      # local and three-platform CI configuration
-  cmake/                 # pinned wxWidgets source + version/CPack packaging
+  CMakePresets.json      # `dev` (system deps) + `ci-macos/linux/windows` (vcpkg)
+  vcpkg.json             # cross-platform dependency manifest (wxwidgets, md4c)
+  cmake/                 # shared modules: version + CPack packaging
   libs/                  # SHARED, reusable libraries (rottools::* targets)
     HelperFunctions/         rottools::helpers
     backend/
@@ -45,9 +46,6 @@ rottools/
 Uses system-provided wxWidgets (e.g. `brew install wxwidgets`) and fetches md4c.
 `make help` prints the full menu. Root targets operate on the complete suite;
 app-prefixed targets use an isolated build directory and operate on one app:
-
-The macOS and Windows CI presets instead compile the wxWidgets version pinned in
-`cmake/RotToolsWxWidgets.cmake` as static libraries for self-contained packages.
 
 | `make`                  | Does                                      |
 |-------------------------|-------------------------------------------|

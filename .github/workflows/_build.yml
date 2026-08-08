@@ -1,10 +1,9 @@
 # Reusable build+package workflow. Given a tool name, builds it on all three
-# OSes and produces installers. macOS and Windows build a pinned, static
-# wxWidgets from source; Linux uses the distribution's native wxGTK packages.
+# OSes via vcpkg (binary-cached through actions/cache) and produces installers.
 # Called by ci.yml (no upload) and by each release-<tool>.yml (uploads artifacts).
 #
-# NOTE: first-run validation needed on GitHub — CI specifics (the bundled
-# wxWidgets WebView build, NSIS availability, exact apt package names) can only be
+# NOTE: first-run validation needed on GitHub — CI specifics (vcpkg wxwidgets
+# webview feature, NSIS availability, exact apt package names) can only be
 # confirmed once this runs on real runners.
 name: build
 
@@ -36,6 +35,14 @@ jobs:
           - os: windows-2022
             preset: ci-windows
     runs-on: ${{ matrix.os }}
+    env:
+      VCPKG_DISABLE_METRICS: "1"
+      # vcpkg binary caching. The old 'x-gha' backend was removed upstream; with
+      # it configured vcpkg warned and silently cached nothing, so every run
+      # rebuilt wxWidgets from source (~10-30 min). The supported replacement is
+      # the plain 'files' backend pointed at a directory we persist ourselves
+      # with actions/cache below.
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
     steps:
       - uses: actions/checkout@v4
 
@@ -53,17 +60,25 @@ jobs:
             exit 1
           fi
 
-      # FetchContent keeps source trees and incremental dependency build outputs
-      # here. Invalidate them whenever a pinned dependency or its build settings
-      # change; application-only changes can safely reuse the cache.
-      - name: Cache source dependencies
+      - name: Create vcpkg cache directory
+        shell: bash
+        run: mkdir -p "${{ github.workspace }}/vcpkg-cache"
+
+      # Restore on the closest key, always save under a unique one: cache entries
+      # are immutable, so reusing a key would never pick up newly built ports.
+      - name: Cache vcpkg binaries
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/.cache/fetchcontent
-          key: fetchcontent-${{ matrix.os }}-${{ hashFiles('CMakePresets.json', 'cmake/RotToolsWxWidgets.cmake', 'libs/backend/MarkdownToHtmlAsync/CMakeLists.txt') }}
+          path: ${{ github.workspace }}/vcpkg-cache
+          key: vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-triplets/*.cmake') }}-${{ github.sha }}
+          restore-keys: |
+            vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-triplets/*.cmake') }}-
+            vcpkg-${{ matrix.os }}-
 
-      # Linux uses its native wxGTK/WebKitGTK stack; md4c falls back to
-      # FetchContent. The packaged application records these system dependencies.
+      # Linux does not use vcpkg (see the ci-linux preset): wxWidgets and its GTK
+      # stack come from apt, and md4c falls back to FetchContent. That keeps the
+      # job to one compile instead of ~100 source builds, and stops us depending
+      # on gitlab.freedesktop.org, which throttles bulk archive downloads.
       - name: Install Linux system deps
         if: runner.os == 'Linux'
         run: |
@@ -88,10 +103,12 @@ jobs:
         with:
           arch: x64
 
+      # Use the vcpkg preinstalled on the runner image.
       - name: Configure
         shell: bash
         run: |
           APP_UPPER=$(echo "${{ inputs.app }}" | tr '[:lower:]' '[:upper:]')
+          export VCPKG_ROOT="${VCPKG_INSTALLATION_ROOT}"
           cmake --preset ${{ matrix.preset }} \
             -DROTTOOLS_BUILD_ROTREADER=OFF \
             -DROTTOOLS_BUILD_ROTPAD=OFF \

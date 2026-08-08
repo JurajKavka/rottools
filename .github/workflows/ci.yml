@@ -31,6 +31,7 @@ jobs:
               - 'cmake/**'
               - 'CMakeLists.txt'
               - 'CMakePresets.json'
+              - 'vcpkg.json'
               - '.github/workflows/_build.yml'
               - '.github/workflows/ci.yml'
             rotreader:

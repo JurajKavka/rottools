@@ -58,9 +58,8 @@ Configure/build directly with presets when needed:
 - Build one shared component in isolation: `cmake --build build --target rottools_ui_webview`
 - Build the per-library standalone smoke-test apps: `cmake -B build -DROTTOOLS_BUILD_LIB_APPS=ON`
 
-Dependencies resolve from the system (Homebrew/apt) for the `dev` and `ci-linux`
-presets. The `ci-macos` and `ci-windows` presets build the pinned wxWidgets release
-declared in [cmake/RotToolsWxWidgets.cmake](cmake/RotToolsWxWidgets.cmake).
+Dependencies resolve from the system (Homebrew/apt) for the `dev` preset, or from vcpkg
+([vcpkg.json](vcpkg.json)) for the `ci-macos`/`ci-linux`/`ci-windows` presets.
 
 ## Packaging (CPack)
 
@@ -83,8 +82,8 @@ Bundle id `com.jurajkavka.rotreader`. To change any of these, edit the `rottools
 call in [apps/rotreader/CMakeLists.txt](apps/rotreader/CMakeLists.txt).
 
 macOS signing is still ad-hoc (CPack default); Developer-ID cert + notarization is a follow-up.
-For a fully self-contained `.dmg` (wxWidgets statically linked, not against Homebrew), configure
-with `--preset ci-macos`.
+For a fully self-contained `.dmg` (deps statically linked, not against Homebrew), configure with
+`--preset ci-macos` (vcpkg).
 
 ## Icons
 
