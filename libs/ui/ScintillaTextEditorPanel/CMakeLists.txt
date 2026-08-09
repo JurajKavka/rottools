@@ -1,4 +1,4 @@
-# rottools::ui_scintillatexteditor — reusable Scintilla-backed plain-text editor panel.
+# rottools::ui_scintillatexteditor — reusable, configurable Scintilla-backed text editor panel.
 add_library(rottools_ui_scintillatexteditor STATIC ScintillaTextEditorPanel.cpp ScintillaTextEditorPanelWx.cpp)
 add_library(rottools::ui_scintillatexteditor ALIAS rottools_ui_scintillatexteditor)
 

@@ -44,6 +44,24 @@ WebViewPanel::WebViewPanel(wxWindow* parent) : WebViewPanelWx(parent) {
     Layout();
 }
 
+void WebViewPanel::Copy() {
+    if (CanCopy()) {
+        m_webView->Copy();
+    }
+}
+
+bool WebViewPanel::CanCopy() const {
+    return m_webView != nullptr && m_webView->CanCopy();
+}
+
+void WebViewPanel::FocusContent() {
+    if (m_webView != nullptr) {
+        m_webView->SetFocus();
+    } else {
+        SetFocus();
+    }
+}
+
 void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior) {
     if (!m_webView) {
         // 3. Instantiate the wxWebView

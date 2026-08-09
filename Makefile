@@ -5,7 +5,7 @@
         rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
-        run-filetree run-htmlsource run-mdsource run-texteditor run-scintillatexteditor \
+        run-filetree run-htmlsource run-texteditor run-scintillatexteditor \
         run-dirscan run-md2html run-helpers \
         build-texteditor build-scintillatexteditor \
         build-webview build-filedrop \
@@ -110,10 +110,6 @@ run-markdownpreview: _demos ## MarkdownPreviewPanel        (rottools::ui_markdow
 	cmake --build build --target rottools_ui_markdownpreview_app
 	./build/libs/ui/MarkdownPreviewPanel/rottools_ui_markdownpreview_app
 
-run-mdsource: _demos   ## MarkdownSourcePanel    (rottools::ui_mdsource)
-	cmake --build build --target rottools_ui_mdsource_app
-	./build/libs/ui/MarkdownSourcePanel/rottools_ui_mdsource_app
-
 build-scintillatexteditor: _demos ## Build ScintillaTextEditorPanel smoke app
 	cmake --build build --target rottools_ui_scintillatexteditor_app
 
@@ -153,10 +149,13 @@ format:                ## Format all non-generated sources
 # Static analysis. wxFormBuilder-generated *Wx.h/*Wx.cpp are excluded.
 # constParameterCallback is suppressed globally: wxWidgets' Bind() requires event
 # handlers to take a non-const reference.
+# ctuOneDefinitionRuleViolation is suppressed because rotreader and rotpad are
+# separate executables whose frame classes intentionally share the name MainFrame.
 check:                 ## Run cppcheck static analysis over libs + apps
 	cppcheck --std=c++20 --enable=warning,style,performance,portability \
 		--suppress=missingIncludeSystem \
 		--suppress=constParameterCallback \
+		--suppress=ctuOneDefinitionRuleViolation \
 		--suppress="*:*Wx.h" --suppress="*:*Wx.cpp" \
 		--inline-suppr --error-exitcode=1 -i build --quiet \
 		libs apps

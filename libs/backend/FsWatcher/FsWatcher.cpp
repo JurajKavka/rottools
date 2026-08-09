@@ -56,7 +56,7 @@ bool FsWatcher::IsRelevant(wxFileSystemWatcherEvent& event) const {
     int changeType = event.GetChangeType();
 
     if (m_watchingFile) {
-        if (!(changeType & (wxFSW_EVENT_MODIFY | wxFSW_EVENT_CREATE | wxFSW_EVENT_RENAME))) {
+        if (!(changeType & (wxFSW_EVENT_MODIFY | wxFSW_EVENT_CREATE | wxFSW_EVENT_DELETE | wxFSW_EVENT_RENAME))) {
             return false;
         }
         if (event.GetPath().SameAs(m_target)) {

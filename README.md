@@ -8,7 +8,7 @@ and its own macOS / Linux / Windows builds, and is released independently.
 
 | Tool         | Description                                                        |
 |--------------|-------------------------------------------------------------------|
-| **rotreader** | A native Markdown viewer (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ℜ⛤𝔗 reader**. |
+| **rotreader** | A native Markdown reader/editor (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ℜ⛤𝔗 reader**. |
 | **rotpad**    | A small native plain-text editor inspired by classic Notepad. UI name: **ℜ⛤𝔗 pad**. |
 
 ## Repository layout
@@ -27,7 +27,6 @@ rottools/
     ui/
       WebViewPanel/          rottools::ui_webview
       HtmlSourcePanel/       rottools::ui_htmlsource
-      MarkdownSourcePanel/   rottools::ui_mdsource
       TextEditorPanel/       rottools::ui_texteditor
       ScintillaTextEditorPanel/ rottools::ui_scintillatexteditor
       FileBrowserTreePanel/  rottools::ui_filetree
@@ -67,8 +66,8 @@ Build/run a single shared component in isolation (`make help` lists them all):
 | `make run-filetree`  | FileBrowserTreePanel | `cmake -B build -DROTTOOLS_BUILD_LIB_APPS=ON`<br>`cmake --build build --target rottools_ui_filetree_app`<br>`./build/libs/ui/FileBrowserTreePanel/rottools_ui_filetree_app` |
 | `make build-webview` | WebViewPanel (lib only) | `cmake --build build --target rottools_ui_webview` |
 
-The other demos follow the same pattern: `run-htmlsource`, `run-mdsource`,
-`run-texteditor`, `run-scintillatexteditor`, `run-dirscan`, `run-md2html`,
+The other demos follow the same pattern: `run-htmlsource`, `run-texteditor`,
+`run-scintillatexteditor`, `run-dirscan`, `run-md2html`,
 `run-helpers` (and `build-filedrop`). Build-only editor smoke targets are also
 available as `build-texteditor` and `build-scintillatexteditor`.
 

@@ -39,7 +39,7 @@ class ParserDemoApp : public wxApp {
         m_receiver = std::make_unique<ConsoleReceiver>();
         m_parser = std::make_unique<MarkdownToHtmlAsync>(m_receiver.get());
         std::cout << "[Main Thread] Launching Async Parse..." << std::endl;
-        m_parser->ParseFile(wxFileName("AGENTS.md"));
+        (void)m_parser->ParseFile(wxFileName("AGENTS.md"));
         return true;  // Start the main loop
     }
 

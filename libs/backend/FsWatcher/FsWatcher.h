@@ -9,7 +9,7 @@
 // Watches a directory or a file and invokes a callback, debounced, on a
 // relevant change:
 //   - directory: a direct child is created/deleted/renamed
-//   - file:      that file is modified/created/renamed
+//   - file:      that file is modified/created/deleted/renamed
 // Recreate the object to change what is watched.
 class FsWatcher : public wxEvtHandler {
    public:

@@ -18,6 +18,9 @@ class MyApp : public wxApp {
 wxIMPLEMENT_APP(MyApp);
 
 bool MyApp::OnInit() {
+    SetAppName("rotreader-rottools");
+    SetVendorName("Juraj Kavka");
+
 #ifdef __WXOSX__
     OSXEnableAutomaticTabbing(false);
 #endif
@@ -28,7 +31,7 @@ bool MyApp::OnInit() {
     m_frame->Show(true);
 
     if (argc > 1) {
-        m_frame->OpenMarkdownFile(wxFileName(argv[1]));
+        m_frame->HandleOpenMarkdownFile(wxFileName(argv[1]));
     }
 
     return true;
@@ -39,6 +42,6 @@ void MyApp::MacOpenFiles(const wxArrayString& fileNames) {
     if (fileNames.IsEmpty()) {
         return;
     }
-    m_frame->OpenMarkdownFile(wxFileName(fileNames[0]));
+    m_frame->HandleOpenMarkdownFile(wxFileName(fileNames[0]));
 }
 #endif

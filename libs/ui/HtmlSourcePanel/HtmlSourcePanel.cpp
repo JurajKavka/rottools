@@ -39,6 +39,16 @@ void HtmlSourcePanel::ShowHtml(const wxString& html) {
     m_styledTextCtrl->SetReadOnly(true);
 }
 
+void HtmlSourcePanel::Copy() {
+    if (CanCopy()) {
+        m_styledTextCtrl->Copy();
+    }
+}
+
+bool HtmlSourcePanel::CanCopy() const {
+    return m_styledTextCtrl->GetSelectionStart() != m_styledTextCtrl->GetSelectionEnd();
+}
+
 void HtmlSourcePanel::HandleMarginClick(wxStyledTextEvent& event) {
     int line = m_styledTextCtrl->LineFromPosition(event.GetPosition());
     if (m_styledTextCtrl->GetFoldLevel(line) & wxSTC_FOLDLEVELHEADERFLAG) {

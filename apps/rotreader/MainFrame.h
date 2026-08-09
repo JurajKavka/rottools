@@ -8,64 +8,77 @@
 #include "FileBrowserTreePanel.h"
 #include "FsWatcher.h"
 #include "MainFrameWx.h"
+#include "MarkdownEditorPanel.h"
 #include "MarkdownPreviewPanel.h"
 
 // Forward declarations
 class HtmlSourcePanel;
-class MarkdownSourcePanel;
 
 class MainFrame : public MainFrameWx {
    private:
     // Store a pointer to your custom panel
     MarkdownPreviewPanel* m_markdownPreviewPanel = nullptr;
     HtmlSourcePanel* m_htmlSourcePanel = nullptr;
-    MarkdownSourcePanel* m_markdownSourcePanel = nullptr;
+    MarkdownEditorPanel* m_markdownEditorPanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
     wxSplitterWindow* m_mainSplitter = nullptr;
     int m_fileBrowserWidth = 100;
     // Right of the always-visible preview it holds the source-views area
     wxSplitterWindow* m_rightSplitter = nullptr;
-    // Divides the source area into HTML source and markdown source columns
+    int m_previewWidth = 0;
+    // Divides the source area into HTML source and Markdown editor columns
     wxSplitterWindow* m_sourceSplitter = nullptr;
-    // Watches the browsed directory (list reloads) and the open document (live
-    // reload); recreated by RefreshWatchedPaths when either target changes.
+    int m_htmlSourceWidth = 0;
+    // Watches the browsed directory so its list follows external changes. The
+    // MarkdownEditorPanel owns the separate current-document watcher.
     std::unique_ptr<FsWatcher> m_browserWatcher;
-    std::unique_ptr<FsWatcher> m_documentWatcher;
-    wxFileName m_currentFile;
     wxFileName m_browsedDirectory;
-    // The document text already loaded and rendered, i.e. what we believe is on
-    // disk. ReloadOpenDocument compares against it to ignore the file-system
-    // event our own save triggers, which has already been rendered directly.
-    wxString m_loadedText;
     // First of the CssThemeCount consecutive ids given to the Theme menu items
     wxWindowID m_themeMenuBaseId = wxID_ANY;
     // Index into cssThemes; the frame owns the theme, the preview panel does not
     int m_themeId = RotdownMonoLight;
+    bool m_replaceEditorStatusOnPreviewReady = false;
 
     void HandleNewWindowMenuItemClick(wxCommandEvent& event);
+    void HandleCloseWindow(wxCloseEvent& event);
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
+    void HandleSaveMenuItemClick(wxCommandEvent& event);
+    void HandleSaveAsMenuItemClick(wxCommandEvent& event);
+    void HandleUndoMenuItemClick(wxCommandEvent& event);
+    void HandleRedoMenuItemClick(wxCommandEvent& event);
+    void HandleCopyMenuItemClick(wxCommandEvent& event);
+    void HandleCutMenuItemClick(wxCommandEvent& event);
+    void HandlePasteMenuItemClick(wxCommandEvent& event);
+    [[nodiscard]] bool IsMarkdownEditorFocused() const;
+    void HandleUpdateUndoMenuItem(wxUpdateUIEvent& event);
+    void HandleUpdateRedoMenuItem(wxUpdateUIEvent& event);
+    void HandleUpdateCopyMenuItem(wxUpdateUIEvent& event);
+    void HandleUpdateCutMenuItem(wxUpdateUIEvent& event);
+    void HandleUpdatePasteMenuItem(wxUpdateUIEvent& event);
     void HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
-    void HandleToggleMarkdownSourcePanelMenuItemClick(wxCommandEvent& event);
+    void HandleToggleMarkdownEditorPanelMenuItemClick(wxCommandEvent& event);
+    void HandleWordWrapMenuItemClick(wxCommandEvent& event);
+    void HandleFontMenuItemClick(wxCommandEvent& event);
     void HandleHtmlSourcePanelClose();
-    void HandleMarkdownSourcePanelClose();
     void HideFileBrowser();
-    void ApplySourcePanelVisibility();
+    void ApplySourcePanelVisibility(wxWindow* focusedWindowBeforeChange = nullptr);
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);
     MarkdownPreviewOptions GetPreviewOptions(ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop) const;
-    void ReloadOpenDocument();
     void HandleDirectoryChanged(const wxFileName& filePath);
-    void RefreshWatchedPaths();
+    void HandleBrowserWatcherChange();
+    void RefreshBrowserWatcher();
 
+    void HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change);
+    void HandleMarkdownEditorStatusChanged(const MarkdownEditorPanel::StatusChange& change);
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
     void HandleMarkdownError(const wxString& error);
-    void HandleMarkdownSourceSave(const wxString& markdown);
 
    public:
     explicit MainFrame(wxWindow* parent);
     ~MainFrame();
 
-    void OpenMarkdownFile(const wxFileName& filePath);
+    void HandleOpenMarkdownFile(const wxFileName& filePath);
 };

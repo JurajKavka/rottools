@@ -31,6 +31,8 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
      *        navigating to a new directory should.
      */
     void ListDir(const wxFileName& fileName, ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop);
+    /** List the containing directory and select the given file when the scan completes. */
+    void ShowFile(const wxFileName& fileName);
     void ReloadCurrentDir();
     bool IsShowingDir(const wxFileName& dir) const;
 

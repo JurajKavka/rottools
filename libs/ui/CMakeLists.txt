@@ -2,7 +2,6 @@
 add_subdirectory(FileDropTarget)
 add_subdirectory(WebViewPanel)
 add_subdirectory(HtmlSourcePanel)
-add_subdirectory(MarkdownSourcePanel)
 add_subdirectory(FileBrowserTreePanel)
 add_subdirectory(MarkdownPreviewPanel)
 add_subdirectory(ScintillaTextEditorPanel)

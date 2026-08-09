@@ -117,6 +117,17 @@ void FileBrowserTreePanel::ListDir(const wxFileName& fileName, ScrollBehavior sc
     m_directoryScanner.StartScan(fileName, m_scanOptions, this);
 }
 
+void FileBrowserTreePanel::ShowFile(const wxFileName& fileName) {
+    wxFileName absoluteFile(fileName);
+    absoluteFile.MakeAbsolute();
+
+    m_scrollBehavior = ScrollBehavior::ResetToTop;
+    m_savedSelectionText = absoluteFile.GetFullName();
+    m_savedTopItemText.clear();
+    m_currentPath = wxFileName::DirName(absoluteFile.GetPath());
+    m_directoryScanner.StartScan(m_currentPath, m_scanOptions, this);
+}
+
 void FileBrowserTreePanel::HandleDirectoryScanComplete(DirectoryScannerEvent& event) {
     UpdateTree(event.files);
     if (m_onDirectoryChanged) {

@@ -13,19 +13,31 @@ MarkdownPreviewPanel::MarkdownPreviewPanel(wxWindow* parent, OnMarkdownReadyCall
 void MarkdownPreviewPanel::LoadFile(const wxFileName& fileName, MarkdownPreviewOptions options) {
     m_options = std::move(options);
     m_origin = MarkdownOrigin::Disk;
-    m_markdownParser.ParseFile(fileName);
+    m_parsePending = true;
+    m_hasCurrentParse = false;
+    m_parseRequestId = m_markdownParser.ParseFile(fileName);
 }
 
 void MarkdownPreviewPanel::LoadMarkdown(const wxString& markdown, const wxFileName& fileName,
                                         MarkdownPreviewOptions options) {
     m_options = std::move(options);
     m_origin = MarkdownOrigin::Memory;
-    m_markdownParser.ParseText(markdown, fileName);
+    m_parsePending = true;
+    m_hasCurrentParse = false;
+    m_parseRequestId = m_markdownParser.ParseText(markdown, fileName);
 }
 
 void MarkdownPreviewPanel::Render(MarkdownPreviewOptions options) {
+    if (m_parsePending) {
+        // A theme can change while a new document is parsing. Keep that style
+        // for the pending result, but retain the load request's scroll behavior
+        // and do not repaint the previous document as though it were current.
+        m_options.injectStyle = std::move(options.injectStyle);
+        return;
+    }
+
     m_options = std::move(options);
-    if (m_parsedHtml.IsEmpty()) {
+    if (!m_hasCurrentParse) {
         return;
     }
     Paint();
@@ -65,6 +77,12 @@ void MarkdownPreviewPanel::Paint() {
 }
 
 void MarkdownPreviewPanel::HandleMarkdownReady(MarkdownToHtmlAsyncEvent& event) {
+    if (event.requestId != m_parseRequestId) {
+        return;
+    }
+
+    m_parsePending = false;
+    m_hasCurrentParse = true;
     m_parsedHtml = event.html;
     m_markdown = event.markdown;
     m_fileName = event.filePath;
@@ -72,6 +90,12 @@ void MarkdownPreviewPanel::HandleMarkdownReady(MarkdownToHtmlAsyncEvent& event) 
 }
 
 void MarkdownPreviewPanel::HandleMarkdownError(MarkdownToHtmlAsyncEvent& event) {
+    if (event.requestId != m_parseRequestId) {
+        return;
+    }
+
+    m_parsePending = false;
+    m_hasCurrentParse = false;
     if (m_onMarkdownErrorCallback) {
         m_onMarkdownErrorCallback(event.error);
     }
