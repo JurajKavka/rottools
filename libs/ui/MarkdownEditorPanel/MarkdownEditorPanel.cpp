@@ -37,7 +37,9 @@ void HandleStatusChanged(const MarkdownEditorPanel::OnStatusMessageCallback& onS
 }  // namespace
 
 MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCallback onDocumentChanged,
-                                         OnStatusMessageCallback onStatusMessage, OnErrorCallback onError)
+                                         OnStatusMessageCallback onStatusMessage,
+                                         ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard,
+                                         OnErrorCallback onError)
     : ScintillaTextEditorPanel(
           parent,
           {.syntax = Syntax::Markdown,
@@ -48,6 +50,7 @@ MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCall
            .saveDialogTitle = "Save Markdown File"},
           {.documentChanged = std::move(onDocumentChanged),
            .statusChanged = std::bind_front(&HandleStatusChanged, std::move(onStatusMessage)),
+           .confirmSaveBeforeDiscard = std::move(confirmSaveBeforeDiscard),
            .onError = std::move(onError),
            .documentWatchRequested = std::bind_front(&MarkdownEditorPanel::HandleDocumentWatchRequested, this)}) {}
 

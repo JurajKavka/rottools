@@ -128,25 +128,24 @@ bool ScintillaTextEditorPanel::ConfirmSaveBeforeDiscard() {
         return true;
     }
 
-    const wxString documentName = m_currentFile.IsOk() ? m_currentFile.GetFullName() : wxString("Untitled");
-    const wxString message = fileMissing
-                                 ? wxString("The file \"") + documentName +
-                                       "\" was removed by another application.\n\nRecreate it before continuing?"
-                                 : wxString("Save changes to \"") + documentName + "\" before continuing?";
-    wxMessageDialog dialog(GetDialogParent(), message, fileMissing ? "File Removed" : "Unsaved Changes",
-                           wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
-    dialog.SetYesNoCancelLabels(fileMissing ? wxString("Recreate") : wxGetStockLabel(wxID_SAVE), "Don't Save",
-                                wxGetStockLabel(wxID_CANCEL));
-
-    const int result = dialog.ShowModal();
-    if (result == wxID_NO) {
-        return true;
-    }
-    if (result != wxID_YES) {
+    if (!m_callbacks.confirmSaveBeforeDiscard) {
         return false;
     }
 
-    return m_currentFile.IsOk() ? SaveFile(m_currentFile, fileMissing) : SaveAs();
+    const SavePrompt prompt = {
+        .reason = fileMissing ? SavePromptReason::FileRemoved : SavePromptReason::UnsavedChanges,
+        .filePath = m_currentFile,
+    };
+    switch (m_callbacks.confirmSaveBeforeDiscard(prompt)) {
+        case SavePromptDecision::Save:
+            return m_currentFile.IsOk() ? SaveFile(m_currentFile, fileMissing) : SaveAs();
+        case SavePromptDecision::Discard:
+            return true;
+        case SavePromptDecision::Cancel:
+            return false;
+    }
+
+    return false;
 }
 
 bool ScintillaTextEditorPanel::SaveFile(const wxFileName& filePath, bool missingFileRecreationConfirmed) {

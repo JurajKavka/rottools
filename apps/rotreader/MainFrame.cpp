@@ -86,6 +86,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_markdownEditorPanel =
         new MarkdownEditorPanel(m_sourceSplitter, std::bind_front(&MainFrame::HandleMarkdownDocumentChanged, this),
                                 std::bind_front(&MainFrame::HandleMarkdownEditorStatusChanged, this),
+                                std::bind_front(&MainFrame::HandleConfirmSaveBeforeDiscard, this),
                                 std::bind_front(&MainFrame::HandleMarkdownEditorError, this));
     m_viewMenu->Check(wxID_WORDWRAP, m_markdownEditorPanel->IsWordWrapEnabled());
     m_rightSplitter->SetMinimumPaneSize(100);
@@ -422,6 +423,29 @@ void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::Documen
 void MainFrame::HandleMarkdownEditorStatusChanged(const MarkdownEditorPanel::StatusMessage& message) {
     statusBar->SetStatusText(message.label);
     m_replaceEditorStatusOnPreviewReady = message.replaceOnPreviewReady;
+}
+
+MarkdownEditorPanel::SavePromptDecision MainFrame::HandleConfirmSaveBeforeDiscard(
+    const MarkdownEditorPanel::SavePrompt& prompt) {
+    const bool fileRemoved = prompt.reason == MarkdownEditorPanel::SavePromptReason::FileRemoved;
+    const wxString documentName = prompt.filePath.IsOk() ? prompt.filePath.GetFullName() : wxString("Untitled");
+    const wxString message = fileRemoved
+                                 ? wxString("The file \"") + documentName +
+                                       "\" was removed by another application.\n\nRecreate it before continuing?"
+                                 : wxString("Save changes to \"") + documentName + "\" before continuing?";
+    wxMessageDialog dialog(this, message, fileRemoved ? "File Removed" : "Unsaved Changes",
+                           wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+    dialog.SetYesNoCancelLabels(fileRemoved ? wxString("Recreate") : wxGetStockLabel(wxID_SAVE), "Don't Save",
+                                wxGetStockLabel(wxID_CANCEL));
+
+    switch (dialog.ShowModal()) {
+        case wxID_YES:
+            return MarkdownEditorPanel::SavePromptDecision::Save;
+        case wxID_NO:
+            return MarkdownEditorPanel::SavePromptDecision::Discard;
+        default:
+            return MarkdownEditorPanel::SavePromptDecision::Cancel;
+    }
 }
 
 void MainFrame::HandleMarkdownEditorError(MarkdownEditorPanel::ErrorCode errorCode, const wxFileName& filePath) {

@@ -70,9 +70,32 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
         ExternalChangeCheckFailed,
     };
 
+    enum class SavePromptReason {
+        /** The document has editor changes that have not been saved. */
+        UnsavedChanges,
+        /** The current document file was removed outside the editor. */
+        FileRemoved,
+    };
+
+    enum class SavePromptDecision {
+        /** Save or recreate the document before continuing. */
+        Save,
+        /** Continue without saving or recreating the document. */
+        Discard,
+        /** Cancel the operation that would discard the current document. */
+        Cancel,
+    };
+
+    struct SavePrompt {
+        SavePromptReason reason = SavePromptReason::UnsavedChanges;
+        /** Absolute current file path; invalid when the document is untitled. */
+        wxFileName filePath;
+    };
+
     using OnDocumentChangedCallback = std::function<void(const DocumentChange&)>;
     using OnStatusChangedCallback = std::function<void(Status, const wxFileName&)>;
     using OnErrorCallback = std::function<void(ErrorCode, const wxFileName&)>;
+    using ConfirmSaveBeforeDiscardCallback = std::function<SavePromptDecision(const SavePrompt&)>;
     using OnDocumentWatchRequestedCallback = std::function<void(const wxFileName&)>;
 
     struct Callbacks {
@@ -90,6 +113,13 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
          * how to present it, including its user-facing label.
          */
         OnStatusChangedCallback statusChanged;
+
+        /**
+         * Called when continuing may discard unsaved editor contents or leave
+         * a removed file unrecreated. The callback presents that choice and
+         * returns the user's decision; absence of a callback means Cancel.
+         */
+        ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard;
 
         /**
          * Called when a file operation fails. The callback receives a stable
