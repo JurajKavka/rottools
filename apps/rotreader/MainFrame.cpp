@@ -377,6 +377,14 @@ MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavio
     return {.injectStyle = cssThemes[m_themeId].css, .scrollBehavior = scrollBehavior};
 }
 
+/**
+ * Opens a Markdown file through the editor, which owns the document lifecycle.
+ *
+ * OpenFile() reads the UTF-8 file into the editor and reports the resulting
+ * in-memory text through HandleMarkdownDocumentChanged(). That handler passes
+ * the text to MarkdownPreviewPanel for asynchronous Markdown-to-HTML parsing;
+ * once rendering finishes, HandleMarkdownReady() receives the generated HTML.
+ */
 void MainFrame::HandleOpenMarkdownFile(const wxFileName& filePath) {
     (void)m_markdownEditorPanel->OpenFile(filePath);
 }
