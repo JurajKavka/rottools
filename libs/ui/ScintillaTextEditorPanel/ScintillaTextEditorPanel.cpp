@@ -59,6 +59,8 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
 }
 
 bool ScintillaTextEditorPanel::ShowOpenDialog() {
+    // TODO: Move open-dialog presentation to the host and receive the selected
+    // path through a typed callback, so this panel does not resolve a parent.
     wxFileDialog dialog(GetDialogParent(), m_options.openDialogTitle, {}, {}, m_options.fileWildcard,
                         wxFD_OPEN | wxFD_FILE_MUST_EXIST);
     if (dialog.ShowModal() != wxID_OK) {
@@ -111,6 +113,8 @@ bool ScintillaTextEditorPanel::SaveAs() {
         defaultFileName = m_currentFile.GetFullName();
     }
 
+    // TODO: Move Save As presentation to the host and receive the selected
+    // path through a typed callback, so this panel does not resolve a parent.
     wxFileDialog dialog(GetDialogParent(), m_options.saveDialogTitle, defaultDirectory, defaultFileName,
                         m_options.fileWildcard, wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
     if (dialog.ShowModal() != wxID_OK) {
@@ -342,6 +346,8 @@ void ScintillaTextEditorPanel::ShowFontDialog() {
     fontData.EnableEffects(false);
     fontData.SetInitialFont(GetEditorFont());
 
+    // TODO: Move font-dialog presentation to the host and receive the selected
+    // font through a typed callback, so this panel does not resolve a parent.
     wxFontDialog dialog(GetDialogParent(), fontData);
     if (dialog.ShowModal() == wxID_OK) {
         const wxFont chosenFont = dialog.GetFontData().GetChosenFont();
@@ -357,6 +363,8 @@ void ScintillaTextEditorPanel::ShowFontDialog() {
 }
 
 wxWindow* ScintillaTextEditorPanel::GetDialogParent() const {
+    // TODO: Remove this helper after open, Save As, and font presentation have
+    // moved to the host callbacks above.
     wxWindow* topLevelParent = wxGetTopLevelParent(const_cast<ScintillaTextEditorPanel*>(this));
     return topLevelParent != nullptr ? topLevelParent : const_cast<ScintillaTextEditorPanel*>(this);
 }

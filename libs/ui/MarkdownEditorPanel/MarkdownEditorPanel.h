@@ -40,6 +40,11 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
     using OnErrorMessageCallback = std::function<void(const ErrorMessage&)>;
     using ConfirmOverwritePromptCallback = std::function<OverwritePromptDecision(const OverwritePromptMessage&)>;
 
+    // TODO: Replace the positional callback parameters below with a documented
+    // MarkdownEditorPanel::Callbacks aggregate. Keep document state decisions
+    // in ScintillaTextEditorPanel, message translation and FsWatcher ownership
+    // here, and native dialog presentation in MainFrame.
+
     /**
      * @param confirmSaveBeforeDiscard Synchronous confirmation callback used
      * before the current document may be replaced or the window may close. It
