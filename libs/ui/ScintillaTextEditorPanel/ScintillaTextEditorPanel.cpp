@@ -1,15 +1,23 @@
 #include "ScintillaTextEditorPanel.h"
 
+#include <wx/filedlg.h>
+#include <wx/fontdlg.h>
+#include <wx/msgdlg.h>
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stc/stc.h>
+#include <wx/stockitem.h>
+#include <wx/window.h>
 
 #include <algorithm>
+#include <utility>
 
-ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent) : ScintillaTextEditorPanel(parent, Options{}) {}
+#include "HelperFunctions.h"
 
-ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options options)
-    : ScintillaTextEditorPanelWx(parent), m_options(options) {
+ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent) : ScintillaTextEditorPanel(parent, {}, {}) {}
+
+ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options options, Callbacks callbacks)
+    : ScintillaTextEditorPanelWx(parent), m_options(std::move(options)), m_callbacks(std::move(callbacks)) {
     m_textEditor = new wxStyledTextCtrl(this, wxID_ANY);
 
     // Keep the plain-text defaults visually close to a native text editor.
@@ -47,10 +55,166 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
 
     m_textEditor->EmptyUndoBuffer();
     m_textEditor->SetSavePoint();
+
+    SetEditorFont(LoadEditorFont(GetEditorFont()));
+    SetWordWrap(m_options.wordWrap);
 }
 
-void ScintillaTextEditorPanel::LoadText(const wxString& text) {
-    LoadText(text, LoadBehavior::ResetToTop);
+bool ScintillaTextEditorPanel::ShowOpenDialog() {
+    wxFileDialog dialog(GetDialogParent(), m_options.openDialogTitle, {}, {}, m_options.fileWildcard,
+                        wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+    if (dialog.ShowModal() != wxID_OK) {
+        return false;
+    }
+
+    return OpenFile(wxFileName(dialog.GetPath()));
+}
+
+bool ScintillaTextEditorPanel::OpenFile(const wxFileName& filePath) {
+    wxFileName absolutePath(filePath);
+    absolutePath.MakeAbsolute();
+
+    if (!absolutePath.FileExists()) {
+        NotifyError(ErrorCode::FileDoesNotExist, absolutePath);
+        return false;
+    }
+    if (!absolutePath.IsFileReadable()) {
+        NotifyError(ErrorCode::FileNotReadable, absolutePath);
+        return false;
+    }
+    if (!ConfirmSaveBeforeDiscard()) {
+        return false;
+    }
+
+    wxString text;
+    if (!ReadFileUtf8(absolutePath, text)) {
+        NotifyError(ErrorCode::FileReadFailed, absolutePath);
+        return false;
+    }
+
+    m_currentFile = absolutePath;
+    m_loadedText = text;
+    LoadText(text);
+    RequestDocumentWatch();
+    NotifyStatusChanged(Status::Loading);
+    NotifyDocumentChanged(ChangeReason::Opened, text);
+    return true;
+}
+
+bool ScintillaTextEditorPanel::Save() {
+    return m_currentFile.IsOk() ? SaveFile(m_currentFile) : SaveAs();
+}
+
+bool ScintillaTextEditorPanel::SaveAs() {
+    wxString defaultDirectory;
+    wxString defaultFileName;
+    if (m_currentFile.IsOk()) {
+        defaultDirectory = m_currentFile.GetPath();
+        defaultFileName = m_currentFile.GetFullName();
+    }
+
+    wxFileDialog dialog(GetDialogParent(), m_options.saveDialogTitle, defaultDirectory, defaultFileName,
+                        m_options.fileWildcard, wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+    if (dialog.ShowModal() != wxID_OK) {
+        return false;
+    }
+
+    return SaveFile(wxFileName(dialog.GetPath()));
+}
+
+bool ScintillaTextEditorPanel::ConfirmSaveBeforeDiscard() {
+    const bool fileMissing = m_currentFile.IsOk() && !m_currentFile.FileExists();
+    if (!HasUnsavedChanges() && !fileMissing) {
+        return true;
+    }
+
+    const wxString documentName = m_currentFile.IsOk() ? m_currentFile.GetFullName() : wxString("Untitled");
+    const wxString message = fileMissing
+                                 ? wxString("The file \"") + documentName +
+                                       "\" was removed by another application.\n\nRecreate it before continuing?"
+                                 : wxString("Save changes to \"") + documentName + "\" before continuing?";
+    wxMessageDialog dialog(GetDialogParent(), message, fileMissing ? "File Removed" : "Unsaved Changes",
+                           wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+    dialog.SetYesNoCancelLabels(fileMissing ? wxString("Recreate") : wxGetStockLabel(wxID_SAVE), "Don't Save",
+                                wxGetStockLabel(wxID_CANCEL));
+
+    const int result = dialog.ShowModal();
+    if (result == wxID_NO) {
+        return true;
+    }
+    if (result != wxID_YES) {
+        return false;
+    }
+
+    return m_currentFile.IsOk() ? SaveFile(m_currentFile, fileMissing) : SaveAs();
+}
+
+bool ScintillaTextEditorPanel::SaveFile(const wxFileName& filePath, bool missingFileRecreationConfirmed) {
+    wxFileName absolutePath(filePath);
+    absolutePath.MakeAbsolute();
+    const bool targetWasMissing = !absolutePath.FileExists();
+
+    if (!targetWasMissing && !absolutePath.IsFileWritable()) {
+        NotifyError(ErrorCode::FileNotWritable, absolutePath);
+        return false;
+    }
+    if (!ConfirmOverwriteExternalChanges(absolutePath, missingFileRecreationConfirmed)) {
+        return false;
+    }
+
+    const wxString text = GetText();
+    if (!WriteFileUtf8(absolutePath, text)) {
+        NotifyError(ErrorCode::FileWriteFailed, absolutePath);
+        return false;
+    }
+
+    const bool pathChanged = !m_currentFile.IsOk() || !m_currentFile.SameAs(absolutePath);
+    m_currentFile = absolutePath;
+    m_loadedText = text;
+    MarkSaved();
+    if (pathChanged || targetWasMissing) {
+        RequestDocumentWatch();
+    }
+
+    NotifyStatusChanged(Status::Saved);
+    NotifyDocumentChanged(ChangeReason::Saved, text, pathChanged || targetWasMissing);
+    return true;
+}
+
+bool ScintillaTextEditorPanel::ConfirmOverwriteExternalChanges(const wxFileName& filePath,
+                                                               bool missingFileRecreationConfirmed) {
+    if (!m_currentFile.IsOk() || !m_currentFile.SameAs(filePath)) {
+        return true;
+    }
+
+    wxString message;
+    wxString actionLabel;
+    if (!filePath.FileExists()) {
+        if (missingFileRecreationConfirmed) {
+            return true;
+        }
+        message = wxString("The file was removed by another application:\n") + filePath.GetFullPath() +
+                  "\n\nRecreate it with your editor contents?";
+        actionLabel = "Recreate";
+    } else {
+        wxString onDisk;
+        if (!ReadFileUtf8(filePath, onDisk)) {
+            NotifyError(ErrorCode::ExternalChangeCheckFailed, filePath);
+            return false;
+        }
+        if (onDisk == m_loadedText) {
+            return true;
+        }
+
+        message = wxString("The file changed in another application:\n") + filePath.GetFullPath() +
+                  "\n\nOverwrite those external changes with your editor contents?";
+        actionLabel = "Overwrite";
+    }
+
+    wxMessageDialog dialog(GetDialogParent(), message, "File Changed on Disk",
+                           wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+    dialog.SetOKCancelLabels(actionLabel, wxGetStockLabel(wxID_CANCEL));
+    return dialog.ShowModal() == wxID_OK;
 }
 
 void ScintillaTextEditorPanel::LoadText(const wxString& text, LoadBehavior loadBehavior) {
@@ -100,30 +264,35 @@ void ScintillaTextEditorPanel::Undo() {
     if (m_textEditor->CanUndo()) {
         m_textEditor->Undo();
     }
+    FocusEditor();
 }
 
 void ScintillaTextEditorPanel::Redo() {
     if (m_textEditor->CanRedo()) {
         m_textEditor->Redo();
     }
+    FocusEditor();
 }
 
 void ScintillaTextEditorPanel::Copy() {
     if (CanCopy()) {
         m_textEditor->Copy();
     }
+    FocusEditor();
 }
 
 void ScintillaTextEditorPanel::Cut() {
     if (CanCut()) {
         m_textEditor->Cut();
     }
+    FocusEditor();
 }
 
 void ScintillaTextEditorPanel::Paste() {
     if (CanPaste()) {
         m_textEditor->Paste();
     }
+    FocusEditor();
 }
 
 bool ScintillaTextEditorPanel::CanUndo() const {
@@ -147,7 +316,11 @@ bool ScintillaTextEditorPanel::CanPaste() const {
 }
 
 void ScintillaTextEditorPanel::SetWordWrap(bool enabled) {
+    const bool editorHadFocus = ContainsFocus();
     m_textEditor->SetWrapMode(enabled ? wxSTC_WRAP_WORD : wxSTC_WRAP_NONE);
+    if (editorHadFocus) {
+        FocusEditor();
+    }
 }
 
 bool ScintillaTextEditorPanel::IsWordWrapEnabled() const {
@@ -163,8 +336,97 @@ wxFont ScintillaTextEditorPanel::GetEditorFont() const {
     return m_textEditor->StyleGetFont(wxSTC_STYLE_DEFAULT);
 }
 
+bool ScintillaTextEditorPanel::ContainsFocus() const {
+    wxWindow* focusedWindow = wxWindow::FindFocus();
+    return focusedWindow != nullptr && (focusedWindow == this || IsDescendant(focusedWindow));
+}
+
 void ScintillaTextEditorPanel::FocusEditor() {
     m_textEditor->SetFocus();
+}
+
+void ScintillaTextEditorPanel::ShowFontDialog() {
+    const bool editorHadFocus = ContainsFocus();
+    wxFontData fontData;
+    fontData.EnableEffects(false);
+    fontData.SetInitialFont(GetEditorFont());
+
+    wxFontDialog dialog(GetDialogParent(), fontData);
+    if (dialog.ShowModal() == wxID_OK) {
+        const wxFont chosenFont = dialog.GetFontData().GetChosenFont();
+        if (chosenFont.IsOk()) {
+            SetEditorFont(chosenFont);
+            SaveEditorFont(chosenFont);
+        }
+    }
+
+    if (editorHadFocus) {
+        FocusEditor();
+    }
+}
+
+wxWindow* ScintillaTextEditorPanel::GetDialogParent() const {
+    wxWindow* topLevelParent = wxGetTopLevelParent(const_cast<ScintillaTextEditorPanel*>(this));
+    return topLevelParent != nullptr ? topLevelParent : const_cast<ScintillaTextEditorPanel*>(this);
+}
+
+void ScintillaTextEditorPanel::RequestDocumentWatch() const {
+    if (m_callbacks.documentWatchRequested) {
+        m_callbacks.documentWatchRequested(m_currentFile);
+    }
+}
+
+void ScintillaTextEditorPanel::HandleDocumentWatcherChange() {
+    if (!m_currentFile.IsOk()) {
+        return;
+    }
+    if (!m_currentFile.FileExists()) {
+        NotifyStatusChanged(Status::FileRemoved);
+        return;
+    }
+
+    wxString onDisk;
+    if (!ReadFileUtf8(m_currentFile, onDisk)) {
+        printError("[Watcher] Could not read changed file: {}", m_currentFile.GetFullPath());
+        return;
+    }
+
+    // Ignore an echo of our own write, or a repeated event for text already
+    // accepted as the new disk baseline.
+    if (onDisk == m_loadedText) {
+        return;
+    }
+
+    if (HasUnsavedChanges()) {
+        NotifyStatusChanged(Status::FileChangedWithUnsavedEdits);
+        return;
+    }
+
+    printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
+    m_loadedText = onDisk;
+    LoadText(onDisk, LoadBehavior::KeepPosition);
+    NotifyStatusChanged(Status::Reloading);
+    NotifyDocumentChanged(ChangeReason::Reloaded, onDisk);
+}
+
+void ScintillaTextEditorPanel::NotifyDocumentChanged(ChangeReason reason, const wxString& text,
+                                                     bool diskEntryChanged) const {
+    if (m_callbacks.documentChanged) {
+        m_callbacks.documentChanged(
+            {.reason = reason, .diskEntryChanged = diskEntryChanged, .text = text, .filePath = m_currentFile});
+    }
+}
+
+void ScintillaTextEditorPanel::NotifyStatusChanged(Status status) const {
+    if (m_callbacks.statusChanged) {
+        m_callbacks.statusChanged(status, m_currentFile);
+    }
+}
+
+void ScintillaTextEditorPanel::NotifyError(ErrorCode errorCode, const wxFileName& filePath) const {
+    if (m_callbacks.onError) {
+        m_callbacks.onError(errorCode, filePath);
+    }
 }
 
 void ScintillaTextEditorPanel::ApplyEditorStyles(const wxFont& font) {

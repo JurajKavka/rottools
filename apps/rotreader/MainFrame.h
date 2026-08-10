@@ -72,7 +72,8 @@ class MainFrame : public MainFrameWx {
     void RefreshBrowserWatcher();
 
     void HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change);
-    void HandleMarkdownEditorStatusChanged(const MarkdownEditorPanel::StatusChange& change);
+    void HandleMarkdownEditorStatusChanged(const MarkdownEditorPanel::StatusMessage& message);
+    void HandleMarkdownEditorError(MarkdownEditorPanel::ErrorCode errorCode, const wxFileName& filePath);
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
     void HandleMarkdownError(const wxString& error);
 

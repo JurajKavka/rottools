@@ -85,7 +85,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
         new HtmlSourcePanel(m_sourceSplitter, std::bind_front(&MainFrame::HandleHtmlSourcePanelClose, this));
     m_markdownEditorPanel =
         new MarkdownEditorPanel(m_sourceSplitter, std::bind_front(&MainFrame::HandleMarkdownDocumentChanged, this),
-                                std::bind_front(&MainFrame::HandleMarkdownEditorStatusChanged, this));
+                                std::bind_front(&MainFrame::HandleMarkdownEditorStatusChanged, this),
+                                std::bind_front(&MainFrame::HandleMarkdownEditorError, this));
     m_viewMenu->Check(wxID_WORDWRAP, m_markdownEditorPanel->IsWordWrapEnabled());
     m_rightSplitter->SetMinimumPaneSize(100);
     m_sourceSplitter->SetMinimumPaneSize(100);
@@ -377,7 +378,7 @@ MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavio
 }
 
 void MainFrame::HandleOpenMarkdownFile(const wxFileName& filePath) {
-    m_markdownEditorPanel->OpenFile(filePath);
+    (void)m_markdownEditorPanel->OpenFile(filePath);
 }
 
 void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
@@ -407,12 +408,38 @@ void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::Documen
     const ScrollBehavior scrollBehavior = change.reason == MarkdownEditorPanel::ChangeReason::Opened
                                               ? ScrollBehavior::ResetToTop
                                               : ScrollBehavior::KeepPosition;
-    m_markdownPreviewPanel->LoadMarkdown(change.markdown, change.filePath, GetPreviewOptions(scrollBehavior));
+    m_markdownPreviewPanel->LoadMarkdown(change.text, change.filePath, GetPreviewOptions(scrollBehavior));
 }
 
-void MainFrame::HandleMarkdownEditorStatusChanged(const MarkdownEditorPanel::StatusChange& change) {
-    statusBar->SetStatusText(change.text);
-    m_replaceEditorStatusOnPreviewReady = change.replaceOnPreviewReady;
+void MainFrame::HandleMarkdownEditorStatusChanged(const MarkdownEditorPanel::StatusMessage& message) {
+    statusBar->SetStatusText(message.label);
+    m_replaceEditorStatusOnPreviewReady = message.replaceOnPreviewReady;
+}
+
+void MainFrame::HandleMarkdownEditorError(MarkdownEditorPanel::ErrorCode errorCode, const wxFileName& filePath) {
+    wxString message;
+    switch (errorCode) {
+        case MarkdownEditorPanel::ErrorCode::FileDoesNotExist:
+            message = wxString("File does not exist: ") + filePath.GetFullPath();
+            break;
+        case MarkdownEditorPanel::ErrorCode::FileNotReadable:
+            message = wxString("No permission to read file: ") + filePath.GetFullPath();
+            break;
+        case MarkdownEditorPanel::ErrorCode::FileReadFailed:
+            message = wxString("Could not read file: ") + filePath.GetFullPath();
+            break;
+        case MarkdownEditorPanel::ErrorCode::FileNotWritable:
+            message = wxString("No permission to write file: ") + filePath.GetFullPath();
+            break;
+        case MarkdownEditorPanel::ErrorCode::FileWriteFailed:
+            message = wxString("Could not save file: ") + filePath.GetFullPath();
+            break;
+        case MarkdownEditorPanel::ErrorCode::ExternalChangeCheckFailed:
+            message = wxString("Could not check the current file before saving: ") + filePath.GetFullPath();
+            break;
+    }
+
+    wxMessageBox(message, "Error", wxOK | wxICON_ERROR, this);
 }
 
 void MainFrame::HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData) {

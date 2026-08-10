@@ -6,7 +6,6 @@ add_executable(rotreader
     main.cpp
     MainFrame.cpp
     MainFrameWx.cpp
-    MarkdownEditorPanel.cpp
 )
 
 target_compile_features(rotreader PRIVATE cxx_std_20)
@@ -14,7 +13,7 @@ target_link_libraries(rotreader PRIVATE
     rottools::ui_webview
     rottools::ui_markdownpreview
     rottools::ui_htmlsource
-    rottools::ui_scintillatexteditor
+    rottools::ui_markdowneditor
     rottools::ui_filetree
     rottools::ui_filedrop
     rottools::md2html

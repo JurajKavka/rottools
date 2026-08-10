@@ -29,6 +29,7 @@ rottools/
       HtmlSourcePanel/       rottools::ui_htmlsource
       TextEditorPanel/       rottools::ui_texteditor
       ScintillaTextEditorPanel/ rottools::ui_scintillatexteditor
+      MarkdownEditorPanel/   rottools::ui_markdowneditor
       FileBrowserTreePanel/  rottools::ui_filetree
       FileDropTarget/        rottools::ui_filedrop
   apps/
