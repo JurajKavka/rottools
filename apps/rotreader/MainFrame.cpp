@@ -1,6 +1,7 @@
 #include "MainFrame.h"
 
-#include <wx/dnd.h>     // Required for wxFileDropTarget
+#include <wx/dnd.h>  // Required for wxFileDropTarget
+#include <wx/intl.h>
 #include <wx/msgdlg.h>  // Required for wxMessageBox
 #include <wx/stockitem.h>
 
@@ -448,30 +449,8 @@ MarkdownEditorPanel::SavePromptDecision MainFrame::HandleConfirmSaveBeforeDiscar
     }
 }
 
-void MainFrame::HandleMarkdownEditorError(MarkdownEditorPanel::ErrorCode errorCode, const wxFileName& filePath) {
-    wxString message;
-    switch (errorCode) {
-        case MarkdownEditorPanel::ErrorCode::FileDoesNotExist:
-            message = wxString("File does not exist: ") + filePath.GetFullPath();
-            break;
-        case MarkdownEditorPanel::ErrorCode::FileNotReadable:
-            message = wxString("No permission to read file: ") + filePath.GetFullPath();
-            break;
-        case MarkdownEditorPanel::ErrorCode::FileReadFailed:
-            message = wxString("Could not read file: ") + filePath.GetFullPath();
-            break;
-        case MarkdownEditorPanel::ErrorCode::FileNotWritable:
-            message = wxString("No permission to write file: ") + filePath.GetFullPath();
-            break;
-        case MarkdownEditorPanel::ErrorCode::FileWriteFailed:
-            message = wxString("Could not save file: ") + filePath.GetFullPath();
-            break;
-        case MarkdownEditorPanel::ErrorCode::ExternalChangeCheckFailed:
-            message = wxString("Could not check the current file before saving: ") + filePath.GetFullPath();
-            break;
-    }
-
-    wxMessageBox(message, "Error", wxOK | wxICON_ERROR, this);
+void MainFrame::HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessage& message) {
+    wxMessageBox(message.text, _("Error"), wxOK | wxICON_ERROR, this);
 }
 
 void MainFrame::HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData) {

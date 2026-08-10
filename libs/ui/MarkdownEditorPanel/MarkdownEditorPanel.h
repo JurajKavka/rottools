@@ -10,11 +10,11 @@
 class FsWatcher;
 
 /**
- * Markdown-configured Scintilla editor with status labels and file watching.
+ * Markdown-configured Scintilla editor with UI messages and file watching.
  *
  * ScintillaTextEditorPanel owns the document lifecycle and reports semantic
- * events. This subclass supplies status labels and the FsWatcher requested
- * through the base panel's callbacks.
+ * events. This subclass translates statuses and errors into user-facing text,
+ * and supplies the FsWatcher requested through the base panel's callbacks.
  */
 class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
    public:
@@ -23,7 +23,13 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
         bool replaceOnPreviewReady = false;
     };
 
+    /** Localized description of a Scintilla document error. */
+    struct ErrorMessage {
+        wxString text;
+    };
+
     using OnStatusMessageCallback = std::function<void(const StatusMessage&)>;
+    using OnErrorMessageCallback = std::function<void(const ErrorMessage&)>;
 
     /**
      * @param confirmSaveBeforeDiscard Synchronous confirmation callback used
@@ -40,7 +46,8 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
      */
     MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCallback onDocumentChanged,
                         OnStatusMessageCallback onStatusMessage,
-                        ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard, OnErrorCallback onError);
+                        ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard,
+                        OnErrorMessageCallback onErrorMessage);
     ~MarkdownEditorPanel() override;
 
    private:

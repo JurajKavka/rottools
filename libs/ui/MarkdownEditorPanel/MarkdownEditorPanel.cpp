@@ -1,5 +1,7 @@
 #include "MarkdownEditorPanel.h"
 
+#include <wx/intl.h>
+
 #include <functional>
 #include <utility>
 
@@ -34,12 +36,40 @@ void HandleStatusChanged(const MarkdownEditorPanel::OnStatusMessageCallback& onS
         onStatusMessage(MakeStatusMessage(status, filePath));
     }
 }
+
+MarkdownEditorPanel::ErrorMessage MakeErrorMessage(ScintillaTextEditorPanel::ErrorCode errorCode,
+                                                   const wxFileName& filePath) {
+    const wxString path = filePath.GetFullPath();
+    switch (errorCode) {
+        case ScintillaTextEditorPanel::ErrorCode::FileDoesNotExist:
+            return {.text = wxString::Format(_("File does not exist: %s"), path.c_str())};
+        case ScintillaTextEditorPanel::ErrorCode::FileNotReadable:
+            return {.text = wxString::Format(_("No permission to read file: %s"), path.c_str())};
+        case ScintillaTextEditorPanel::ErrorCode::FileReadFailed:
+            return {.text = wxString::Format(_("Could not read file: %s"), path.c_str())};
+        case ScintillaTextEditorPanel::ErrorCode::FileNotWritable:
+            return {.text = wxString::Format(_("No permission to write file: %s"), path.c_str())};
+        case ScintillaTextEditorPanel::ErrorCode::FileWriteFailed:
+            return {.text = wxString::Format(_("Could not save file: %s"), path.c_str())};
+        case ScintillaTextEditorPanel::ErrorCode::ExternalChangeCheckFailed:
+            return {.text = wxString::Format(_("Could not check the current file before saving: %s"), path.c_str())};
+    }
+
+    return {};
+}
+
+void HandleError(const MarkdownEditorPanel::OnErrorMessageCallback& onErrorMessage,
+                 ScintillaTextEditorPanel::ErrorCode errorCode, const wxFileName& filePath) {
+    if (onErrorMessage) {
+        onErrorMessage(MakeErrorMessage(errorCode, filePath));
+    }
+}
 }  // namespace
 
 MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCallback onDocumentChanged,
                                          OnStatusMessageCallback onStatusMessage,
                                          ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard,
-                                         OnErrorCallback onError)
+                                         OnErrorMessageCallback onErrorMessage)
     : ScintillaTextEditorPanel(
           parent,
           {.syntax = Syntax::Markdown,
@@ -51,7 +81,7 @@ MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCall
           {.documentChanged = std::move(onDocumentChanged),
            .statusChanged = std::bind_front(&HandleStatusChanged, std::move(onStatusMessage)),
            .confirmSaveBeforeDiscard = std::move(confirmSaveBeforeDiscard),
-           .onError = std::move(onError),
+           .onError = std::bind_front(&HandleError, std::move(onErrorMessage)),
            .documentWatchRequested = std::bind_front(&MarkdownEditorPanel::HandleDocumentWatchRequested, this)}) {}
 
 MarkdownEditorPanel::~MarkdownEditorPanel() = default;
