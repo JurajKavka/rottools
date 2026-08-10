@@ -2,11 +2,9 @@
 
 #include <wx/filedlg.h>
 #include <wx/fontdlg.h>
-#include <wx/msgdlg.h>
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stc/stc.h>
-#include <wx/stockitem.h>
 #include <wx/window.h>
 
 #include <algorithm>
@@ -186,15 +184,11 @@ bool ScintillaTextEditorPanel::ConfirmOverwriteExternalChanges(const wxFileName&
         return true;
     }
 
-    wxString message;
-    wxString actionLabel;
+    OverwritePromptReason reason = OverwritePromptReason::FileRemoved;
     if (!filePath.FileExists()) {
         if (missingFileRecreationConfirmed) {
             return true;
         }
-        message = wxString("The file was removed by another application:\n") + filePath.GetFullPath() +
-                  "\n\nRecreate it with your editor contents?";
-        actionLabel = "Recreate";
     } else {
         wxString onDisk;
         if (!ReadFileUtf8(filePath, onDisk)) {
@@ -204,16 +198,14 @@ bool ScintillaTextEditorPanel::ConfirmOverwriteExternalChanges(const wxFileName&
         if (onDisk == m_loadedText) {
             return true;
         }
-
-        message = wxString("The file changed in another application:\n") + filePath.GetFullPath() +
-                  "\n\nOverwrite those external changes with your editor contents?";
-        actionLabel = "Overwrite";
+        reason = OverwritePromptReason::FileChanged;
     }
 
-    wxMessageDialog dialog(GetDialogParent(), message, "File Changed on Disk",
-                           wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
-    dialog.SetOKCancelLabels(actionLabel, wxGetStockLabel(wxID_CANCEL));
-    return dialog.ShowModal() == wxID_OK;
+    if (!m_callbacks.confirmOverwriteExternalChanges) {
+        return false;
+    }
+    return m_callbacks.confirmOverwriteExternalChanges({.reason = reason, .filePath = filePath}) ==
+           OverwritePromptDecision::Proceed;
 }
 
 void ScintillaTextEditorPanel::LoadText(const wxString& text, LoadBehavior loadBehavior) {

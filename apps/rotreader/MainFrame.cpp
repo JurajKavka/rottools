@@ -88,6 +88,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
         new MarkdownEditorPanel(m_sourceSplitter, std::bind_front(&MainFrame::HandleMarkdownDocumentChanged, this),
                                 std::bind_front(&MainFrame::HandleMarkdownEditorStatusChanged, this),
                                 std::bind_front(&MainFrame::HandleConfirmSaveBeforeDiscard, this),
+                                std::bind_front(&MainFrame::HandleConfirmOverwriteExternalChanges, this),
                                 std::bind_front(&MainFrame::HandleMarkdownEditorError, this));
     m_viewMenu->Check(wxID_WORDWRAP, m_markdownEditorPanel->IsWordWrapEnabled());
     m_rightSplitter->SetMinimumPaneSize(100);
@@ -447,6 +448,14 @@ MarkdownEditorPanel::SavePromptDecision MainFrame::HandleConfirmSaveBeforeDiscar
         default:
             return MarkdownEditorPanel::SavePromptDecision::Cancel;
     }
+}
+
+MarkdownEditorPanel::OverwritePromptDecision MainFrame::HandleConfirmOverwriteExternalChanges(
+    const MarkdownEditorPanel::OverwritePromptMessage& prompt) {
+    wxMessageDialog dialog(this, prompt.text, prompt.title, wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+    dialog.SetOKCancelLabels(prompt.actionLabel, wxGetStockLabel(wxID_CANCEL));
+    return dialog.ShowModal() == wxID_OK ? MarkdownEditorPanel::OverwritePromptDecision::Proceed
+                                         : MarkdownEditorPanel::OverwritePromptDecision::Cancel;
 }
 
 void MainFrame::HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessage& message) {

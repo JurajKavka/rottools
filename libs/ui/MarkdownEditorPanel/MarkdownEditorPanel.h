@@ -13,8 +13,9 @@ class FsWatcher;
  * Markdown-configured Scintilla editor with UI messages and file watching.
  *
  * ScintillaTextEditorPanel owns the document lifecycle and reports semantic
- * events. This subclass translates statuses and errors into user-facing text,
- * and supplies the FsWatcher requested through the base panel's callbacks.
+ * events. This subclass translates statuses, errors, and external-change
+ * prompts into user-facing text, and supplies the FsWatcher requested through
+ * the base panel's callbacks.
  */
 class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
    public:
@@ -28,8 +29,16 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
         wxString text;
     };
 
+    /** Localized presentation for an external-change confirmation dialog. */
+    struct OverwritePromptMessage {
+        wxString title;
+        wxString text;
+        wxString actionLabel;
+    };
+
     using OnStatusMessageCallback = std::function<void(const StatusMessage&)>;
     using OnErrorMessageCallback = std::function<void(const ErrorMessage&)>;
+    using ConfirmOverwritePromptCallback = std::function<OverwritePromptDecision(const OverwritePromptMessage&)>;
 
     /**
      * @param confirmSaveBeforeDiscard Synchronous confirmation callback used
@@ -43,10 +52,16 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
      * writing the document. Returning Cancel vetoes the pending operation. An
      * empty callback is treated as Cancel. Clean documents whose files still
      * exist do not invoke the callback.
+     *
+     * @param confirmOverwriteExternalChanges Synchronous confirmation callback
+     * used before saving would recreate a removed file or overwrite changes
+     * made outside the editor. It receives localized presentation text and
+     * returns whether the save may proceed.
      */
     MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCallback onDocumentChanged,
                         OnStatusMessageCallback onStatusMessage,
                         ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard,
+                        ConfirmOverwritePromptCallback confirmOverwriteExternalChanges,
                         OnErrorMessageCallback onErrorMessage);
     ~MarkdownEditorPanel() override;
 

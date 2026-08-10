@@ -64,11 +64,47 @@ void HandleError(const MarkdownEditorPanel::OnErrorMessageCallback& onErrorMessa
         onErrorMessage(MakeErrorMessage(errorCode, filePath));
     }
 }
+
+MarkdownEditorPanel::OverwritePromptMessage MakeOverwritePromptMessage(
+    const ScintillaTextEditorPanel::OverwritePrompt& prompt) {
+    const wxString path = prompt.filePath.GetFullPath();
+    switch (prompt.reason) {
+        case ScintillaTextEditorPanel::OverwritePromptReason::FileRemoved:
+            return {
+                .title = _("File Changed on Disk"),
+                .text = wxString::Format(
+                    _("The file was removed by another application:\n%s\n\nRecreate it with your editor contents?"),
+                    path.c_str()),
+                .actionLabel = _("Recreate"),
+            };
+        case ScintillaTextEditorPanel::OverwritePromptReason::FileChanged:
+            return {
+                .title = _("File Changed on Disk"),
+                .text = wxString::Format(
+                    _("The file changed in another application:\n%s\n\nOverwrite those external changes with your "
+                      "editor contents?"),
+                    path.c_str()),
+                .actionLabel = _("Overwrite"),
+            };
+    }
+
+    return {};
+}
+
+ScintillaTextEditorPanel::OverwritePromptDecision HandleConfirmOverwriteExternalChanges(
+    const MarkdownEditorPanel::ConfirmOverwritePromptCallback& confirmOverwriteExternalChanges,
+    const ScintillaTextEditorPanel::OverwritePrompt& prompt) {
+    if (!confirmOverwriteExternalChanges) {
+        return ScintillaTextEditorPanel::OverwritePromptDecision::Cancel;
+    }
+    return confirmOverwriteExternalChanges(MakeOverwritePromptMessage(prompt));
+}
 }  // namespace
 
 MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCallback onDocumentChanged,
                                          OnStatusMessageCallback onStatusMessage,
                                          ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard,
+                                         ConfirmOverwritePromptCallback confirmOverwriteExternalChanges,
                                          OnErrorMessageCallback onErrorMessage)
     : ScintillaTextEditorPanel(
           parent,
@@ -81,6 +117,8 @@ MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCall
           {.documentChanged = std::move(onDocumentChanged),
            .statusChanged = std::bind_front(&HandleStatusChanged, std::move(onStatusMessage)),
            .confirmSaveBeforeDiscard = std::move(confirmSaveBeforeDiscard),
+           .confirmOverwriteExternalChanges =
+               std::bind_front(&HandleConfirmOverwriteExternalChanges, std::move(confirmOverwriteExternalChanges)),
            .onError = std::bind_front(&HandleError, std::move(onErrorMessage)),
            .documentWatchRequested = std::bind_front(&MarkdownEditorPanel::HandleDocumentWatchRequested, this)}) {}
 

@@ -75,6 +75,8 @@ class MainFrame : public MainFrameWx {
     void HandleMarkdownEditorStatusChanged(const MarkdownEditorPanel::StatusMessage& message);
     MarkdownEditorPanel::SavePromptDecision HandleConfirmSaveBeforeDiscard(
         const MarkdownEditorPanel::SavePrompt& prompt);
+    MarkdownEditorPanel::OverwritePromptDecision HandleConfirmOverwriteExternalChanges(
+        const MarkdownEditorPanel::OverwritePromptMessage& prompt);
     void HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessage& message);
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
     void HandleMarkdownError(const wxString& error);

@@ -92,10 +92,31 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
         wxFileName filePath;
     };
 
+    enum class OverwritePromptReason {
+        /** The current file was removed and saving would recreate it. */
+        FileRemoved,
+        /** The current file contents changed since the editor loaded them. */
+        FileChanged,
+    };
+
+    enum class OverwritePromptDecision {
+        /** Continue by recreating the removed file or overwriting its changes. */
+        Proceed,
+        /** Cancel the save without changing the file. */
+        Cancel,
+    };
+
+    struct OverwritePrompt {
+        OverwritePromptReason reason = OverwritePromptReason::FileChanged;
+        /** Absolute path of the file that would be recreated or overwritten. */
+        wxFileName filePath;
+    };
+
     using OnDocumentChangedCallback = std::function<void(const DocumentChange&)>;
     using OnStatusChangedCallback = std::function<void(Status, const wxFileName&)>;
     using OnErrorCallback = std::function<void(ErrorCode, const wxFileName&)>;
     using ConfirmSaveBeforeDiscardCallback = std::function<SavePromptDecision(const SavePrompt&)>;
+    using ConfirmOverwriteExternalChangesCallback = std::function<OverwritePromptDecision(const OverwritePrompt&)>;
     using OnDocumentWatchRequestedCallback = std::function<void(const wxFileName&)>;
 
     struct Callbacks {
@@ -120,6 +141,13 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
          * returns the user's decision; absence of a callback means Cancel.
          */
         ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard;
+
+        /**
+         * Called before saving would recreate a removed current file or
+         * overwrite changes made outside the editor. The callback presents
+         * that choice and returns the user's decision; absence means Cancel.
+         */
+        ConfirmOverwriteExternalChangesCallback confirmOverwriteExternalChanges;
 
         /**
          * Called when a file operation fails. The callback receives a stable
