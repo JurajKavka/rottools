@@ -14,6 +14,8 @@ class HtmlSourcePanel : public HtmlSourcePanelWx {
      */
     explicit HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback = nullptr);
     void ShowHtml(const wxString& html);
+    void Copy();
+    [[nodiscard]] bool CanCopy() const;
 
    private:
     OnCloseCallback m_onCloseCallback;

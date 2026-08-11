@@ -84,7 +84,7 @@
         <property name="window_style"></property>
         <object class="wxMenu" expanded="false">
           <property name="label">File</property>
-          <property name="name">m_menu1</property>
+          <property name="name">m_fileMenu</property>
           <property name="permission">protected</property>
           <object class="wxMenuItem" expanded="false">
             <property name="bitmap"></property>
@@ -112,10 +112,114 @@
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
           </object>
+          <object class="separator" expanded="false">
+            <property name="name">m_separator1</property>
+            <property name="permission">none</property>
+          </object>
+          <object class="wxMenuItem" expanded="false">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_SAVE</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">&amp;Save</property>
+            <property name="name">m_saveMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut">CTRL+S</property>
+            <property name="unchecked_bitmap"></property>
+          </object>
+          <object class="wxMenuItem" expanded="false">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_SAVEAS</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">Save As...</property>
+            <property name="name">m_saveAsMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut">CTRL+SHIFT+S</property>
+            <property name="unchecked_bitmap"></property>
+          </object>
+        </object>
+        <object class="wxMenu" expanded="false">
+          <property name="label">Edit</property>
+          <property name="name">m_editMenu</property>
+          <property name="permission">protected</property>
+          <object class="wxMenuItem" expanded="false">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_UNDO</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">Undo</property>
+            <property name="name">m_undoMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut">CTRL+Z</property>
+            <property name="unchecked_bitmap"></property>
+          </object>
+          <object class="wxMenuItem" expanded="false">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_REDO</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">Redo</property>
+            <property name="name">m_redoMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut"></property>
+            <property name="unchecked_bitmap"></property>
+          </object>
+          <object class="separator" expanded="false">
+            <property name="name">m_separator2</property>
+            <property name="permission">none</property>
+          </object>
+          <object class="wxMenuItem" expanded="false">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_COPY</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">Copy</property>
+            <property name="name">m_copyMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut">CTRL+C</property>
+            <property name="unchecked_bitmap"></property>
+          </object>
+          <object class="wxMenuItem" expanded="false">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_CUT</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">Cut</property>
+            <property name="name">m_cutMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut">CTRL+X</property>
+            <property name="unchecked_bitmap"></property>
+          </object>
+          <object class="wxMenuItem" expanded="false">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_PASTE</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">Paste</property>
+            <property name="name">m_pasteMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut"></property>
+            <property name="unchecked_bitmap"></property>
+          </object>
         </object>
         <object class="wxMenu" expanded="true">
           <property name="label">View</property>
-          <property name="name">m_menu2</property>
+          <property name="name">m_viewMenu</property>
           <property name="permission">protected</property>
           <object class="wxMenuItem" expanded="true">
             <property name="bitmap"></property>
@@ -124,7 +228,7 @@
             <property name="help"></property>
             <property name="id">wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM</property>
             <property name="kind">wxITEM_NORMAL</property>
-            <property name="label">Solo Markdown Prevew</property>
+            <property name="label">Solo Markdown Preview</property>
             <property name="name">m_soloWebViewPanelMenuItem</property>
             <property name="permission">none</property>
             <property name="shortcut"></property>
@@ -136,7 +240,7 @@
             <property name="enabled">1</property>
             <property name="help"></property>
             <property name="id">wxID_TOGGLE_FILE_BROWSER_MENU_ITEM</property>
-            <property name="kind">wxITEM_NORMAL</property>
+            <property name="kind">wxITEM_CHECK</property>
             <property name="label">Toggle file browser</property>
             <property name="name">m_toggleFileBrowserMenuItem</property>
             <property name="permission">none</property>
@@ -149,7 +253,7 @@
             <property name="enabled">1</property>
             <property name="help"></property>
             <property name="id">wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM</property>
-            <property name="kind">wxITEM_NORMAL</property>
+            <property name="kind">wxITEM_CHECK</property>
             <property name="label">Toggle HTML Source</property>
             <property name="name">m_toggleHtmlSourcePanelMenuItem</property>
             <property name="permission">none</property>
@@ -161,10 +265,23 @@
             <property name="checked">0</property>
             <property name="enabled">1</property>
             <property name="help"></property>
-            <property name="id">wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM</property>
-            <property name="kind">wxITEM_NORMAL</property>
-            <property name="label">Toggle Markdown Source</property>
-            <property name="name">m_toggleMarkdownSourcePanelMenuItem</property>
+            <property name="id">wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM</property>
+            <property name="kind">wxITEM_CHECK</property>
+            <property name="label">Toggle Markdown Editor</property>
+            <property name="name">m_toggleMarkdownEditorPanelMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut"></property>
+            <property name="unchecked_bitmap"></property>
+          </object>
+          <object class="wxMenuItem" expanded="false">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_WORDWRAP</property>
+            <property name="kind">wxITEM_CHECK</property>
+            <property name="label">Word Wrap</property>
+            <property name="name">m_wordWrap</property>
             <property name="permission">none</property>
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
@@ -174,6 +291,24 @@
             <property name="label">Theme</property>
             <property name="name">m_themeSubmenu</property>
             <property name="permission">protected</property>
+          </object>
+        </object>
+        <object class="wxMenu" expanded="true">
+          <property name="label">Settings</property>
+          <property name="name">m_settingsMenu</property>
+          <property name="permission">protected</property>
+          <object class="wxMenuItem" expanded="true">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_FONT</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">Font</property>
+            <property name="name">m_fontMenuItem</property>
+            <property name="permission">none</property>
+            <property name="shortcut"></property>
+            <property name="unchecked_bitmap"></property>
           </object>
         </object>
       </object>
@@ -246,10 +381,32 @@
           <property name="id">wxID_ANY</property>
           <property name="kind">wxITEM_NORMAL</property>
           <property name="label">Open file</property>
-          <property name="name">fileOpenTool</property>
+          <property name="name">m_fileOpenTool</property>
           <property name="permission">protected</property>
           <property name="statusbar"></property>
           <property name="tooltip"></property>
+        </object>
+        <object class="tool" expanded="true">
+          <property name="bitmap">Load From Art Provider; wxART_FILE_SAVE; wxART_TOOLBAR</property>
+          <property name="context_menu">0</property>
+          <property name="id">wxID_ANY</property>
+          <property name="kind">wxITEM_NORMAL</property>
+          <property name="label">Save</property>
+          <property name="name">m_saveTool</property>
+          <property name="permission">protected</property>
+          <property name="statusbar">Save the current Markdown file</property>
+          <property name="tooltip">Save</property>
+        </object>
+        <object class="tool" expanded="true">
+          <property name="bitmap">Load From Art Provider; wxART_FILE_SAVE_AS; wxART_TOOLBAR</property>
+          <property name="context_menu">0</property>
+          <property name="id">wxID_ANY</property>
+          <property name="kind">wxITEM_NORMAL</property>
+          <property name="label">Save As</property>
+          <property name="name">m_saveAsTool</property>
+          <property name="permission">protected</property>
+          <property name="statusbar">Save the current Markdown file with a new name</property>
+          <property name="tooltip">Save As</property>
         </object>
       </object>
       <object class="wxStatusBar" expanded="false">

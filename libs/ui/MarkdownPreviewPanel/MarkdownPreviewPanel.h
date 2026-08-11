@@ -36,10 +36,13 @@ enum class MarkdownOrigin {
  */
 struct MarkdownPreviewData {
     /// The full HTML page, including the injected style
+    // cppcheck-suppress uninitMemberVarNoCtor -- initialized by every aggregate construction
     const wxString& html;
     /// The markdown source the page was rendered from
+    // cppcheck-suppress uninitMemberVarNoCtor -- initialized by every aggregate construction
     const wxString& markdown;
     /// The file the markdown was read from
+    // cppcheck-suppress uninitMemberVarNoCtor -- initialized by every aggregate construction
     const wxFileName& fileName;
     ScrollBehavior scrollBehavior;
     MarkdownOrigin origin = MarkdownOrigin::Disk;
@@ -92,8 +95,9 @@ class MarkdownPreviewPanel : public WebViewPanel {
      * @brief Re-renders the file already parsed with new options, e.g. a theme change.
      *
      * The markdown is not read or parsed again, only wrapped in a new page.
-     * Does nothing until a file has been loaded, but the options are kept and
-     * applied to that first load.
+     * Before the first result it keeps the requested style for that result. If
+     * another document is currently parsing, it also keeps that load request's
+     * scroll behavior instead of repainting the previous document.
      *
      * @param options Styling that replaces the options in force
      */
@@ -101,6 +105,15 @@ class MarkdownPreviewPanel : public WebViewPanel {
 
    private:
     MarkdownToHtmlAsync m_markdownParser;
+    /// Identifies the newest asynchronous parse so late results from an older
+    /// request cannot replace the active document.
+    MarkdownToHtmlAsync::RequestId m_parseRequestId = 0;
+    /// True while the request identified by m_parseRequestId is still running;
+    /// Render() then updates its style instead of repainting stale content.
+    bool m_parsePending = false;
+    /// True when m_parsedHtml contains the latest successful parse and can be
+    /// repainted by Render() without parsing the Markdown again.
+    bool m_hasCurrentParse = false;
     OnMarkdownReadyCallback m_onMarkdownReadyCallback;
     OnMarkdownErrorCallback m_onMarkdownErrorCallback;
     /// Options in force, from the last LoadFile() or Render()

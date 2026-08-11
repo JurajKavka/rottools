@@ -40,15 +40,21 @@ class MainFrameWx : public wxFrame
 			wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM,
 			wxID_TOGGLE_FILE_BROWSER_MENU_ITEM,
 			wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM,
-			wxID_TOGGLE_MARKDOWN_SOURCE_PANEL_MENU_ITEM,
+			wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM,
+			wxID_WORDWRAP,
+			wxID_FONT,
 		};
 
 		wxMenuBar* MenuBar;
-		wxMenu* m_menu1;
-		wxMenu* m_menu2;
+		wxMenu* m_fileMenu;
+		wxMenu* m_editMenu;
+		wxMenu* m_viewMenu;
 		wxMenu* m_themeSubmenu;
+		wxMenu* m_settingsMenu;
 		wxToolBar* toolBar;
-		wxToolBarToolBase* fileOpenTool;
+		wxToolBarToolBase* m_fileOpenTool;
+		wxToolBarToolBase* m_saveTool;
+		wxToolBarToolBase* m_saveAsTool;
 		wxStatusBar* statusBar;
 
 	public:
@@ -58,4 +64,3 @@ class MainFrameWx : public wxFrame
 		~MainFrameWx();
 
 };
-

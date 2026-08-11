@@ -3,6 +3,7 @@
 #include <wx/wx.h>
 
 #include <atomic>
+#include <cstdint>
 #include <string>
 #include <thread>
 
@@ -13,10 +14,12 @@ wxDECLARE_EVENT(EVT_MARKDOWN_ERROR, MarkdownToHtmlAsyncEvent);
 
 class MarkdownToHtmlAsync {
    public:
+    using RequestId = std::uint64_t;
+
     explicit MarkdownToHtmlAsync(wxEvtHandler* parent);
     ~MarkdownToHtmlAsync();
 
-    void ParseFile(const wxFileName& filePath);
+    [[nodiscard]] RequestId ParseFile(const wxFileName& filePath);
 
     /**
      * @brief Parses markdown already held in memory, without touching the disk.
@@ -28,7 +31,7 @@ class MarkdownToHtmlAsync {
      * @param markdown The markdown to parse
      * @param filePath The file the markdown belongs to; travels on the result event
      */
-    void ParseText(const wxString& markdown, const wxFileName& filePath);
+    [[nodiscard]] RequestId ParseText(const wxString& markdown, const wxFileName& filePath);
 
     void AbortParseFile();  // New method to trigger cancellation
 
@@ -38,6 +41,7 @@ class MarkdownToHtmlAsync {
     // Apple's libc++ only ships jthread from Xcode 26.4, too new to require.
     std::thread m_workerThread;  // Store the thread as a member
     std::atomic<bool> m_stopRequested{false};
+    RequestId m_nextRequestId = 0;
     void StopWorker();  // request stop + join (std::thread must be joined before reuse/destruction)
 
     /**
@@ -47,7 +51,7 @@ class MarkdownToHtmlAsync {
      * @param readFromDisk true reads filePath on the worker thread, false parses markdown as given
      * @param markdown The UTF-8 markdown to parse; ignored when readFromDisk is true
      */
-    void StartWorker(const wxFileName& filePath, bool readFromDisk, std::string markdown);
+    [[nodiscard]] RequestId StartWorker(const wxFileName& filePath, bool readFromDisk, std::string markdown);
 
     [[nodiscard]] static wxString ConvertMarkdownToHtml(const std::string& markdownContent);
 };

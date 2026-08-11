@@ -2,6 +2,7 @@
 
 #include <wx/config.h>
 #include <wx/stdpaths.h>
+#include <wx/window.h>
 
 #include <fstream>
 #include <iostream>
@@ -79,6 +80,14 @@ bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents) {
     out.write(utf8.data(), static_cast<std::streamsize>(utf8.length()));
     out.close();
     return static_cast<bool>(out);
+}
+
+bool IsWindowOrDescendant(wxWindow* window, wxWindow* candidate) {
+    return window != nullptr && candidate != nullptr && (candidate == window || window->IsDescendant(candidate));
+}
+
+bool ContainsFocus(wxWindow* window) {
+    return IsWindowOrDescendant(window, wxWindow::FindFocus());
 }
 
 wxFont LoadEditorFont(const wxFont& fallback) {

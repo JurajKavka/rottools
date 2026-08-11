@@ -16,6 +16,10 @@ class WebViewPanel : public WebViewPanelWx {
    public:
     explicit WebViewPanel(wxWindow* parent);
 
+    void Copy();
+    [[nodiscard]] bool CanCopy() const;
+    void FocusContent();
+
     /**
      * @brief Shows an HTML page in the webview.
      *

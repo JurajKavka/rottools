@@ -1,4 +1,3 @@
-# rotreader — the first tool in the suite: a native Markdown viewer.
 include(RotToolsVersion)
 include(RotToolsPackaging)
 
@@ -13,7 +12,7 @@ target_link_libraries(rotreader PRIVATE
     rottools::ui_webview
     rottools::ui_markdownpreview
     rottools::ui_htmlsource
-    rottools::ui_mdsource
+    rottools::ui_markdowneditor
     rottools::ui_filetree
     rottools::ui_filedrop
     rottools::md2html
@@ -33,7 +32,7 @@ rottools_package_app(
     BUNDLE_ID    com.jurajkavka.rotreader
     VERSION      "${ROTREADER_VERSION}"
     VENDOR       "Juraj Kavka"
-    DESCRIPTION  "A native Markdown viewer"
+    DESCRIPTION  "A native Markdown reader (and editor)"
     ICON_DIR     "${CMAKE_CURRENT_SOURCE_DIR}/assets/icons"
     DESKTOP_CATEGORIES "Utility;TextTools;"
 )

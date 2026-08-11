@@ -9,6 +9,8 @@
 #include <string>
 #include <utility>
 
+class wxWindow;
+
 /**
  * @brief What happens to the scroll position when a panel's content is replaced.
  *
@@ -49,6 +51,30 @@ bool ReadFileUtf8(const wxFileName& filePath, wxString& contents);
  * @return false when the file could not be opened or written
  */
 bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents);
+
+/**
+ * @brief Tests whether a window is a candidate window or one of its ancestors.
+ *
+ * Composite controls often contain the native widget that actually receives
+ * focus. Use this when routing a command to the containing panel should work
+ * for both the panel itself and any focused child control.
+ *
+ * @param window Possible ancestor window
+ * @param candidate Window to test
+ * @return true when both windows exist and candidate is window or its descendant
+ */
+[[nodiscard]] bool IsWindowOrDescendant(wxWindow* window, wxWindow* candidate);
+
+/**
+ * @brief Tests whether keyboard focus is inside a window's subtree.
+ *
+ * Use this to route frame-level actions such as Copy to the composite panel
+ * that owns the focused native child.
+ *
+ * @param window Window whose subtree should be checked
+ * @return true when window or one of its descendants has focus
+ */
+[[nodiscard]] bool ContainsFocus(wxWindow* window);
 
 /** Load the persisted editor font, or return fallback if none is valid. */
 [[nodiscard]] wxFont LoadEditorFont(const wxFont& fallback);
