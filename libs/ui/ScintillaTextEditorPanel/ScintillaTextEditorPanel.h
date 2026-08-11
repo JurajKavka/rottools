@@ -118,7 +118,6 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     using OnDocumentWatchRequestedCallback = std::function<void(const wxFileName&)>;
     using SelectOpenFileCallback = std::function<std::optional<wxFileName>()>;
     using SelectSaveFileCallback = std::function<std::optional<wxFileName>(const wxFileName&)>;
-    using SelectEditorFontCallback = std::function<std::optional<wxFont>(const wxFont&)>;
 
     struct Callbacks {
         /**
@@ -177,13 +176,6 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
          * cancels the operation.
          */
         SelectSaveFileCallback selectSaveFile;
-
-        /**
-         * Called when the host should present its editor-font dialog. The
-         * argument is the current editor font. Returning an empty optional, or
-         * omitting the callback, leaves the font unchanged.
-         */
-        SelectEditorFontCallback selectEditorFont;
     };
 
    private:
@@ -244,7 +236,6 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     [[nodiscard]] wxFont GetEditorFont() const;
     [[nodiscard]] bool ContainsFocus() const;
     void FocusEditor();
-    void ShowFontDialog();
 
    protected:
     /** Process a change reported by the optional external document watcher. */

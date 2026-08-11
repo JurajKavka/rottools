@@ -33,12 +33,17 @@ class MainFrame : public MainFrameWx {
     int m_htmlSourceWidth = 0;
     // Watches the browsed directory so its list follows external changes. The
     // MarkdownEditorPanel owns the separate current-document watcher.
-    std::unique_ptr<FsWatcher> m_browserWatcher;
+    std::unique_ptr<FsWatcher> m_fileBrowserWatcher;
     wxFileName m_browsedDirectory;
     // First of the CssThemeCount consecutive ids given to the Theme menu items
     wxWindowID m_themeMenuBaseId = wxID_ANY;
     // Index into cssThemes; the frame owns the theme, the preview panel does not
     int m_themeId = RotdownMonoLight;
+    /**
+     * Whether the status bar currently shows transient editor progress. A
+     * matching preview completion may replace it with the document path, while
+     * newer save confirmations and external-change warnings remain visible.
+     */
     bool m_replaceEditorStatusOnPreviewReady = false;
 
     void HandleNewWindowMenuItemClick(wxCommandEvent& event);
@@ -82,7 +87,6 @@ class MainFrame : public MainFrameWx {
     void HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessage& message);
     std::optional<wxFileName> HandleSelectOpenFile();
     std::optional<wxFileName> HandleSelectSaveFile(const wxFileName& currentFile);
-    std::optional<wxFont> HandleSelectEditorFont(const wxFont& currentFont);
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
     void HandleMarkdownError(const wxString& error);
 

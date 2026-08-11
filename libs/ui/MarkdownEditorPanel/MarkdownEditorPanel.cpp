@@ -12,17 +12,17 @@ MarkdownEditorPanel::StatusMessage MakeStatusMessage(ScintillaTextEditorPanel::S
                                                      const wxFileName& filePath) {
     switch (status) {
         case ScintillaTextEditorPanel::Status::Loading:
-            return {.label = "Loading ...", .replaceOnPreviewReady = true};
+            return {.label = _("Loading ..."), .replaceOnPreviewReady = true};
         case ScintillaTextEditorPanel::Status::Reloading:
-            return {.label = "Reloading ...", .replaceOnPreviewReady = true};
+            return {.label = _("Reloading ..."), .replaceOnPreviewReady = true};
         case ScintillaTextEditorPanel::Status::Saved:
-            return {.label = wxString("Saved ") + filePath.GetFullPath()};
+            return {.label = wxString::Format(_("Saved %s"), filePath.GetFullPath().c_str())};
         case ScintillaTextEditorPanel::Status::FileRemoved:
-            return {.label =
-                        wxString("File was removed on disk - the editor copy was kept: ") + filePath.GetFullPath()};
+            return {.label = wxString::Format(_("File was removed on disk - the editor copy was kept: %s"),
+                                              filePath.GetFullPath().c_str())};
         case ScintillaTextEditorPanel::Status::FileChangedWithUnsavedEdits:
-            return {.label =
-                        wxString("File changed on disk - your unsaved edits were kept: ") + filePath.GetFullPath()};
+            return {.label = wxString::Format(_("File changed on disk - your unsaved edits were kept: %s"),
+                                              filePath.GetFullPath().c_str())};
     }
 
     return {};
@@ -110,8 +110,7 @@ MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, Callbacks callbacks)
            .onError = std::bind_front(&HandleError, std::move(callbacks.error)),
            .documentWatchRequested = std::bind_front(&MarkdownEditorPanel::HandleDocumentWatchRequested, this),
            .selectOpenFile = std::move(callbacks.selectOpenFile),
-           .selectSaveFile = std::move(callbacks.selectSaveFile),
-           .selectEditorFont = std::move(callbacks.selectEditorFont)}) {}
+           .selectSaveFile = std::move(callbacks.selectSaveFile)}) {}
 
 MarkdownEditorPanel::~MarkdownEditorPanel() = default;
 

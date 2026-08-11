@@ -52,7 +52,6 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
     m_textEditor->EmptyUndoBuffer();
     m_textEditor->SetSavePoint();
 
-    SetEditorFont(LoadEditorFont(GetEditorFont()));
     SetWordWrap(m_options.wordWrap);
 }
 
@@ -325,21 +324,6 @@ void ScintillaTextEditorPanel::FocusEditor() {
     m_textEditor->SetFocus();
 }
 
-void ScintillaTextEditorPanel::ShowFontDialog() {
-    const bool editorHadFocus = ContainsFocus();
-    if (m_callbacks.selectEditorFont) {
-        const std::optional<wxFont> selectedFont = m_callbacks.selectEditorFont(GetEditorFont());
-        if (selectedFont && selectedFont->IsOk()) {
-            SetEditorFont(*selectedFont);
-            SaveEditorFont(*selectedFont);
-        }
-    }
-
-    if (editorHadFocus) {
-        FocusEditor();
-    }
-}
-
 void ScintillaTextEditorPanel::RequestDocumentWatch() const {
     if (m_callbacks.documentWatchRequested) {
         m_callbacks.documentWatchRequested(m_currentFile);
@@ -372,7 +356,6 @@ void ScintillaTextEditorPanel::HandleDocumentWatcherChange() {
         return;
     }
 
-    printLog("[Watcher] Reloading changed file: {}", m_currentFile.GetFullPath());
     m_loadedText = onDisk;
     LoadText(onDisk, LoadBehavior::KeepPosition);
     NotifyStatusChanged(Status::Reloading);

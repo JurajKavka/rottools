@@ -105,8 +105,14 @@ class MarkdownPreviewPanel : public WebViewPanel {
 
    private:
     MarkdownToHtmlAsync m_markdownParser;
+    /// Identifies the newest asynchronous parse so late results from an older
+    /// request cannot replace the active document.
     MarkdownToHtmlAsync::RequestId m_parseRequestId = 0;
+    /// True while the request identified by m_parseRequestId is still running;
+    /// Render() then updates its style instead of repainting stale content.
     bool m_parsePending = false;
+    /// True when m_parsedHtml contains the latest successful parse and can be
+    /// repainted by Render() without parsing the Markdown again.
     bool m_hasCurrentParse = false;
     OnMarkdownReadyCallback m_onMarkdownReadyCallback;
     OnMarkdownErrorCallback m_onMarkdownErrorCallback;

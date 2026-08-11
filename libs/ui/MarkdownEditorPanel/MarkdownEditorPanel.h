@@ -69,9 +69,6 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
 
         /** Presents the host's native Save As dialog; an empty result means Cancel. */
         SelectSaveFileCallback selectSaveFile;
-
-        /** Presents the host's native font dialog; an empty result means Cancel. */
-        SelectEditorFontCallback selectEditorFont;
     };
 
     explicit MarkdownEditorPanel(wxWindow* parent, Callbacks callbacks = {});
