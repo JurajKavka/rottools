@@ -1,6 +1,8 @@
 #include "MainFrame.h"
 
 #include <wx/dnd.h>  // Required for wxFileDropTarget
+#include <wx/filedlg.h>
+#include <wx/fontdlg.h>
 #include <wx/intl.h>
 #include <wx/msgdlg.h>  // Required for wxMessageBox
 #include <wx/stockitem.h>
@@ -15,6 +17,8 @@
 #include "HtmlSourcePanel.h"
 
 namespace {
+constexpr auto kMarkdownFileWildcard = "Markdown files (*.md;*.markdown)|*.md;*.markdown";
+
 bool IsWindowOrDescendant(wxWindow* window, wxWindow* candidate) {
     return window != nullptr && candidate != nullptr && (candidate == window || window->IsDescendant(candidate));
 }
@@ -84,12 +88,16 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
         new wxSplitterWindow(m_rightSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_htmlSourcePanel =
         new HtmlSourcePanel(m_sourceSplitter, std::bind_front(&MainFrame::HandleHtmlSourcePanelClose, this));
-    m_markdownEditorPanel =
-        new MarkdownEditorPanel(m_sourceSplitter, std::bind_front(&MainFrame::HandleMarkdownDocumentChanged, this),
-                                std::bind_front(&MainFrame::HandleMarkdownEditorStatusChanged, this),
-                                std::bind_front(&MainFrame::HandleConfirmSaveBeforeDiscard, this),
-                                std::bind_front(&MainFrame::HandleConfirmOverwriteExternalChanges, this),
-                                std::bind_front(&MainFrame::HandleMarkdownEditorError, this));
+    m_markdownEditorPanel = new MarkdownEditorPanel(
+        m_sourceSplitter,
+        {.documentChanged = std::bind_front(&MainFrame::HandleMarkdownDocumentChanged, this),
+         .statusMessageChanged = std::bind_front(&MainFrame::HandleMarkdownEditorStatusChanged, this),
+         .confirmSaveBeforeDiscard = std::bind_front(&MainFrame::HandleConfirmSaveBeforeDiscard, this),
+         .confirmOverwriteExternalChanges = std::bind_front(&MainFrame::HandleConfirmOverwriteExternalChanges, this),
+         .error = std::bind_front(&MainFrame::HandleMarkdownEditorError, this),
+         .selectOpenFile = std::bind_front(&MainFrame::HandleSelectOpenFile, this),
+         .selectSaveFile = std::bind_front(&MainFrame::HandleSelectSaveFile, this),
+         .selectEditorFont = std::bind_front(&MainFrame::HandleSelectEditorFont, this)});
     m_viewMenu->Check(wxID_WORDWRAP, m_markdownEditorPanel->IsWordWrapEnabled());
     m_rightSplitter->SetMinimumPaneSize(100);
     m_sourceSplitter->SetMinimumPaneSize(100);
@@ -460,6 +468,41 @@ MarkdownEditorPanel::OverwritePromptDecision MainFrame::HandleConfirmOverwriteEx
 
 void MainFrame::HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessage& message) {
     wxMessageBox(message.text, _("Error"), wxOK | wxICON_ERROR, this);
+}
+
+std::optional<wxFileName> MainFrame::HandleSelectOpenFile() {
+    wxFileDialog dialog(this, "Open Markdown File", {}, {}, kMarkdownFileWildcard, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+    if (dialog.ShowModal() != wxID_OK) {
+        return std::nullopt;
+    }
+
+    return wxFileName(dialog.GetPath());
+}
+
+std::optional<wxFileName> MainFrame::HandleSelectSaveFile(const wxFileName& currentFile) {
+    const wxString defaultDirectory = currentFile.IsOk() ? currentFile.GetPath() : wxString{};
+    const wxString defaultFileName = currentFile.IsOk() ? currentFile.GetFullName() : wxString{};
+    wxFileDialog dialog(this, "Save Markdown File", defaultDirectory, defaultFileName, kMarkdownFileWildcard,
+                        wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+    if (dialog.ShowModal() != wxID_OK) {
+        return std::nullopt;
+    }
+
+    return wxFileName(dialog.GetPath());
+}
+
+std::optional<wxFont> MainFrame::HandleSelectEditorFont(const wxFont& currentFont) {
+    wxFontData fontData;
+    fontData.EnableEffects(false);
+    fontData.SetInitialFont(currentFont);
+
+    wxFontDialog dialog(this, fontData);
+    if (dialog.ShowModal() != wxID_OK) {
+        return std::nullopt;
+    }
+
+    const wxFont selectedFont = dialog.GetFontData().GetChosenFont();
+    return selectedFont.IsOk() ? std::optional<wxFont>{selectedFont} : std::nullopt;
 }
 
 void MainFrame::HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData) {

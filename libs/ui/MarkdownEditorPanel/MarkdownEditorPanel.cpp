@@ -8,8 +8,6 @@
 #include "FsWatcher.h"
 
 namespace {
-constexpr auto kMarkdownFileWildcard = "Markdown files (*.md;*.markdown)|*.md;*.markdown";
-
 MarkdownEditorPanel::StatusMessage MakeStatusMessage(ScintillaTextEditorPanel::Status status,
                                                      const wxFileName& filePath) {
     switch (status) {
@@ -101,26 +99,19 @@ ScintillaTextEditorPanel::OverwritePromptDecision HandleConfirmOverwriteExternal
 }
 }  // namespace
 
-MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCallback onDocumentChanged,
-                                         OnStatusMessageCallback onStatusMessage,
-                                         ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard,
-                                         ConfirmOverwritePromptCallback confirmOverwriteExternalChanges,
-                                         OnErrorMessageCallback onErrorMessage)
+MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, Callbacks callbacks)
     : ScintillaTextEditorPanel(
-          parent,
-          {.syntax = Syntax::Markdown,
-           .lineNumbers = true,
-           .wordWrap = true,
-           .fileWildcard = kMarkdownFileWildcard,
-           .openDialogTitle = "Open Markdown File",
-           .saveDialogTitle = "Save Markdown File"},
-          {.documentChanged = std::move(onDocumentChanged),
-           .statusChanged = std::bind_front(&HandleStatusChanged, std::move(onStatusMessage)),
-           .confirmSaveBeforeDiscard = std::move(confirmSaveBeforeDiscard),
-           .confirmOverwriteExternalChanges =
-               std::bind_front(&HandleConfirmOverwriteExternalChanges, std::move(confirmOverwriteExternalChanges)),
-           .onError = std::bind_front(&HandleError, std::move(onErrorMessage)),
-           .documentWatchRequested = std::bind_front(&MarkdownEditorPanel::HandleDocumentWatchRequested, this)}) {}
+          parent, {.syntax = Syntax::Markdown, .lineNumbers = true, .wordWrap = true},
+          {.documentChanged = std::move(callbacks.documentChanged),
+           .statusChanged = std::bind_front(&HandleStatusChanged, std::move(callbacks.statusMessageChanged)),
+           .confirmSaveBeforeDiscard = std::move(callbacks.confirmSaveBeforeDiscard),
+           .confirmOverwriteExternalChanges = std::bind_front(&HandleConfirmOverwriteExternalChanges,
+                                                              std::move(callbacks.confirmOverwriteExternalChanges)),
+           .onError = std::bind_front(&HandleError, std::move(callbacks.error)),
+           .documentWatchRequested = std::bind_front(&MarkdownEditorPanel::HandleDocumentWatchRequested, this),
+           .selectOpenFile = std::move(callbacks.selectOpenFile),
+           .selectSaveFile = std::move(callbacks.selectSaveFile),
+           .selectEditorFont = std::move(callbacks.selectEditorFont)}) {}
 
 MarkdownEditorPanel::~MarkdownEditorPanel() = default;
 

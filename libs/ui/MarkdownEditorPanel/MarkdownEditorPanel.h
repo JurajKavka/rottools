@@ -40,34 +40,41 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
     using OnErrorMessageCallback = std::function<void(const ErrorMessage&)>;
     using ConfirmOverwritePromptCallback = std::function<OverwritePromptDecision(const OverwritePromptMessage&)>;
 
-    // TODO: Replace the positional callback parameters below with a documented
-    // MarkdownEditorPanel::Callbacks aggregate. Keep document state decisions
-    // in ScintillaTextEditorPanel, message translation and FsWatcher ownership
-    // here, and native dialog presentation in MainFrame.
+    struct Callbacks {
+        /** Called after the current Markdown document is opened, reloaded, or saved. */
+        OnDocumentChangedCallback documentChanged;
 
-    /**
-     * @param confirmSaveBeforeDiscard Synchronous confirmation callback used
-     * before the current document may be replaced or the window may close. It
-     * is called in two cases: the editor contains unsaved changes, or the
-     * current file was removed outside the application and can be recreated.
-     *
-     * Returning Save writes the current editor contents first, opening Save As
-     * for an untitled document or recreating a removed file as appropriate.
-     * Returning Discard allows the pending operation to continue without
-     * writing the document. Returning Cancel vetoes the pending operation. An
-     * empty callback is treated as Cancel. Clean documents whose files still
-     * exist do not invoke the callback.
-     *
-     * @param confirmOverwriteExternalChanges Synchronous confirmation callback
-     * used before saving would recreate a removed file or overwrite changes
-     * made outside the editor. It receives localized presentation text and
-     * returns whether the save may proceed.
-     */
-    MarkdownEditorPanel(wxWindow* parent, OnDocumentChangedCallback onDocumentChanged,
-                        OnStatusMessageCallback onStatusMessage,
-                        ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard,
-                        ConfirmOverwritePromptCallback confirmOverwriteExternalChanges,
-                        OnErrorMessageCallback onErrorMessage);
+        /** Called with translated text whenever the editor status changes. */
+        OnStatusMessageCallback statusMessageChanged;
+
+        /**
+         * Called before the current document may be replaced or the window may
+         * close. See ScintillaTextEditorPanel::ConfirmSaveBeforeDiscardCallback
+         * for the decision semantics; absence is treated as Cancel.
+         */
+        ConfirmSaveBeforeDiscardCallback confirmSaveBeforeDiscard;
+
+        /**
+         * Called before saving would recreate a removed file or overwrite
+         * external changes. The prompt contains translated presentation text;
+         * absence is treated as Cancel.
+         */
+        ConfirmOverwritePromptCallback confirmOverwriteExternalChanges;
+
+        /** Called with translated text when a document operation fails. */
+        OnErrorMessageCallback error;
+
+        /** Presents the host's native Open dialog; an empty result means Cancel. */
+        SelectOpenFileCallback selectOpenFile;
+
+        /** Presents the host's native Save As dialog; an empty result means Cancel. */
+        SelectSaveFileCallback selectSaveFile;
+
+        /** Presents the host's native font dialog; an empty result means Cancel. */
+        SelectEditorFontCallback selectEditorFont;
+    };
+
+    explicit MarkdownEditorPanel(wxWindow* parent, Callbacks callbacks = {});
     ~MarkdownEditorPanel() override;
 
    private:

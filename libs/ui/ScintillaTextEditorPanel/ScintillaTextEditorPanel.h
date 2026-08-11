@@ -1,14 +1,15 @@
 #pragma once
 
 #include <wx/filename.h>
+#include <wx/font.h>
 #include <wx/string.h>
 
 #include <functional>
+#include <optional>
 
 #include "ScintillaTextEditorPanelWx.h"
 
 // Forward declarations keep the Scintilla headers out of consumers.
-class wxFont;
 class wxStyledTextCtrl;
 class wxStyledTextEvent;
 class wxSysColourChangedEvent;
@@ -24,9 +25,6 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
         Syntax syntax = Syntax::None;
         bool lineNumbers = false;
         bool wordWrap = false;
-        wxString fileWildcard = "All files (*.*)|*.*";
-        wxString openDialogTitle = "Open File";
-        wxString saveDialogTitle = "Save File";
     };
 
     enum class LoadBehavior {
@@ -118,6 +116,9 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     using ConfirmSaveBeforeDiscardCallback = std::function<SavePromptDecision(const SavePrompt&)>;
     using ConfirmOverwriteExternalChangesCallback = std::function<OverwritePromptDecision(const OverwritePrompt&)>;
     using OnDocumentWatchRequestedCallback = std::function<void(const wxFileName&)>;
+    using SelectOpenFileCallback = std::function<std::optional<wxFileName>()>;
+    using SelectSaveFileCallback = std::function<std::optional<wxFileName>(const wxFileName&)>;
+    using SelectEditorFontCallback = std::function<std::optional<wxFont>(const wxFont&)>;
 
     struct Callbacks {
         /**
@@ -162,6 +163,27 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
          * watches the supplied absolute document path.
          */
         OnDocumentWatchRequestedCallback documentWatchRequested;
+
+        /**
+         * Called when the host should present its Open dialog. Returning an
+         * empty optional, or omitting the callback, cancels the operation.
+         */
+        SelectOpenFileCallback selectOpenFile;
+
+        /**
+         * Called when the host should present its Save As dialog. The argument
+         * is the absolute current file, or an invalid path for an untitled
+         * document. Returning an empty optional, or omitting the callback,
+         * cancels the operation.
+         */
+        SelectSaveFileCallback selectSaveFile;
+
+        /**
+         * Called when the host should present its editor-font dialog. The
+         * argument is the current editor font. Returning an empty optional, or
+         * omitting the callback, leaves the font unchanged.
+         */
+        SelectEditorFontCallback selectEditorFont;
     };
 
    private:
@@ -171,7 +193,6 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     wxFileName m_currentFile;
     wxString m_loadedText;
 
-    [[nodiscard]] wxWindow* GetDialogParent() const;
     [[nodiscard]] bool SaveFile(const wxFileName& filePath, bool missingFileRecreationConfirmed = false);
     [[nodiscard]] bool ConfirmOverwriteExternalChanges(const wxFileName& filePath,
                                                        bool missingFileRecreationConfirmed = false);

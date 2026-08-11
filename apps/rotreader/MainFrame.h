@@ -1,8 +1,10 @@
 #pragma once
 
+#include <wx/font.h>
 #include <wx/splitter.h>
 
 #include <memory>
+#include <optional>
 
 #include "CssThemes.h"
 #include "FileBrowserTreePanel.h"
@@ -78,6 +80,9 @@ class MainFrame : public MainFrameWx {
     MarkdownEditorPanel::OverwritePromptDecision HandleConfirmOverwriteExternalChanges(
         const MarkdownEditorPanel::OverwritePromptMessage& prompt);
     void HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessage& message);
+    std::optional<wxFileName> HandleSelectOpenFile();
+    std::optional<wxFileName> HandleSelectSaveFile(const wxFileName& currentFile);
+    std::optional<wxFont> HandleSelectEditorFont(const wxFont& currentFont);
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
     void HandleMarkdownError(const wxString& error);
 

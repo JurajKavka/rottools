@@ -1,7 +1,5 @@
 #include "ScintillaTextEditorPanel.h"
 
-#include <wx/filedlg.h>
-#include <wx/fontdlg.h>
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stc/stc.h>
@@ -59,15 +57,12 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
 }
 
 bool ScintillaTextEditorPanel::ShowOpenDialog() {
-    // TODO: Move open-dialog presentation to the host and receive the selected
-    // path through a typed callback, so this panel does not resolve a parent.
-    wxFileDialog dialog(GetDialogParent(), m_options.openDialogTitle, {}, {}, m_options.fileWildcard,
-                        wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-    if (dialog.ShowModal() != wxID_OK) {
+    if (!m_callbacks.selectOpenFile) {
         return false;
     }
 
-    return OpenFile(wxFileName(dialog.GetPath()));
+    const std::optional<wxFileName> selectedFile = m_callbacks.selectOpenFile();
+    return selectedFile && selectedFile->IsOk() && OpenFile(*selectedFile);
 }
 
 bool ScintillaTextEditorPanel::OpenFile(const wxFileName& filePath) {
@@ -106,22 +101,12 @@ bool ScintillaTextEditorPanel::Save() {
 }
 
 bool ScintillaTextEditorPanel::SaveAs() {
-    wxString defaultDirectory;
-    wxString defaultFileName;
-    if (m_currentFile.IsOk()) {
-        defaultDirectory = m_currentFile.GetPath();
-        defaultFileName = m_currentFile.GetFullName();
-    }
-
-    // TODO: Move Save As presentation to the host and receive the selected
-    // path through a typed callback, so this panel does not resolve a parent.
-    wxFileDialog dialog(GetDialogParent(), m_options.saveDialogTitle, defaultDirectory, defaultFileName,
-                        m_options.fileWildcard, wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-    if (dialog.ShowModal() != wxID_OK) {
+    if (!m_callbacks.selectSaveFile) {
         return false;
     }
 
-    return SaveFile(wxFileName(dialog.GetPath()));
+    const std::optional<wxFileName> selectedFile = m_callbacks.selectSaveFile(m_currentFile);
+    return selectedFile && selectedFile->IsOk() && SaveFile(*selectedFile);
 }
 
 bool ScintillaTextEditorPanel::ConfirmSaveBeforeDiscard() {
@@ -342,31 +327,17 @@ void ScintillaTextEditorPanel::FocusEditor() {
 
 void ScintillaTextEditorPanel::ShowFontDialog() {
     const bool editorHadFocus = ContainsFocus();
-    wxFontData fontData;
-    fontData.EnableEffects(false);
-    fontData.SetInitialFont(GetEditorFont());
-
-    // TODO: Move font-dialog presentation to the host and receive the selected
-    // font through a typed callback, so this panel does not resolve a parent.
-    wxFontDialog dialog(GetDialogParent(), fontData);
-    if (dialog.ShowModal() == wxID_OK) {
-        const wxFont chosenFont = dialog.GetFontData().GetChosenFont();
-        if (chosenFont.IsOk()) {
-            SetEditorFont(chosenFont);
-            SaveEditorFont(chosenFont);
+    if (m_callbacks.selectEditorFont) {
+        const std::optional<wxFont> selectedFont = m_callbacks.selectEditorFont(GetEditorFont());
+        if (selectedFont && selectedFont->IsOk()) {
+            SetEditorFont(*selectedFont);
+            SaveEditorFont(*selectedFont);
         }
     }
 
     if (editorHadFocus) {
         FocusEditor();
     }
-}
-
-wxWindow* ScintillaTextEditorPanel::GetDialogParent() const {
-    // TODO: Remove this helper after open, Save As, and font presentation have
-    // moved to the host callbacks above.
-    wxWindow* topLevelParent = wxGetTopLevelParent(const_cast<ScintillaTextEditorPanel*>(this));
-    return topLevelParent != nullptr ? topLevelParent : const_cast<ScintillaTextEditorPanel*>(this);
 }
 
 void ScintillaTextEditorPanel::RequestDocumentWatch() const {
