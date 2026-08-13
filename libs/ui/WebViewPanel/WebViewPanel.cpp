@@ -84,13 +84,13 @@ void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior)
     // scroll offset in one synchronous script leaves no intermediate state to
     // paint, so the view neither flashes nor jumps to the top. SetPage() would
     // instead navigate to a fresh document, which always starts at the top.
-    wxString script = std::format(R"((function () {{
+    wxString script = wxString::FromUTF8(std::format(R"((function () {{
     var doc = new DOMParser().parseFromString("{}", "text/html");
     var scrollY = window.scrollY;
     document.head.replaceWith(doc.head);
     document.body.replaceWith(doc.body);
     window.scrollTo(0, scrollY);
 }})();)",
-                                  EscapeForJsString(html));
+                                                     EscapeForJsString(html)));
     m_webView->RunScriptAsync(script);
 }

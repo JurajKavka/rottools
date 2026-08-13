@@ -82,8 +82,12 @@ void printError(const wxString& msg);
 template <>
 struct std::formatter<wxString> : std::formatter<std::string> {
     auto format(const wxString& str, std::format_context& ctx) const {
-        // Convert to std::string under the hood and pass it to the standard formatter
-        return std::formatter<std::string>::format(str.ToStdString(), ctx);
+        // std::format produces a narrow string. Keep that string explicitly
+        // UTF-8 instead of using wxString::ToStdString(), whose default
+        // conversion depends on the process locale and can return an empty
+        // string for otherwise valid Unicode text.
+        const std::string utf8 = str.utf8_string();
+        return std::formatter<std::string>::format(utf8, ctx);
     }
 };
 
