@@ -1,11 +1,15 @@
-#include "ApplicationConfig.h"
+#include "AppConfigFunctions.h"
 
 #include <wx/config.h>
 #include <wx/string.h>
 
+namespace {
+constexpr auto kEditorFontSetting = "/editor/font";
+}
+
 namespace rottools {
 
-wxFont ApplicationConfig::LoadEditorFont(const wxFont& fallback) {
+wxFont LoadEditorFont(const wxFont& fallback) {
     wxString nativeFontInfo;
     if (!wxConfigBase::Get()->Read(kEditorFontSetting, &nativeFontInfo)) {
         return fallback;
@@ -19,7 +23,7 @@ wxFont ApplicationConfig::LoadEditorFont(const wxFont& fallback) {
     return font;
 }
 
-void ApplicationConfig::SaveEditorFont(const wxFont& font) {
+void SaveEditorFont(const wxFont& font) {
     wxConfigBase* config = wxConfigBase::Get();
     if (config->Write(kEditorFontSetting, font.GetNativeFontInfoDesc())) {
         config->Flush();
