@@ -20,9 +20,15 @@
 
 namespace {
 constexpr auto kMarkdownFileWildcard = "Markdown files (*.md;*.markdown)|*.md;*.markdown";
+constexpr auto kApplicationTitle = "ROT Reader";
 }  // namespace
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
+    // Keep an ASCII fallback in the native window-title property. Some Linux
+    // taskbars fall back to "Untitled Window" when the generated stylized
+    // Unicode title cannot be represented in the legacy X11 property.
+    SetTitle(kApplicationTitle);
+
 #ifndef __WXOSX__
     // macOS takes the window and Dock icon from AppIcon.icns in the .app bundle,
     // where SetIcons does nothing. Windows and X11 need it set explicitly.
@@ -428,6 +434,10 @@ void MainFrame::RefreshBrowserWatcher() {
 }
 
 void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change) {
+    if (change.filePath.IsOk()) {
+        SetTitle(change.filePath.GetFullName() + " - " + kApplicationTitle);
+    }
+
     if (change.reason == MarkdownEditorPanel::ChangeReason::Opened || change.diskEntryChanged) {
         // Explicit navigation and Save As follow/select the active file. Live
         // reloads deliberately leave the user's browsed directory alone.
