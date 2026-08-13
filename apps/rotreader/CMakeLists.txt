@@ -17,6 +17,7 @@ target_link_libraries(rotreader PRIVATE
     rottools::ui_filedrop
     rottools::md2html
     rottools::fswatcher
+    rottools::appconfig
     rottools::helpers
     ${wxWidgets_LIBRARIES}
 )

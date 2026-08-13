@@ -1,7 +1,6 @@
 #pragma once
 
 #include <wx/filename.h>
-#include <wx/font.h>
 #include <wx/string.h>
 
 #include <format>
@@ -32,7 +31,6 @@ void WriteLogLine(std::ostream& stream, const std::string& line);
 
 void printCppVersion();
 std::string trimToStdString(const wxString& str);
-wxFileName GetAssetPath(const wxString& filename);
 
 /**
  * @brief Reads a whole file as UTF-8 text.
@@ -75,12 +73,6 @@ bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents);
  * @return true when window or one of its descendants has focus
  */
 [[nodiscard]] bool ContainsFocus(wxWindow* window);
-
-/** Load the persisted editor font, or return fallback if none is valid. */
-[[nodiscard]] wxFont LoadEditorFont(const wxFont& fallback);
-
-/** Persist the editor font in the current application's settings store. */
-void SaveEditorFont(const wxFont& font);
 
 // 1. Keep this for simple, single wxString prints: printLog(myWxString);
 void printLog(const wxString& msg);
