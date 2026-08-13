@@ -38,7 +38,7 @@ class MainFrame : public MainFrameWx {
     // First of the CssThemeCount consecutive ids given to the Theme menu items
     wxWindowID m_themeMenuBaseId = wxID_ANY;
     // Index into cssThemes; the frame owns the theme, the preview panel does not
-    int m_themeId = RotdownMonoLight;
+    int m_themeId = RotdownNotesMonoLight;
     /**
      * Whether the status bar currently shows transient editor progress. A
      * matching preview completion may replace it with the document path, while
