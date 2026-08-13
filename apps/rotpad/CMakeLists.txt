@@ -12,6 +12,7 @@ target_compile_features(rotpad PRIVATE cxx_std_20)
 target_link_libraries(rotpad PRIVATE
     rottools::ui_texteditor
     rottools::ui_filetree
+    rottools::appconfig
     rottools::helpers
     ${wxWidgets_LIBRARIES}
 )

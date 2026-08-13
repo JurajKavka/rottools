@@ -111,6 +111,15 @@ function(rottools_package_app)
             COMMENT "Touching ${APP_EXE_NAME}.app so Finder re-reads its icon"
             VERBATIM)
 
+        # The linker signs only the Mach-O executable, leaving the development
+        # bundle's Info.plist and resources outside the signature. Sign the
+        # complete bundle so LaunchServices sees the configured bundle identity
+        # when launching directly from the build tree.
+        add_custom_command(TARGET ${APP_TARGET} POST_BUILD
+            COMMAND codesign --force --deep --sign - "$<TARGET_BUNDLE_DIR:${APP_TARGET}>"
+            COMMENT "Ad-hoc signing ${APP_EXE_NAME}.app for local development"
+            VERBATIM)
+
         # Configure Info.plist from the app's template.
         set(_plist "${CMAKE_CURRENT_BINARY_DIR}/Info.plist")
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/packaging/macos/Info.plist.in" "${_plist}" @ONLY)

@@ -13,6 +13,7 @@
 
 #include "AppIcon.h"
 #include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
+#include "AppConfigFunctions.h"
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
@@ -90,7 +91,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          .error = std::bind_front(&MainFrame::HandleMarkdownEditorError, this),
          .selectOpenFile = std::bind_front(&MainFrame::HandleSelectOpenFile, this),
          .selectSaveFile = std::bind_front(&MainFrame::HandleSelectSaveFile, this)});
-    m_markdownEditorPanel->SetEditorFont(LoadEditorFont(m_markdownEditorPanel->GetEditorFont()));
+    m_markdownEditorPanel->SetEditorFont(rottools::LoadEditorFont(m_markdownEditorPanel->GetEditorFont()));
     m_viewMenu->Check(wxID_WORDWRAP, m_markdownEditorPanel->IsWordWrapEnabled());
     m_rightSplitter->SetMinimumPaneSize(100);
     m_sourceSplitter->SetMinimumPaneSize(100);
@@ -296,7 +297,7 @@ void MainFrame::HandleFontMenuItemClick(wxCommandEvent& event) {
     if (dialog.ShowModal() == wxID_OK) {
         const wxFont selectedFont = dialog.GetFontData().GetChosenFont();
         if (selectedFont.IsOk()) {
-            SaveEditorFont(selectedFont);
+            rottools::SaveEditorFont(selectedFont);
             m_markdownEditorPanel->SetEditorFont(selectedFont);
         }
     }
