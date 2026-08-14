@@ -136,6 +136,6 @@ The download links point at real GitHub Release assets and were checked with
 `CPACK_PACKAGE_FILE_NAME`.
 
 `ROTREADER_VERSION` in `src/data/tools.ts` must match a **published** release,
-not `apps/rotreader/VERSION`. It is currently `0.1.0` while the app source is at
-`0.1.1`, because `rotreader-v0.1.1` has not been tagged yet. Bump it after that
-release exists, or every download button 404s.
+not necessarily `apps/rotreader/VERSION`. When preparing a release, deploy the
+website change only after the corresponding `rotreader-v<version>` release
+exists, or every download button will 404.
