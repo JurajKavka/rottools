@@ -10,6 +10,19 @@
 
 #include "HelperFunctions.h"
 
+namespace {
+int GetScintillaSearchFlags(const TextSearchOptions& options) {
+    int flags = wxSTC_FIND_NONE;
+    if (options.wholeWord) {
+        flags |= wxSTC_FIND_WHOLEWORD;
+    }
+    if (options.matchCase) {
+        flags |= wxSTC_FIND_MATCHCASE;
+    }
+    return flags;
+}
+}  // namespace
+
 ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent) : ScintillaTextEditorPanel(parent, {}, {}) {}
 
 ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options options, Callbacks callbacks)
@@ -292,6 +305,88 @@ bool ScintillaTextEditorPanel::CanCut() const {
 
 bool ScintillaTextEditorPanel::CanPaste() const {
     return m_textEditor->CanPaste();
+}
+
+wxString ScintillaTextEditorPanel::GetSelectedText() const {
+    return m_textEditor->GetSelectedText();
+}
+
+bool ScintillaTextEditorPanel::FindText(const wxString& text, const TextSearchOptions& options) {
+    if (text.IsEmpty()) {
+        return false;
+    }
+
+    const int documentEnd = m_textEditor->GetLength();
+    const int selectionStart = m_textEditor->GetSelectionStart();
+    const int selectionEnd = m_textEditor->GetSelectionEnd();
+    const int searchStart = options.backwards ? selectionStart : selectionEnd;
+    const int searchEnd = options.backwards ? 0 : documentEnd;
+    const int flags = GetScintillaSearchFlags(options);
+
+    int matchEnd = wxSTC_INVALID_POSITION;
+    int matchStart = m_textEditor->FindText(searchStart, searchEnd, text, flags, &matchEnd);
+    if (matchStart == wxSTC_INVALID_POSITION && options.wrap) {
+        const int wrapStart = options.backwards ? documentEnd : 0;
+        matchStart = m_textEditor->FindText(wrapStart, searchStart, text, flags, &matchEnd);
+    }
+
+    if (matchStart == wxSTC_INVALID_POSITION) {
+        return false;
+    }
+
+    m_textEditor->SetSelection(matchStart, matchEnd);
+    m_textEditor->EnsureCaretVisible();
+    return true;
+}
+
+bool ScintillaTextEditorPanel::ReplaceText(const wxString& text, const wxString& replacement,
+                                           const TextSearchOptions& options) {
+    if (text.IsEmpty()) {
+        return false;
+    }
+
+    const int selectionStart = m_textEditor->GetSelectionStart();
+    const int selectionEnd = m_textEditor->GetSelectionEnd();
+    int matchEnd = wxSTC_INVALID_POSITION;
+    const int matchStart =
+        m_textEditor->FindText(selectionStart, selectionEnd, text, GetScintillaSearchFlags(options), &matchEnd);
+    const bool selectionIsMatch = matchStart == selectionStart && matchEnd == selectionEnd;
+    if (!selectionIsMatch) {
+        return FindText(text, options);
+    }
+
+    m_textEditor->ReplaceSelection(replacement);
+    if (options.backwards) {
+        // ReplaceSelection leaves the caret after the replacement. Searching
+        // backwards from there could immediately select text just inserted by
+        // this replacement, so continue from the replaced range's start.
+        m_textEditor->SetEmptySelection(selectionStart);
+    }
+    (void)FindText(text, options);
+    return true;
+}
+
+int ScintillaTextEditorPanel::ReplaceAllText(const wxString& text, const wxString& replacement,
+                                             const TextSearchOptions& options) {
+    if (text.IsEmpty()) {
+        return 0;
+    }
+
+    int replacementCount = 0;
+    m_textEditor->BeginUndoAction();
+    m_textEditor->SetSearchFlags(GetScintillaSearchFlags(options));
+    m_textEditor->SetTargetStart(0);
+    m_textEditor->SetTargetEnd(m_textEditor->GetLength());
+
+    while (m_textEditor->SearchInTarget(text) != wxSTC_INVALID_POSITION) {
+        m_textEditor->ReplaceTarget(replacement);
+        ++replacementCount;
+        m_textEditor->SetTargetStart(m_textEditor->GetTargetEnd());
+        m_textEditor->SetTargetEnd(m_textEditor->GetLength());
+    }
+
+    m_textEditor->EndUndoAction();
+    return replacementCount;
 }
 
 void ScintillaTextEditorPanel::SetWordWrap(bool enabled) {

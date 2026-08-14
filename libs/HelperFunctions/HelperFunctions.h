@@ -23,6 +23,19 @@ enum class ScrollBehavior {
     KeepPosition,
 };
 
+/**
+ * @brief Options shared by text-searchable content panels.
+ *
+ * Each panel translates these semantic options to its native control's search
+ * flags, keeping wxWebView and Scintilla details out of their callers.
+ */
+struct TextSearchOptions {
+    bool backwards = false;
+    bool matchCase = false;
+    bool wholeWord = false;
+    bool wrap = true;
+};
+
 namespace detail {
 // Serializes writes so a whole line stays atomic even when worker threads log
 // concurrently (std::osyncstream is not available in Apple's libc++ yet).

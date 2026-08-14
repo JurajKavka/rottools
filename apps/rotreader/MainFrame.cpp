@@ -6,14 +6,16 @@
 #include <wx/intl.h>
 #include <wx/msgdlg.h>  // Required for wxMessageBox
 #include <wx/stockitem.h>
+#include <wx/utils.h>
 
+#include <cstddef>
 #include <functional>
 #include <string>
 #include <vector>
 
+#include "AppConfigFunctions.h"
 #include "AppIcon.h"
 #include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
-#include "AppConfigFunctions.h"
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
@@ -21,6 +23,17 @@
 namespace {
 constexpr auto kMarkdownFileWildcard = "Markdown files (*.md;*.markdown)|*.md;*.markdown";
 constexpr auto kApplicationTitle = "ROT Reader";
+constexpr std::size_t kMaximumSearchSeedLength = 150;
+
+TextSearchOptions GetTextSearchOptions(const wxFindDialogEvent& event) {
+    const int flags = event.GetFlags();
+    return {
+        .backwards = (flags & wxFR_DOWN) == 0,
+        .matchCase = (flags & wxFR_MATCHCASE) != 0,
+        .wholeWord = (flags & wxFR_WHOLEWORD) != 0,
+        .wrap = true,
+    };
+}
 }  // namespace
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
@@ -45,11 +58,20 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_MENU, &MainFrame::HandleCopyMenuItemClick, this, wxID_COPY);
     Bind(wxEVT_MENU, &MainFrame::HandleCutMenuItemClick, this, wxID_CUT);
     Bind(wxEVT_MENU, &MainFrame::HandlePasteMenuItemClick, this, wxID_PASTE);
+    Bind(wxEVT_MENU, &MainFrame::HandleFindMenuItemClick, this, wxID_FIND);
+    Bind(wxEVT_MENU, &MainFrame::HandleReplaceMenuItemClick, this, wxID_REPLACE);
+    Bind(wxEVT_FIND, &MainFrame::HandleFindDialogFind, this);
+    Bind(wxEVT_FIND_NEXT, &MainFrame::HandleFindDialogFind, this);
+    Bind(wxEVT_FIND_REPLACE, &MainFrame::HandleFindDialogReplace, this);
+    Bind(wxEVT_FIND_REPLACE_ALL, &MainFrame::HandleFindDialogReplaceAll, this);
+    Bind(wxEVT_FIND_CLOSE, &MainFrame::HandleFindDialogClose, this);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateUndoMenuItem, this, wxID_UNDO);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateRedoMenuItem, this, wxID_REDO);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateCopyMenuItem, this, wxID_COPY);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateCutMenuItem, this, wxID_CUT);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdatePasteMenuItem, this, wxID_PASTE);
+    Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateFindMenuItem, this, wxID_FIND);
+    Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateReplaceMenuItem, this, wxID_REPLACE);
     Bind(wxEVT_MENU, &MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick, this, wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleHtmlSourcePanelMenuItemClick, this,
@@ -69,6 +91,12 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_editMenu->FindItem(wxID_COPY)->SetItemLabel(wxGetStockLabel(wxID_COPY, stockLabelFlags));
     m_editMenu->FindItem(wxID_CUT)->SetItemLabel(wxGetStockLabel(wxID_CUT, stockLabelFlags));
     m_editMenu->FindItem(wxID_PASTE)->SetItemLabel(wxGetStockLabel(wxID_PASTE, stockLabelFlags));
+    if (wxMenuItem* findItem = m_editMenu->FindItem(wxID_FIND)) {
+        findItem->SetItemLabel(wxGetStockLabel(wxID_FIND, stockLabelFlags));
+    }
+    if (wxMenuItem* replaceItem = m_editMenu->FindItem(wxID_REPLACE)) {
+        replaceItem->SetItemLabel(wxGetStockLabel(wxID_REPLACE, stockLabelFlags));
+    }
 
     PopulateThemeMenu();
 
@@ -199,8 +227,119 @@ void MainFrame::HandlePasteMenuItemClick(wxCommandEvent& event) {
     }
 }
 
+void MainFrame::HandleFindMenuItemClick(wxCommandEvent& event) {
+    ShowFindDialog(false);
+}
+
+void MainFrame::HandleReplaceMenuItemClick(wxCommandEvent& event) {
+    ShowFindDialog(true);
+}
+
+void MainFrame::HandleFindDialogFind(wxFindDialogEvent& event) {
+    if (event.GetDialog() != m_findDialog) {
+        return;
+    }
+
+    const TextSearchOptions options = GetTextSearchOptions(event);
+    const bool found = m_searchTarget == SearchTarget::MarkdownEditor
+                           ? m_markdownEditorPanel->FindText(event.GetFindString(), options)
+                           : m_markdownPreviewPanel->FindText(event.GetFindString(), options) != wxNOT_FOUND;
+    if (!found) {
+        wxBell();
+    }
+}
+
+void MainFrame::HandleFindDialogReplace(wxFindDialogEvent& event) {
+    if (event.GetDialog() != m_findDialog) {
+        return;
+    }
+
+    if (m_searchTarget != SearchTarget::MarkdownEditor ||
+        !m_markdownEditorPanel->ReplaceText(event.GetFindString(), event.GetReplaceString(),
+                                            GetTextSearchOptions(event))) {
+        wxBell();
+    }
+}
+
+void MainFrame::HandleFindDialogReplaceAll(wxFindDialogEvent& event) {
+    if (event.GetDialog() != m_findDialog) {
+        return;
+    }
+
+    if (m_searchTarget != SearchTarget::MarkdownEditor ||
+        m_markdownEditorPanel->ReplaceAllText(event.GetFindString(), event.GetReplaceString(),
+                                              GetTextSearchOptions(event)) == 0) {
+        wxBell();
+    }
+}
+
+void MainFrame::HandleFindDialogClose(wxFindDialogEvent& event) {
+    if (event.GetDialog() != m_findDialog) {
+        return;
+    }
+
+    if (m_searchTarget == SearchTarget::MarkdownPreview) {
+        m_markdownPreviewPanel->ClearSearch();
+    }
+
+    m_findDialog->Destroy();
+    m_findDialog = nullptr;
+    m_findDialogIsReplace = false;
+}
+
 bool MainFrame::IsMarkdownEditorFocused() const {
     return m_markdownEditorPanel->ContainsFocus();
+}
+
+std::optional<MainFrame::SearchTarget> MainFrame::GetFocusedSearchTarget() const {
+    if (IsMarkdownEditorFocused()) {
+        return SearchTarget::MarkdownEditor;
+    }
+    if (ContainsFocus(m_markdownPreviewPanel)) {
+        return SearchTarget::MarkdownPreview;
+    }
+    return std::nullopt;
+}
+
+void MainFrame::ShowFindDialog(bool replace) {
+    std::optional<SearchTarget> target = GetFocusedSearchTarget();
+    if (!target && m_findDialog != nullptr) {
+        target = m_searchTarget;
+    }
+    if (!target || (replace && *target != SearchTarget::MarkdownEditor)) {
+        return;
+    }
+
+    if (m_findDialog != nullptr) {
+        if (*target == m_searchTarget && replace == m_findDialogIsReplace) {
+            m_findDialog->Raise();
+            m_findDialog->SetFocus();
+            return;
+        }
+
+        if (m_searchTarget == SearchTarget::MarkdownPreview) {
+            m_markdownPreviewPanel->ClearSearch();
+        }
+        m_findDialog->Destroy();
+        m_findDialog = nullptr;
+    }
+
+    m_searchTarget = *target;
+    m_findDialogIsReplace = replace;
+
+    const wxString selection = m_searchTarget == SearchTarget::MarkdownEditor
+                                   ? m_markdownEditorPanel->GetSelectedText()
+                                   : m_markdownPreviewPanel->GetSelectedText();
+    if (!selection.IsEmpty() && selection.length() <= kMaximumSearchSeedLength && selection.Find('\n') == wxNOT_FOUND &&
+        selection.Find('\r') == wxNOT_FOUND) {
+        m_findData.SetFindString(selection);
+    }
+
+    const wxString title = replace                                          ? _("Replace in Markdown")
+                           : m_searchTarget == SearchTarget::MarkdownEditor ? _("Find in Markdown")
+                                                                            : _("Find in Preview");
+    m_findDialog = new wxFindReplaceDialog(this, &m_findData, title, replace ? wxFR_REPLACEDIALOG : 0);
+    m_findDialog->Show();
 }
 
 void MainFrame::HandleUpdateUndoMenuItem(wxUpdateUIEvent& event) {
@@ -224,6 +363,15 @@ void MainFrame::HandleUpdateCutMenuItem(wxUpdateUIEvent& event) {
 
 void MainFrame::HandleUpdatePasteMenuItem(wxUpdateUIEvent& event) {
     event.Enable(IsMarkdownEditorFocused() && m_markdownEditorPanel->CanPaste());
+}
+
+void MainFrame::HandleUpdateFindMenuItem(wxUpdateUIEvent& event) {
+    event.Enable(m_findDialog != nullptr || GetFocusedSearchTarget().has_value());
+}
+
+void MainFrame::HandleUpdateReplaceMenuItem(wxUpdateUIEvent& event) {
+    event.Enable(IsMarkdownEditorFocused() ||
+                 (m_findDialog != nullptr && m_searchTarget == SearchTarget::MarkdownEditor));
 }
 
 // Collapses every panel except the always-visible markdown preview so it fills

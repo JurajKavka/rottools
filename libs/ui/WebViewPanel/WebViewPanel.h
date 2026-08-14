@@ -4,6 +4,7 @@
 #include "WebViewPanelWx.h"
 
 // Forward declaration prevents bloated compile times
+class wxMouseEvent;
 class wxWebView;
 
 // ScrollBehavior comes from HelperFunctions.h; it is shared with the other
@@ -13,12 +14,24 @@ class WebViewPanel : public WebViewPanelWx {
    private:
     wxWebView* m_webView = nullptr;
 
+    void HandleWebViewLeftDown(wxMouseEvent& event);
+
    public:
     explicit WebViewPanel(wxWindow* parent);
 
     void Copy();
     [[nodiscard]] bool CanCopy() const;
+    [[nodiscard]] wxString GetSelectedText() const;
     void FocusContent();
+
+    /**
+     * Finds visible text in the rendered page and selects the next match.
+     * Returns wxNOT_FOUND when the page is unavailable or there is no match.
+     */
+    [[nodiscard]] long FindText(const wxString& text, const TextSearchOptions& options = {});
+
+    /** Clears the web engine's current match and search highlighting. */
+    void ClearSearch();
 
     /**
      * @brief Shows an HTML page in the webview.

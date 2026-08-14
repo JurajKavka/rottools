@@ -7,6 +7,7 @@
 #include <functional>
 #include <optional>
 
+#include "HelperFunctions.h"
 #include "ScintillaTextEditorPanelWx.h"
 
 // Forward declarations keep the Scintilla headers out of consumers.
@@ -229,6 +230,18 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     [[nodiscard]] bool CanCopy() const;
     [[nodiscard]] bool CanCut() const;
     [[nodiscard]] bool CanPaste() const;
+    [[nodiscard]] wxString GetSelectedText() const;
+
+    /** Finds and selects the next match relative to the current selection. */
+    [[nodiscard]] bool FindText(const wxString& text, const TextSearchOptions& options = {});
+
+    /** Replaces the selected match, or selects the next match when needed. */
+    [[nodiscard]] bool ReplaceText(const wxString& text, const wxString& replacement,
+                                   const TextSearchOptions& options = {});
+
+    /** Replaces every match as one undoable editor operation. */
+    [[nodiscard]] int ReplaceAllText(const wxString& text, const wxString& replacement,
+                                     const TextSearchOptions& options = {});
 
     void SetWordWrap(bool enabled);
     [[nodiscard]] bool IsWordWrapEnabled() const;
