@@ -33,6 +33,7 @@ void MarkdownPreviewPanel::Render(MarkdownPreviewOptions options) {
         // for the pending result, but retain the load request's scroll behavior
         // and do not repaint the previous document as though it were current.
         m_options.injectStyle = std::move(options.injectStyle);
+        m_options.injectScript = std::move(options.injectScript);
         return;
     }
 
@@ -48,18 +49,23 @@ wxString MarkdownPreviewPanel::GetHtmlPage(const wxString& parsedMarkdownToHtml,
     wxString styleTag = options.injectStyle.IsEmpty()
                             ? wxString()
                             : wxString::FromUTF8(std::format("<style>{}</style>", options.injectStyle));
+    wxString scriptTag =
+        options.injectScript.IsEmpty()
+            ? wxString()
+            : wxString::FromUTF8(std::format("<script id=\"rotdown-theme-script\">{}</script>", options.injectScript));
 
     wxString finalHtml = wxString::FromUTF8(std::format(R"(
 <!DOCTYPE html>
   <html>
   <head>
     {}
+    {}
   </head>
   <body>
     {}
   </body>
 </html>)",
-                                                        styleTag, parsedMarkdownToHtml));
+                                                        styleTag, scriptTag, parsedMarkdownToHtml));
     return finalHtml;
 }
 

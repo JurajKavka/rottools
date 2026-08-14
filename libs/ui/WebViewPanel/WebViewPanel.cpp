@@ -89,6 +89,15 @@ void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior)
     var scrollY = window.scrollY;
     document.head.replaceWith(doc.head);
     document.body.replaceWith(doc.body);
+    // A script parsed by DOMParser is inert. Recreate only the generated theme
+    // script; scripts originating in Markdown remain inactive during restyling.
+    var oldThemeScript = document.getElementById("rotdown-theme-script");
+    if (oldThemeScript) {{
+        var newThemeScript = document.createElement("script");
+        newThemeScript.id = oldThemeScript.id;
+        newThemeScript.textContent = oldThemeScript.textContent;
+        oldThemeScript.replaceWith(newThemeScript);
+    }}
     window.scrollTo(0, scrollY);
 }})();)",
                                                      EscapeForJsString(html)));
