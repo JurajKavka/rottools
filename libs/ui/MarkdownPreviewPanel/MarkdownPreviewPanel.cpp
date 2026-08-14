@@ -45,10 +45,11 @@ void MarkdownPreviewPanel::Render(MarkdownPreviewOptions options) {
 
 wxString MarkdownPreviewPanel::GetHtmlPage(const wxString& parsedMarkdownToHtml,
                                            const MarkdownPreviewOptions& options) const {
-    wxString styleTag =
-        options.injectStyle.IsEmpty() ? wxString() : std::format("<style>{}</style>", options.injectStyle);
+    wxString styleTag = options.injectStyle.IsEmpty()
+                            ? wxString()
+                            : wxString::FromUTF8(std::format("<style>{}</style>", options.injectStyle));
 
-    wxString finalHtml = std::format(R"(
+    wxString finalHtml = wxString::FromUTF8(std::format(R"(
 <!DOCTYPE html>
   <html>
   <head>
@@ -58,7 +59,7 @@ wxString MarkdownPreviewPanel::GetHtmlPage(const wxString& parsedMarkdownToHtml,
     {}
   </body>
 </html>)",
-                                     styleTag, parsedMarkdownToHtml);
+                                                        styleTag, parsedMarkdownToHtml));
     return finalHtml;
 }
 

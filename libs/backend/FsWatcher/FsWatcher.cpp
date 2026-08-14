@@ -35,9 +35,17 @@ FsWatcher::FsWatcher(const wxFileName& target, Callback onChanged, int debounceM
     m_timer.SetOwner(this);
     Bind(wxEVT_TIMER, &FsWatcher::HandleDebounce, this);
 
-    // AddTree is required for reliable macOS FSEvents integration.
     if (m_watchedDir.DirExists()) {
-        if (!m_watcher.AddTree(m_watchedDir)) {
+        // macOS FSEvents requires AddTree() for reliable directory events. On
+        // other platforms Add() already watches the directory's immediate
+        // children and avoids recursively following trees such as Wine's
+        // dosdevices/z: symlink to the filesystem root.
+#ifdef __WXOSX__
+        const bool added = m_watcher.AddTree(m_watchedDir);
+#else
+        const bool added = m_watcher.Add(m_watchedDir);
+#endif
+        if (!added) {
             printError("[FsWatcher] failed to add path: {}", m_watchedDir.GetFullPath());
         }
     }
