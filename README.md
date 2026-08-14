@@ -1,4 +1,4 @@
-# ℜ⛤𝔗 tools
+# ROT tools
 
 A suite (monorepo) of small native desktop utilities built with C++20 and
 **wxWidgets**, sharing a set of common libraries. Each tool has its own version
@@ -8,8 +8,8 @@ and its own macOS / Linux / Windows builds, and is released independently.
 
 | Tool         | Description                                                        |
 |--------------|-------------------------------------------------------------------|
-| **rotreader** | A native Markdown reader/editor (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ℜ⛤𝔗 reader**. |
-| **rotpad**    | A small native plain-text editor inspired by classic Notepad. UI name: **ℜ⛤𝔗 pad**. |
+| **rotreader** | A native Markdown reader/editor (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ROT reader**. |
+| **rotpad**    | A small native plain-text editor inspired by classic Notepad. UI name: **ROT pad**. |
 
 ## Repository layout
 

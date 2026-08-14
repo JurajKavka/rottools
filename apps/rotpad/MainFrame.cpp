@@ -18,9 +18,12 @@
 namespace {
 constexpr auto kTextFileWildcard =
     "Supported text files (*.txt;*.json;*.csv;*.md;*.sql)|*.txt;*.json;*.csv;*.md;*.sql|All files (*.*)|*.*";
+constexpr auto kApplicationTitle = "ROT Pad";
 }
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
+    SetTitle(kApplicationTitle);
+
 #ifndef __WXOSX__
     // macOS takes the window and Dock icon from AppIcon.icns in the .app bundle,
     // where SetIcons does nothing. Windows and X11 need it set explicitly.
