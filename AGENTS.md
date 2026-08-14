@@ -77,7 +77,7 @@ the macOS `Info.plist` ([packaging/macos/Info.plist.in](apps/rotreader/packaging
 and the package name.
 
 Two distinct names: `EXE_NAME` (`rotreader`) is the CMake target / binary / `CFBundleExecutable`;
-`DISPLAY_NAME` (`ℜ⛤𝔗 reader`) is the user-facing `.app`/`CFBundleName`/`.dmg` volume name.
+`DISPLAY_NAME` (`ROT Reader`) is the user-facing `.app`/`CFBundleName`/`.dmg` volume name.
 Bundle id `com.jurajkavka.rotreader`. To change any of these, edit the `rottools_package_app(...)`
 call in [apps/rotreader/CMakeLists.txt](apps/rotreader/CMakeLists.txt).
 
