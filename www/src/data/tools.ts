@@ -66,7 +66,7 @@ function downloadUrl(slug: string, version: string, file: string): string {
   return `${DOWNLOAD_BASE}/${releaseTag(slug, version)}/${file}`;
 }
 
-const ROTREADER_VERSION = '0.1.1';
+const ROTREADER_VERSION = '0.2.0';
 const ROTPAD_VERSION = '0.1.0';
 
 export const tools: Tool[] = [
