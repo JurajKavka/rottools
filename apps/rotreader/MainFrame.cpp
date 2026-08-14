@@ -401,7 +401,9 @@ void MainFrame::HandleThemeMenuItemClick(wxCommandEvent& event) {
 }
 
 MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavior) const {
-    return {.injectStyle = cssThemes[m_themeId].css, .scrollBehavior = scrollBehavior};
+    return {.injectStyle = cssThemes[m_themeId].css,
+            .injectScript = cssThemes[m_themeId].script,
+            .scrollBehavior = scrollBehavior};
 }
 
 /**

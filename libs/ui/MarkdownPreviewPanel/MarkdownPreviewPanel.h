@@ -9,6 +9,8 @@
 struct MarkdownPreviewOptions {
     /// Bare CSS, without a <style> tag: the panel wraps it in one. Empty renders the page unstyled.
     wxString injectStyle;
+    /// Bare JavaScript, without a <script> tag: the panel wraps it in one. Empty injects no script.
+    wxString injectScript;
     /// KeepPosition holds the scroll when re-rendering the same document (a
     /// live reload or a theme change). Ignored on the first load of a document,
     /// which always starts at the top.
@@ -142,7 +144,7 @@ class MarkdownPreviewPanel : public WebViewPanel {
      * @brief Wraps parsed markdown output in a full HTML page.
      *
      * @param parsedMarkdownToHtml The parser's HTML, which becomes the page body
-     * @param options Styling to inject; an empty style leaves the head empty
+     * @param options Theme style and script to inject into the page
      * @return The complete HTML page
      */
     wxString GetHtmlPage(const wxString& parsedMarkdownToHtml, const MarkdownPreviewOptions& options) const;
