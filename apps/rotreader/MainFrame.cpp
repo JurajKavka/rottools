@@ -340,6 +340,10 @@ void MainFrame::ShowFindDialog(bool replace) {
                                                                             : _("Find in Preview");
     m_findDialog = new wxFindReplaceDialog(this, &m_findData, title, replace ? wxFR_REPLACEDIALOG : 0);
     m_findDialog->Show();
+
+    const int margin = FromDIP(12);
+    const wxPoint clientTopRight = ClientToScreen(wxPoint(GetClientSize().GetWidth(), 0));
+    m_findDialog->Move(clientTopRight.x - m_findDialog->GetSize().GetWidth() - margin, clientTopRight.y + margin);
 }
 
 void MainFrame::HandleUpdateUndoMenuItem(wxUpdateUIEvent& event) {
