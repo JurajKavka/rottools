@@ -1,5 +1,6 @@
 #pragma once
 
+#include <wx/fdrepdlg.h>
 #include <wx/font.h>
 #include <wx/splitter.h>
 
@@ -18,6 +19,11 @@ class HtmlSourcePanel;
 
 class MainFrame : public MainFrameWx {
    private:
+    enum class SearchTarget {
+        MarkdownPreview,
+        MarkdownEditor,
+    };
+
     // Store a pointer to your custom panel
     MarkdownPreviewPanel* m_markdownPreviewPanel = nullptr;
     HtmlSourcePanel* m_htmlSourcePanel = nullptr;
@@ -45,6 +51,10 @@ class MainFrame : public MainFrameWx {
      * newer save confirmations and external-change warnings remain visible.
      */
     bool m_replaceEditorStatusOnPreviewReady = false;
+    wxFindReplaceData m_findData{wxFR_DOWN};
+    wxFindReplaceDialog* m_findDialog = nullptr;
+    SearchTarget m_searchTarget = SearchTarget::MarkdownPreview;
+    bool m_findDialogIsReplace = false;
 
     void HandleNewWindowMenuItemClick(wxCommandEvent& event);
     void HandleCloseWindow(wxCloseEvent& event);
@@ -56,12 +66,21 @@ class MainFrame : public MainFrameWx {
     void HandleCopyMenuItemClick(wxCommandEvent& event);
     void HandleCutMenuItemClick(wxCommandEvent& event);
     void HandlePasteMenuItemClick(wxCommandEvent& event);
-    [[nodiscard]] bool IsMarkdownEditorFocused() const;
+    void HandleFindMenuItemClick(wxCommandEvent& event);
+    void HandleReplaceMenuItemClick(wxCommandEvent& event);
+    void HandleFindDialogFind(wxFindDialogEvent& event);
+    void HandleFindDialogReplace(wxFindDialogEvent& event);
+    void HandleFindDialogReplaceAll(wxFindDialogEvent& event);
+    void HandleFindDialogClose(wxFindDialogEvent& event);
+    [[nodiscard]] std::optional<SearchTarget> GetFocusedSearchTarget() const;
+    void ShowFindDialog(bool replace);
     void HandleUpdateUndoMenuItem(wxUpdateUIEvent& event);
     void HandleUpdateRedoMenuItem(wxUpdateUIEvent& event);
     void HandleUpdateCopyMenuItem(wxUpdateUIEvent& event);
     void HandleUpdateCutMenuItem(wxUpdateUIEvent& event);
     void HandleUpdatePasteMenuItem(wxUpdateUIEvent& event);
+    void HandleUpdateFindMenuItem(wxUpdateUIEvent& event);
+    void HandleUpdateReplaceMenuItem(wxUpdateUIEvent& event);
     void HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);

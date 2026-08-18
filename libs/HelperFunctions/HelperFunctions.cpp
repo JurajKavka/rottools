@@ -76,10 +76,10 @@ bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents) {
     return static_cast<bool>(out);
 }
 
-bool IsWindowOrDescendant(wxWindow* window, wxWindow* candidate) {
+bool IsWindowOrDescendant(const wxWindow* window, wxWindow* candidate) {
     return window != nullptr && candidate != nullptr && (candidate == window || window->IsDescendant(candidate));
 }
 
-bool ContainsFocus(wxWindow* window) {
+bool ContainsFocus(const wxWindow* window) {
     return IsWindowOrDescendant(window, wxWindow::FindFocus());
 }

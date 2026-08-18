@@ -1,5 +1,7 @@
 #include "HtmlSourcePanel.h"
 
+#include "HelperFunctions.h"
+
 HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback)
     : HtmlSourcePanelWx(parent), m_onCloseCallback(std::move(onCloseCallback)) {
     m_styledTextCtrl->SetLexer(wxSTC_LEX_HTML);
@@ -47,6 +49,10 @@ void HtmlSourcePanel::Copy() {
 
 bool HtmlSourcePanel::CanCopy() const {
     return m_styledTextCtrl->GetSelectionStart() != m_styledTextCtrl->GetSelectionEnd();
+}
+
+bool HtmlSourcePanel::ContainsFocus() const {
+    return ::ContainsFocus(this);
 }
 
 void HtmlSourcePanel::HandleMarginClick(wxStyledTextEvent& event) {

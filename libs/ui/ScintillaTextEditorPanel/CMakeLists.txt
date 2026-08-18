@@ -5,8 +5,7 @@ add_library(rottools::ui_scintillatexteditor ALIAS rottools_ui_scintillatextedit
 target_include_directories(rottools_ui_scintillatexteditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(rottools_ui_scintillatexteditor PUBLIC cxx_std_20)
 target_link_libraries(rottools_ui_scintillatexteditor
-    PUBLIC ${wxWidgets_LIBRARIES}
-    PRIVATE rottools::helpers
+    PUBLIC ${wxWidgets_LIBRARIES} rottools::helpers
 )
 
 if(ROTTOOLS_BUILD_LIB_APPS)

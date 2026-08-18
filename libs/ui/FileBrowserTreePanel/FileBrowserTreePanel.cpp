@@ -198,6 +198,10 @@ bool FileBrowserTreePanel::IsShowingDir(const wxFileName& dir) const {
     return m_currentPath.IsOk() && m_currentPath.SameAs(wxFileName::DirName(dir.GetFullPath()));
 }
 
+bool FileBrowserTreePanel::ContainsFocus() const {
+    return ::ContainsFocus(this);
+}
+
 void FileBrowserTreePanel::ReloadCurrentDir() {
     if (m_currentPath.IsOk() && m_currentPath.DirExists()) {
         // A live reload after an fs event: the list refreshes under the user,

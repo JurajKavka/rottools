@@ -23,6 +23,19 @@ enum class ScrollBehavior {
     KeepPosition,
 };
 
+/**
+ * @brief Options shared by text-searchable content panels.
+ *
+ * Each panel translates these semantic options to its native control's search
+ * flags, keeping wxWebView and Scintilla details out of their callers.
+ */
+struct TextSearchOptions {
+    bool backwards = false;
+    bool matchCase = false;
+    bool wholeWord = false;
+    bool wrap = true;
+};
+
 namespace detail {
 // Serializes writes so a whole line stays atomic even when worker threads log
 // concurrently (std::osyncstream is not available in Apple's libc++ yet).
@@ -61,7 +74,7 @@ bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents);
  * @param candidate Window to test
  * @return true when both windows exist and candidate is window or its descendant
  */
-[[nodiscard]] bool IsWindowOrDescendant(wxWindow* window, wxWindow* candidate);
+[[nodiscard]] bool IsWindowOrDescendant(const wxWindow* window, wxWindow* candidate);
 
 /**
  * @brief Tests whether keyboard focus is inside a window's subtree.
@@ -72,7 +85,7 @@ bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents);
  * @param window Window whose subtree should be checked
  * @return true when window or one of its descendants has focus
  */
-[[nodiscard]] bool ContainsFocus(wxWindow* window);
+[[nodiscard]] bool ContainsFocus(const wxWindow* window);
 
 // 1. Keep this for simple, single wxString prints: printLog(myWxString);
 void printLog(const wxString& msg);

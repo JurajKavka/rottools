@@ -72,7 +72,7 @@ const ROTPAD_VERSION = '0.1.0';
 export const tools: Tool[] = [
   {
     slug: 'rotreader',
-    displayName: 'ℜ⛤𝔗 reader',
+    displayName: 'ROT reader',
     tagline: 'A Markdown reader that can edit too.',
     version: ROTREADER_VERSION,
     icon: 'rotreader-rottools-logo.svg',
@@ -111,7 +111,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'rotpad',
-    displayName: 'ℜ⛤𝔗 pad',
+    displayName: 'ROT pad',
     tagline: 'The very simple, enjoyable text editor.',
     version: ROTPAD_VERSION,
     icon: 'rotpad-rottools-logo.svg',

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version 4.2.1-0-g80c4cb6)
+// C++ code generated with wxFormBuilder (version 4.2.1-85-gdf26f269)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO *NOT* EDIT THIS FILE!
@@ -59,6 +59,14 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	wxMenuItem* m_pasteMenuItem;
 	m_pasteMenuItem = new wxMenuItem( m_editMenu, wxID_PASTE, wxString( _("Paste") ) , wxEmptyString, wxITEM_NORMAL );
 	m_editMenu->Append( m_pasteMenuItem );
+
+	wxMenuItem* m_findMenuItem;
+	m_findMenuItem = new wxMenuItem( m_editMenu, wxID_FIND, wxString( _("Find") ) , wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_findMenuItem );
+
+	wxMenuItem* m_replaceMenuItem;
+	m_replaceMenuItem = new wxMenuItem( m_editMenu, wxID_REPLACE, wxString( _("Replace...") ) , wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_replaceMenuItem );
 
 	MenuBar->Append( m_editMenu, _("Edit") );
 

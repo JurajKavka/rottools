@@ -54,6 +54,14 @@ bool WebViewPanel::CanCopy() const {
     return m_webView != nullptr && m_webView->CanCopy();
 }
 
+bool WebViewPanel::ContainsFocus() const {
+    return ::ContainsFocus(this);
+}
+
+wxString WebViewPanel::GetSelectedText() const {
+    return m_webView != nullptr ? m_webView->GetSelectedText() : wxString{};
+}
+
 void WebViewPanel::FocusContent() {
     if (m_webView != nullptr) {
         m_webView->SetFocus();
@@ -62,10 +70,47 @@ void WebViewPanel::FocusContent() {
     }
 }
 
+long WebViewPanel::FindText(const wxString& text, const TextSearchOptions& options) {
+    if (m_webView == nullptr || text.IsEmpty()) {
+        return wxNOT_FOUND;
+    }
+
+    int flags = wxWEBVIEW_FIND_HIGHLIGHT_RESULT;
+    if (options.wrap) {
+        flags |= wxWEBVIEW_FIND_WRAP;
+    }
+    if (options.wholeWord) {
+        flags |= wxWEBVIEW_FIND_ENTIRE_WORD;
+    }
+    if (options.matchCase) {
+        flags |= wxWEBVIEW_FIND_MATCH_CASE;
+    }
+    if (options.backwards) {
+        flags |= wxWEBVIEW_FIND_BACKWARDS;
+    }
+
+    return m_webView->Find(text, flags);
+}
+
+void WebViewPanel::ClearSearch() {
+    if (m_webView != nullptr) {
+        m_webView->Find(wxString{});
+    }
+}
+
+void WebViewPanel::HandleWebViewLeftDown(wxMouseEvent& event) {
+    // A non-editable native web view can consume a click without becoming the
+    // wxWidgets focus window. Make the same focus transition explicitly so
+    // frame-level commands such as Find and Copy target the preview.
+    m_webView->SetFocus();
+    event.Skip();
+}
+
 void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior) {
     if (!m_webView) {
         // 3. Instantiate the wxWebView
         m_webView = wxWebView::New(this, wxID_ANY);
+        m_webView->Bind(wxEVT_LEFT_DOWN, &WebViewPanel::HandleWebViewLeftDown, this);
         wxSizer* mainSizer = GetSizer();
         // 4. Add it to the sizer, expanding to fill the panel
         mainSizer->Add(m_webView, 1, wxEXPAND | wxALL, 0);
@@ -74,6 +119,11 @@ void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior)
         m_webView->SetPage(html, "");
         return;
     }
+
+    // A new page body invalidates the web engine's current match. Search
+    // replay is deliberately left to a later feature; the next Find starts a
+    // fresh search in the new document.
+    ClearSearch();
 
     if (scrollBehavior == ScrollBehavior::ResetToTop) {
         m_webView->SetPage(html, "");
