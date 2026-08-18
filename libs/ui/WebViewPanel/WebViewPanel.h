@@ -21,7 +21,6 @@ class WebViewPanel : public WebViewPanelWx {
 
     void Copy();
     [[nodiscard]] bool CanCopy() const;
-    [[nodiscard]] bool ContainsFocus() const;
     [[nodiscard]] wxString GetSelectedText() const;
     void FocusContent();
 

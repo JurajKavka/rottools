@@ -35,7 +35,6 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void ShowFile(const wxFileName& fileName);
     void ReloadCurrentDir();
     bool IsShowingDir(const wxFileName& dir) const;
-    [[nodiscard]] bool ContainsFocus() const;
 
    private:
     DirectoryScanner m_directoryScanner;

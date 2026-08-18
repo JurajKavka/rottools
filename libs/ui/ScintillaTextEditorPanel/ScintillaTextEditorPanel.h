@@ -247,7 +247,6 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     [[nodiscard]] bool IsWordWrapEnabled() const;
     void SetEditorFont(const wxFont& font);
     [[nodiscard]] wxFont GetEditorFont() const;
-    [[nodiscard]] bool ContainsFocus() const;
     void FocusEditor();
 
    protected:
