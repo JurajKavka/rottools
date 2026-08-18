@@ -390,7 +390,7 @@ int ScintillaTextEditorPanel::ReplaceAllText(const wxString& text, const wxStrin
 }
 
 void ScintillaTextEditorPanel::SetWordWrap(bool enabled) {
-    const bool editorHadFocus = ContainsFocus();
+    const bool editorHadFocus = ::ContainsFocus(this);
     m_textEditor->SetWrapMode(enabled ? wxSTC_WRAP_WORD : wxSTC_WRAP_NONE);
     if (editorHadFocus) {
         FocusEditor();
@@ -408,10 +408,6 @@ void ScintillaTextEditorPanel::SetEditorFont(const wxFont& font) {
 
 wxFont ScintillaTextEditorPanel::GetEditorFont() const {
     return m_textEditor->StyleGetFont(wxSTC_STYLE_DEFAULT);
-}
-
-bool ScintillaTextEditorPanel::ContainsFocus() const {
-    return ::ContainsFocus(this);
 }
 
 void ScintillaTextEditorPanel::FocusEditor() {

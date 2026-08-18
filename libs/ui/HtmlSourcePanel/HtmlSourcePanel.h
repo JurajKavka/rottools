@@ -16,7 +16,6 @@ class HtmlSourcePanel : public HtmlSourcePanelWx {
     void ShowHtml(const wxString& html);
     void Copy();
     [[nodiscard]] bool CanCopy() const;
-    [[nodiscard]] bool ContainsFocus() const;
 
    private:
     OnCloseCallback m_onCloseCallback;
