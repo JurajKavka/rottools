@@ -11,6 +11,28 @@ and its own macOS / Linux / Windows builds, and is released independently.
 | **rotreader** | A native Markdown reader/editor (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ROT reader**. |
 | **rotpad**    | A small native plain-text editor inspired by classic Notepad. UI name: **ROT pad**. |
 
+## Known bugs
+
+These are minor upstream dependency issues and do not affect the normal
+usability of the applications.
+
+### macOS 26: font styles may be lost
+
+macOS artifacts built with wxWidgets 3.3.1 are affected by an upstream macOS 26
+Tahoe bug in the native font dialog: the selected face and size are returned,
+but attributes such as bold, italic, and underline may be lost. This is not a
+critical issue; the rest of the font dialog and application remain usable. See
+[wxWidgets issue #26017](https://github.com/wxWidgets/wxWidgets/issues/26017)
+and its merged [fix in PR #26022](https://github.com/wxWidgets/wxWidgets/pull/26022).
+The fix is included in wxWidgets 3.3.3.
+
+[vcpkg issue #53212](https://github.com/microsoft/vcpkg/issues/53212) tracks the
+3.3.3 port update. Although the issue is still open, vcpkg's live
+[wxWidgets port](https://github.com/microsoft/vcpkg/blob/master/ports/wxwidgets/vcpkg.json)
+and version registry now contain 3.3.3. The bug remains relevant to existing
+artifacts built with 3.3.1; new macOS artifacts need to be rebuilt using a
+vcpkg runner or baseline containing the updated port.
+
 ## Repository layout
 
 ```

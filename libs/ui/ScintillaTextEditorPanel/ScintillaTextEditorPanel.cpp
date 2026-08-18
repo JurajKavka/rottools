@@ -12,7 +12,8 @@
 
 namespace {
 int GetScintillaSearchFlags(const TextSearchOptions& options) {
-    int flags = wxSTC_FIND_NONE;
+    // TODO: Use wxSTC_FIND_NONE when Ubuntu provides wxWidgets 3.3.3.
+    int flags = 0;
     if (options.wholeWord) {
         flags |= wxSTC_FIND_WHOLEWORD;
     }
