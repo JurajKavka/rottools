@@ -54,6 +54,10 @@ bool WebViewPanel::CanCopy() const {
     return m_webView != nullptr && m_webView->CanCopy();
 }
 
+bool WebViewPanel::ContainsFocus() const {
+    return ::ContainsFocus(this);
+}
+
 wxString WebViewPanel::GetSelectedText() const {
     return m_webView != nullptr ? m_webView->GetSelectedText() : wxString{};
 }

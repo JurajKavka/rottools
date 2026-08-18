@@ -72,7 +72,6 @@ class MainFrame : public MainFrameWx {
     void HandleFindDialogReplace(wxFindDialogEvent& event);
     void HandleFindDialogReplaceAll(wxFindDialogEvent& event);
     void HandleFindDialogClose(wxFindDialogEvent& event);
-    [[nodiscard]] bool IsMarkdownEditorFocused() const;
     [[nodiscard]] std::optional<SearchTarget> GetFocusedSearchTarget() const;
     void ShowFindDialog(bool replace);
     void HandleUpdateUndoMenuItem(wxUpdateUIEvent& event);

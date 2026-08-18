@@ -21,6 +21,7 @@ class WebViewPanel : public WebViewPanelWx {
 
     void Copy();
     [[nodiscard]] bool CanCopy() const;
+    [[nodiscard]] bool ContainsFocus() const;
     [[nodiscard]] wxString GetSelectedText() const;
     void FocusContent();
 
@@ -28,7 +29,7 @@ class WebViewPanel : public WebViewPanelWx {
      * Finds visible text in the rendered page and selects the next match.
      * Returns wxNOT_FOUND when the page is unavailable or there is no match.
      */
-    [[nodiscard]] long FindText(const wxString& text, const TextSearchOptions& options = {});
+    long FindText(const wxString& text, const TextSearchOptions& options = {});
 
     /** Clears the web engine's current match and search highlighting. */
     void ClearSearch();

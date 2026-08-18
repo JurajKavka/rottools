@@ -362,7 +362,7 @@ bool ScintillaTextEditorPanel::ReplaceText(const wxString& text, const wxString&
         // this replacement, so continue from the replaced range's start.
         m_textEditor->SetEmptySelection(selectionStart);
     }
-    (void)FindText(text, options);
+    FindText(text, options);
     return true;
 }
 
@@ -411,8 +411,7 @@ wxFont ScintillaTextEditorPanel::GetEditorFont() const {
 }
 
 bool ScintillaTextEditorPanel::ContainsFocus() const {
-    wxWindow* focusedWindow = wxWindow::FindFocus();
-    return focusedWindow != nullptr && (focusedWindow == this || IsDescendant(focusedWindow));
+    return ::ContainsFocus(this);
 }
 
 void ScintillaTextEditorPanel::FocusEditor() {

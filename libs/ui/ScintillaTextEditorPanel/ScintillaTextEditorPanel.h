@@ -233,7 +233,7 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     [[nodiscard]] wxString GetSelectedText() const;
 
     /** Finds and selects the next match relative to the current selection. */
-    [[nodiscard]] bool FindText(const wxString& text, const TextSearchOptions& options = {});
+    bool FindText(const wxString& text, const TextSearchOptions& options = {});
 
     /** Replaces the selected match, or selects the next match when needed. */
     [[nodiscard]] bool ReplaceText(const wxString& text, const wxString& replacement,

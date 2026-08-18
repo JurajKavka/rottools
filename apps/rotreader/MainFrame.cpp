@@ -24,6 +24,7 @@ namespace {
 constexpr auto kMarkdownFileWildcard = "Markdown files (*.md;*.markdown)|*.md;*.markdown";
 constexpr auto kApplicationTitle = "ROT Reader";
 constexpr std::size_t kMaximumSearchSeedLength = 150;
+constexpr int kFindDialogMarginDip = 12;
 
 TextSearchOptions GetTextSearchOptions(const wxFindDialogEvent& event) {
     const int flags = event.GetFlags();
@@ -194,35 +195,35 @@ void MainFrame::HandleSaveAsMenuItemClick(wxCommandEvent& event) {
 }
 
 void MainFrame::HandleUndoMenuItemClick(wxCommandEvent& event) {
-    if (IsMarkdownEditorFocused()) {
+    if (m_markdownEditorPanel->ContainsFocus()) {
         m_markdownEditorPanel->Undo();
     }
 }
 
 void MainFrame::HandleRedoMenuItemClick(wxCommandEvent& event) {
-    if (IsMarkdownEditorFocused()) {
+    if (m_markdownEditorPanel->ContainsFocus()) {
         m_markdownEditorPanel->Redo();
     }
 }
 
 void MainFrame::HandleCopyMenuItemClick(wxCommandEvent& event) {
-    if (IsMarkdownEditorFocused()) {
+    if (m_markdownEditorPanel->ContainsFocus()) {
         m_markdownEditorPanel->Copy();
-    } else if (ContainsFocus(m_htmlSourcePanel)) {
+    } else if (m_htmlSourcePanel->ContainsFocus()) {
         m_htmlSourcePanel->Copy();
-    } else if (ContainsFocus(m_markdownPreviewPanel)) {
+    } else if (m_markdownPreviewPanel->ContainsFocus()) {
         m_markdownPreviewPanel->Copy();
     }
 }
 
 void MainFrame::HandleCutMenuItemClick(wxCommandEvent& event) {
-    if (IsMarkdownEditorFocused()) {
+    if (m_markdownEditorPanel->ContainsFocus()) {
         m_markdownEditorPanel->Cut();
     }
 }
 
 void MainFrame::HandlePasteMenuItemClick(wxCommandEvent& event) {
-    if (IsMarkdownEditorFocused()) {
+    if (m_markdownEditorPanel->ContainsFocus()) {
         m_markdownEditorPanel->Paste();
     }
 }
@@ -287,15 +288,11 @@ void MainFrame::HandleFindDialogClose(wxFindDialogEvent& event) {
     m_findDialogIsReplace = false;
 }
 
-bool MainFrame::IsMarkdownEditorFocused() const {
-    return m_markdownEditorPanel->ContainsFocus();
-}
-
 std::optional<MainFrame::SearchTarget> MainFrame::GetFocusedSearchTarget() const {
-    if (IsMarkdownEditorFocused()) {
+    if (m_markdownEditorPanel->ContainsFocus()) {
         return SearchTarget::MarkdownEditor;
     }
-    if (ContainsFocus(m_markdownPreviewPanel)) {
+    if (m_markdownPreviewPanel->ContainsFocus()) {
         return SearchTarget::MarkdownPreview;
     }
     return std::nullopt;
@@ -341,32 +338,32 @@ void MainFrame::ShowFindDialog(bool replace) {
     m_findDialog = new wxFindReplaceDialog(this, &m_findData, title, replace ? wxFR_REPLACEDIALOG : 0);
     m_findDialog->Show();
 
-    const int margin = FromDIP(12);
+    const int margin = FromDIP(kFindDialogMarginDip);
     const wxPoint clientTopRight = ClientToScreen(wxPoint(GetClientSize().GetWidth(), 0));
     m_findDialog->Move(clientTopRight.x - m_findDialog->GetSize().GetWidth() - margin, clientTopRight.y + margin);
 }
 
 void MainFrame::HandleUpdateUndoMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(IsMarkdownEditorFocused() && m_markdownEditorPanel->CanUndo());
+    event.Enable(m_markdownEditorPanel->ContainsFocus() && m_markdownEditorPanel->CanUndo());
 }
 
 void MainFrame::HandleUpdateRedoMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(IsMarkdownEditorFocused() && m_markdownEditorPanel->CanRedo());
+    event.Enable(m_markdownEditorPanel->ContainsFocus() && m_markdownEditorPanel->CanRedo());
 }
 
 void MainFrame::HandleUpdateCopyMenuItem(wxUpdateUIEvent& event) {
-    const bool canCopy = (IsMarkdownEditorFocused() && m_markdownEditorPanel->CanCopy()) ||
-                         (ContainsFocus(m_htmlSourcePanel) && m_htmlSourcePanel->CanCopy()) ||
-                         (ContainsFocus(m_markdownPreviewPanel) && m_markdownPreviewPanel->CanCopy());
+    const bool canCopy = (m_markdownEditorPanel->ContainsFocus() && m_markdownEditorPanel->CanCopy()) ||
+                         (m_htmlSourcePanel->ContainsFocus() && m_htmlSourcePanel->CanCopy()) ||
+                         (m_markdownPreviewPanel->ContainsFocus() && m_markdownPreviewPanel->CanCopy());
     event.Enable(canCopy);
 }
 
 void MainFrame::HandleUpdateCutMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(IsMarkdownEditorFocused() && m_markdownEditorPanel->CanCut());
+    event.Enable(m_markdownEditorPanel->ContainsFocus() && m_markdownEditorPanel->CanCut());
 }
 
 void MainFrame::HandleUpdatePasteMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(IsMarkdownEditorFocused() && m_markdownEditorPanel->CanPaste());
+    event.Enable(m_markdownEditorPanel->ContainsFocus() && m_markdownEditorPanel->CanPaste());
 }
 
 void MainFrame::HandleUpdateFindMenuItem(wxUpdateUIEvent& event) {
@@ -374,7 +371,7 @@ void MainFrame::HandleUpdateFindMenuItem(wxUpdateUIEvent& event) {
 }
 
 void MainFrame::HandleUpdateReplaceMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(IsMarkdownEditorFocused() ||
+    event.Enable(m_markdownEditorPanel->ContainsFocus() ||
                  (m_findDialog != nullptr && m_searchTarget == SearchTarget::MarkdownEditor));
 }
 
@@ -399,7 +396,7 @@ void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
 }
 
 void MainFrame::HideFileBrowser() {
-    const bool browserHadFocus = ContainsFocus(m_fileBrowserPanel);
+    const bool browserHadFocus = m_fileBrowserPanel->ContainsFocus();
     m_viewMenu->Check(wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, false);
     if (!m_mainSplitter->IsSplit()) {
         if (browserHadFocus) {
