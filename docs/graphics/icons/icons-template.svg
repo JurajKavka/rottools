@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+  xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd"
+  width="1408"
+  height="1820"
+  viewBox="0 0 1408 1820"
+  version="1.1"
+  id="rottools-ui-icon-template"
+  sodipodi:docname="Rottools-UI-Icon-Template.svg"
+  inkscape:version="1.3">
+
+  <sodipodi:namedview
+    id="namedview"
+    pagecolor="#efeff2"
+    bordercolor="#666666"
+    borderopacity="0.25"
+    inkscape:pageopacity="0"
+    inkscape:document-units="px"
+    showgrid="false" />
+
+  <defs>
+    <style><![CDATA[
+      .title { font: 700 52px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #222; }
+      .subtitle { font: 400 24px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #666; }
+      .section { font: 700 34px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #222; }
+      .label { font: 400 16px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #444; }
+      .small { font: 400 14px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #666; }
+      .sizeLabel { font: 400 16px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #444; }
+      .noteHead { font: 700 28px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #222; }
+      .noteText { font: 400 18px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #444; }
+      .artboard { fill: #f9f9fa; stroke: #8d8d95; stroke-width: 1.5; }
+      .gridLine { stroke: #d7d7dc; stroke-width: 1; }
+      .safe { fill: none; stroke: #7578ff; stroke-width: 2; stroke-dasharray: 8 6; }
+      .center { stroke: #58a2ff; stroke-width: 2; stroke-dasharray: 8 6; }
+      .callout { stroke: #6b6eff; stroke-width: 2; fill: none; }
+      .calloutDot { fill: #6b6eff; }
+      .divider { stroke: #bcbcc3; stroke-width: 1.5; }
+      .uiLight { fill: #ffffff; stroke: #c8c8cf; stroke-width: 1.5; }
+      .uiDark { fill: #2f3138; stroke: #1f2126; stroke-width: 1.5; }
+      .badge { fill: #5f61ff; }
+      .badgeText { font: 700 14px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #fff; }
+      .iconStroke { fill: none; stroke: #46484d; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .iconStrokeWhite { fill: none; stroke: #ffffff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    ]]></style>
+
+    <!-- 24x24 reusable grid -->
+    <g id="grid24">
+      <rect x="0" y="0" width="336" height="336" class="artboard"/>
+      <g>
+        <line x1="14" y1="0" x2="14" y2="336" class="gridLine"/>
+        <line x1="28" y1="0" x2="28" y2="336" class="gridLine"/>
+        <line x1="42" y1="0" x2="42" y2="336" class="gridLine"/>
+        <line x1="56" y1="0" x2="56" y2="336" class="gridLine"/>
+        <line x1="70" y1="0" x2="70" y2="336" class="gridLine"/>
+        <line x1="84" y1="0" x2="84" y2="336" class="gridLine"/>
+        <line x1="98" y1="0" x2="98" y2="336" class="gridLine"/>
+        <line x1="112" y1="0" x2="112" y2="336" class="gridLine"/>
+        <line x1="126" y1="0" x2="126" y2="336" class="gridLine"/>
+        <line x1="140" y1="0" x2="140" y2="336" class="gridLine"/>
+        <line x1="154" y1="0" x2="154" y2="336" class="gridLine"/>
+        <line x1="168" y1="0" x2="168" y2="336" class="gridLine"/>
+        <line x1="182" y1="0" x2="182" y2="336" class="gridLine"/>
+        <line x1="196" y1="0" x2="196" y2="336" class="gridLine"/>
+        <line x1="210" y1="0" x2="210" y2="336" class="gridLine"/>
+        <line x1="224" y1="0" x2="224" y2="336" class="gridLine"/>
+        <line x1="238" y1="0" x2="238" y2="336" class="gridLine"/>
+        <line x1="252" y1="0" x2="252" y2="336" class="gridLine"/>
+        <line x1="266" y1="0" x2="266" y2="336" class="gridLine"/>
+        <line x1="280" y1="0" x2="280" y2="336" class="gridLine"/>
+        <line x1="294" y1="0" x2="294" y2="336" class="gridLine"/>
+        <line x1="308" y1="0" x2="308" y2="336" class="gridLine"/>
+        <line x1="322" y1="0" x2="322" y2="336" class="gridLine"/>
+
+        <line x1="0" y1="14" x2="336" y2="14" class="gridLine"/>
+        <line x1="0" y1="28" x2="336" y2="28" class="gridLine"/>
+        <line x1="0" y1="42" x2="336" y2="42" class="gridLine"/>
+        <line x1="0" y1="56" x2="336" y2="56" class="gridLine"/>
+        <line x1="0" y1="70" x2="336" y2="70" class="gridLine"/>
+        <line x1="0" y1="84" x2="336" y2="84" class="gridLine"/>
+        <line x1="0" y1="98" x2="336" y2="98" class="gridLine"/>
+        <line x1="0" y1="112" x2="336" y2="112" class="gridLine"/>
+        <line x1="0" y1="126" x2="336" y2="126" class="gridLine"/>
+        <line x1="0" y1="140" x2="336" y2="140" class="gridLine"/>
+        <line x1="0" y1="154" x2="336" y2="154" class="gridLine"/>
+        <line x1="0" y1="168" x2="336" y2="168" class="gridLine"/>
+        <line x1="0" y1="182" x2="336" y2="182" class="gridLine"/>
+        <line x1="0" y1="196" x2="336" y2="196" class="gridLine"/>
+        <line x1="0" y1="210" x2="336" y2="210" class="gridLine"/>
+        <line x1="0" y1="224" x2="336" y2="224" class="gridLine"/>
+        <line x1="0" y1="238" x2="336" y2="238" class="gridLine"/>
+        <line x1="0" y1="252" x2="336" y2="252" class="gridLine"/>
+        <line x1="0" y1="266" x2="336" y2="266" class="gridLine"/>
+        <line x1="0" y1="280" x2="336" y2="280" class="gridLine"/>
+        <line x1="0" y1="294" x2="336" y2="294" class="gridLine"/>
+        <line x1="0" y1="308" x2="336" y2="308" class="gridLine"/>
+        <line x1="0" y1="322" x2="336" y2="322" class="gridLine"/>
+      </g>
+      <rect x="28" y="28" width="280" height="280" class="safe"/>
+      <line x1="168" y1="-12" x2="168" y2="348" class="center"/>
+      <line x1="-12" y1="168" x2="348" y2="168" class="center"/>
+    </g>
+
+    <!-- Sample 24x24 icons. Edit these groups in Inkscape. -->
+    <g id="folderGlyph" aria-label="folder icon">
+      <rect x="0" y="0" width="24" height="24" fill="none" stroke="none"/>
+      <path class="iconStroke" d="M4.5 8.5V18c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2v-6.5c0-1.1-.9-2-2-2H11L9.2 7.5H6.5c-1.1 0-2 .9-2 2z"/>
+    </g>
+
+    <g id="fileGlyph" aria-label="file icon">
+      <rect x="0" y="0" width="24" height="24" fill="none" stroke="none"/>
+      <path class="iconStroke" d="M8 4.5h7l4.5 4.5V18c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2V6.5c0-1.1.9-2 2-2z"/>
+      <path class="iconStroke" d="M15 4.5V9h4.5"/>
+    </g>
+
+    <g id="notesIcon" transform="scale(1)">
+      <rect x="0" y="4" width="28" height="34" rx="6" ry="6" fill="none" stroke="#5f61ff" stroke-width="2.5"/>
+      <rect x="8" y="0" width="12" height="8" rx="3" ry="3" fill="none" stroke="#5f61ff" stroke-width="2.5"/>
+      <line x1="8" y1="14" x2="20" y2="14" stroke="#5f61ff" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="8" y1="21" x2="20" y2="21" stroke="#5f61ff" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="8" y1="28" x2="16" y2="28" stroke="#5f61ff" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="1408" height="1820" fill="#efeff2"/>
+
+  <g inkscape:label="01 - Header" inkscape:groupmode="layer" id="layerHeader">
+    <text x="704" y="92" text-anchor="middle" class="title">Rottools UI Icon Template</text>
+    <text x="704" y="138" text-anchor="middle" class="subtitle">For in-app icons such as folder, file, toolbar, tree-view, and sidebar icons.</text>
+  </g>
+
+  <g inkscape:label="02 - Folder Artboard" inkscape:groupmode="layer" id="layerFolderBoard">
+    <text x="440" y="224" text-anchor="middle" class="section">Folder Icon</text>
+    <g id="folderArtboard" transform="translate(196 242)">
+      <use href="#grid24"/>
+      <!-- Edit inside folderIconExport -->
+      <g id="folderIconExport" transform="scale(14)">
+        <use href="#folderGlyph"/>
+      </g>
+    </g>
+
+    <g id="folderCallouts">
+      <line x1="136" y1="274" x2="190" y2="274" class="callout"/>
+      <circle cx="190" cy="274" r="5" class="calloutDot"/>
+      <text x="56" y="280" class="label">24×24 canvas</text>
+
+      <line x1="136" y1="365" x2="210" y2="365" class="callout"/>
+      <circle cx="210" cy="365" r="5" class="calloutDot"/>
+      <text x="56" y="371" class="label">1 px grid</text>
+
+      <line x1="136" y1="470" x2="238" y2="470" class="callout"/>
+      <circle cx="238" cy="470" r="5" class="calloutDot"/>
+      <text x="56" y="462" class="label">Safe area</text>
+      <text x="56" y="488" class="label">(20×20 px)</text>
+
+      <line x1="136" y1="596" x2="254" y2="596" class="callout"/>
+      <circle cx="254" cy="596" r="5" class="calloutDot"/>
+      <text x="56" y="590" class="label">2 px rounded</text>
+      <text x="56" y="616" class="label">stroke</text>
+    </g>
+  </g>
+
+  <g inkscape:label="03 - File Artboard" inkscape:groupmode="layer" id="layerFileBoard">
+    <text x="968" y="224" text-anchor="middle" class="section">File Icon</text>
+    <g id="fileArtboard" transform="translate(724 242)">
+      <use href="#grid24"/>
+      <!-- Edit inside fileIconExport -->
+      <g id="fileIconExport" transform="scale(14)">
+        <use href="#fileGlyph"/>
+      </g>
+    </g>
+
+    <g id="fileCallouts">
+      <line x1="1144" y1="274" x2="1198" y2="274" class="callout"/>
+      <circle cx="1144" cy="274" r="5" class="calloutDot"/>
+      <text x="1216" y="280" class="label">24×24 canvas</text>
+
+      <line x1="1124" y1="365" x2="1198" y2="365" class="callout"/>
+      <circle cx="1124" cy="365" r="5" class="calloutDot"/>
+      <text x="1216" y="371" class="label">1 px grid</text>
+
+      <line x1="1102" y1="470" x2="1198" y2="470" class="callout"/>
+      <circle cx="1102" cy="470" r="5" class="calloutDot"/>
+      <text x="1216" y="462" class="label">Safe area</text>
+      <text x="1216" y="488" class="label">(20×20 px)</text>
+
+      <line x1="1106" y1="596" x2="1198" y2="596" class="callout"/>
+      <circle cx="1106" cy="596" r="5" class="calloutDot"/>
+      <text x="1216" y="590" class="label">2 px rounded</text>
+      <text x="1216" y="616" class="label">stroke</text>
+    </g>
+  </g>
+
+  <g inkscape:label="04 - Live Size Previews" inkscape:groupmode="layer" id="layerPreviews">
+    <line x1="72" y1="760" x2="534" y2="760" class="divider"/>
+    <line x1="874" y1="760" x2="1336" y2="760" class="divider"/>
+    <text x="704" y="772" text-anchor="middle" class="section">Live size previews</text>
+
+    <!-- Folder row -->
+    <g id="folderPreviewRow" transform="translate(0 0)">
+      <svg x="70" y="852" width="52" height="52" viewBox="0 0 24 24">
+        <use href="#folderGlyph"/>
+      </svg>
+      <text x="70" y="948" class="section" style="font-size:28px;">Folder Icon</text>
+
+      <svg x="268" y="818" width="160" height="160" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <g opacity="0.55">
+          <path d="M1 0V24 M2 0V24 M3 0V24 M4 0V24 M5 0V24 M6 0V24 M7 0V24 M8 0V24 M9 0V24 M10 0V24 M11 0V24 M12 0V24 M13 0V24 M14 0V24 M15 0V24 M16 0V24 M17 0V24 M18 0V24 M19 0V24 M20 0V24 M21 0V24 M22 0V24 M23 0V24" stroke="#dddddf" stroke-width="0.05"/>
+          <path d="M0 1H24 M0 2H24 M0 3H24 M0 4H24 M0 5H24 M0 6H24 M0 7H24 M0 8H24 M0 9H24 M0 10H24 M0 11H24 M0 12H24 M0 13H24 M0 14H24 M0 15H24 M0 16H24 M0 17H24 M0 18H24 M0 19H24 M0 20H24 M0 21H24 M0 22H24 M0 23H24" stroke="#dddddf" stroke-width="0.05"/>
+        </g>
+        <use href="#folderGlyph"/>
+      </svg>
+      <text x="348" y="1018" text-anchor="middle" class="sizeLabel">48</text>
+
+      <svg x="460" y="862" width="112" height="112" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <use href="#folderGlyph"/>
+      </svg>
+      <text x="516" y="1018" text-anchor="middle" class="sizeLabel">32</text>
+
+      <svg x="608" y="882" width="84" height="84" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <use href="#folderGlyph"/>
+      </svg>
+      <text x="650" y="1018" text-anchor="middle" class="sizeLabel">24</text>
+
+      <svg x="734" y="895" width="70" height="70" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <use href="#folderGlyph"/>
+      </svg>
+      <text x="769" y="1018" text-anchor="middle" class="sizeLabel">20</text>
+
+      <svg x="840" y="910" width="56" height="56" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <use href="#folderGlyph"/>
+      </svg>
+      <text x="868" y="1018" text-anchor="middle" class="sizeLabel">16</text>
+
+      <line x1="944" y1="842" x2="944" y2="980" class="divider"/>
+      <text x="1008" y="842" text-anchor="middle" class="label">Light</text>
+      <text x="1146" y="842" text-anchor="middle" class="label">Dark</text>
+
+      <rect x="952" y="868" width="112" height="112" rx="14" ry="14" class="uiLight"/>
+      <svg x="978" y="894" width="60" height="60" viewBox="0 0 24 24">
+        <use href="#folderGlyph"/>
+      </svg>
+
+      <rect x="1090" y="868" width="112" height="112" rx="14" ry="14" class="uiDark"/>
+      <svg x="1116" y="894" width="60" height="60" viewBox="0 0 24 24">
+        <path class="iconStrokeWhite" d="M4.5 8.5V18c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2v-6.5c0-1.1-.9-2-2-2H11L9.2 7.5H6.5c-1.1 0-2 .9-2 2z"/>
+      </svg>
+    </g>
+
+    <line x1="56" y1="1088" x2="1352" y2="1088" class="divider"/>
+
+    <!-- File row -->
+    <g id="filePreviewRow">
+      <svg x="70" y="1178" width="52" height="52" viewBox="0 0 24 24">
+        <use href="#fileGlyph"/>
+      </svg>
+      <text x="70" y="1274" class="section" style="font-size:28px;">File Icon</text>
+
+      <svg x="268" y="1144" width="160" height="160" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <g opacity="0.55">
+          <path d="M1 0V24 M2 0V24 M3 0V24 M4 0V24 M5 0V24 M6 0V24 M7 0V24 M8 0V24 M9 0V24 M10 0V24 M11 0V24 M12 0V24 M13 0V24 M14 0V24 M15 0V24 M16 0V24 M17 0V24 M18 0V24 M19 0V24 M20 0V24 M21 0V24 M22 0V24 M23 0V24" stroke="#dddddf" stroke-width="0.05"/>
+          <path d="M0 1H24 M0 2H24 M0 3H24 M0 4H24 M0 5H24 M0 6H24 M0 7H24 M0 8H24 M0 9H24 M0 10H24 M0 11H24 M0 12H24 M0 13H24 M0 14H24 M0 15H24 M0 16H24 M0 17H24 M0 18H24 M0 19H24 M0 20H24 M0 21H24 M0 22H24 M0 23H24" stroke="#dddddf" stroke-width="0.05"/>
+        </g>
+        <use href="#fileGlyph"/>
+      </svg>
+      <text x="348" y="1344" text-anchor="middle" class="sizeLabel">48</text>
+
+      <svg x="476" y="1188" width="112" height="112" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <use href="#fileGlyph"/>
+      </svg>
+      <text x="532" y="1344" text-anchor="middle" class="sizeLabel">32</text>
+
+      <svg x="624" y="1208" width="84" height="84" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <use href="#fileGlyph"/>
+      </svg>
+      <text x="666" y="1344" text-anchor="middle" class="sizeLabel">24</text>
+
+      <svg x="750" y="1221" width="70" height="70" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <use href="#fileGlyph"/>
+      </svg>
+      <text x="785" y="1344" text-anchor="middle" class="sizeLabel">20</text>
+
+      <svg x="856" y="1236" width="56" height="56" viewBox="0 0 24 24">
+        <rect x="0" y="0" width="24" height="24" fill="#f9f9fa" stroke="#c5c5cb" stroke-width="0.1"/>
+        <use href="#fileGlyph"/>
+      </svg>
+      <text x="884" y="1344" text-anchor="middle" class="sizeLabel">16</text>
+
+      <line x1="944" y1="1168" x2="944" y2="1306" class="divider"/>
+      <text x="1008" y="1168" text-anchor="middle" class="label">Light</text>
+      <text x="1146" y="1168" text-anchor="middle" class="label">Dark</text>
+
+      <rect x="952" y="1194" width="112" height="112" rx="14" ry="14" class="uiLight"/>
+      <svg x="980" y="1222" width="56" height="56" viewBox="0 0 24 24">
+        <use href="#fileGlyph"/>
+      </svg>
+
+      <rect x="1090" y="1194" width="112" height="112" rx="14" ry="14" class="uiDark"/>
+      <svg x="1118" y="1222" width="56" height="56" viewBox="0 0 24 24">
+        <path class="iconStrokeWhite" d="M8 4.5h7l4.5 4.5V18c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2V6.5c0-1.1.9-2 2-2z"/>
+        <path class="iconStrokeWhite" d="M15 4.5V9h4.5"/>
+      </svg>
+    </g>
+  </g>
+
+  <g inkscape:label="05 - Notes" inkscape:groupmode="layer" id="layerNotes">
+    <line x1="56" y1="1466" x2="1352" y2="1466" class="divider"/>
+
+    <g transform="translate(72 1530)">
+      <use href="#notesIcon"/>
+    </g>
+    <text x="146" y="1596" class="noteHead">Notes</text>
+
+    <line x1="248" y1="1512" x2="248" y2="1666" class="divider"/>
+    <line x1="548" y1="1512" x2="548" y2="1666" class="divider"/>
+    <line x1="822" y1="1512" x2="822" y2="1666" class="divider"/>
+    <line x1="1094" y1="1512" x2="1094" y2="1666" class="divider"/>
+
+    <circle cx="306" cy="1544" r="16" class="badge"/>
+    <text x="306" y="1549" text-anchor="middle" class="badgeText">1</text>
+    <text x="338" y="1550" class="noteText">Keep silhouettes</text>
+    <text x="338" y="1580" class="noteText">simple and readable</text>
+    <text x="338" y="1610" class="noteText">at 16 px.</text>
+
+    <circle cx="590" cy="1544" r="16" class="badge"/>
+    <text x="590" y="1549" text-anchor="middle" class="badgeText">2</text>
+    <text x="622" y="1550" class="noteText">Avoid tiny decorative</text>
+    <text x="622" y="1580" class="noteText">details or thin strokes</text>
+    <text x="622" y="1610" class="noteText">that vanish when scaled.</text>
+
+    <circle cx="864" cy="1544" r="16" class="badge"/>
+    <text x="864" y="1549" text-anchor="middle" class="badgeText">3</text>
+    <text x="896" y="1550" class="noteText">Use SVG as source;</text>
+    <text x="896" y="1580" class="noteText">export PNG sizes only</text>
+    <text x="896" y="1610" class="noteText">when needed.</text>
+
+    <circle cx="1136" cy="1544" r="16" class="badge"/>
+    <text x="1136" y="1549" text-anchor="middle" class="badgeText">4</text>
+    <text x="1168" y="1550" class="noteText">Optically center shapes</text>
+    <text x="1168" y="1580" class="noteText">and test on light and</text>
+    <text x="1168" y="1610" class="noteText">dark UI backgrounds.</text>
+  </g>
+
+  <g inkscape:label="06 - Export Hints" inkscape:groupmode="layer" id="layerHints">
+    <text x="196" y="1734" class="small">Edit the icon paths in groups “folderGlyph” and “fileGlyph”.</text>
+    <text x="196" y="1762" class="small">Export objects: “folderIconExport” and “fileIconExport”.</text>
+  </g>
+</svg>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+  xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd"
+  width="1000"
+  height="1200"
+  viewBox="0 0 1000 1200"
+  version="1.1"
+  id="rottools-single-ui-icon-template"
+  sodipodi:docname="Rottools-Single-UI-Icon-Template.svg"
+  inkscape:version="1.3">
+
+  <sodipodi:namedview
+    id="namedview"
+    pagecolor="#f0f0f2"
+    bordercolor="#666666"
+    borderopacity="0.35"
+    inkscape:pageopacity="0"
+    inkscape:document-units="px"
+    showgrid="false"/>
+
+  <defs>
+    <style><![CDATA[
+      .title { font: 700 38px 'Inter','Helvetica Neue',Arial,sans-serif; fill:#232327; }
+      .subtitle { font: 400 17px 'Inter','Helvetica Neue',Arial,sans-serif; fill:#66666d; }
+      .section { font: 700 24px 'Inter','Helvetica Neue',Arial,sans-serif; fill:#2d2d32; }
+      .label { font: 400 14px 'Inter','Helvetica Neue',Arial,sans-serif; fill:#4e4e55; }
+      .small { font: 400 13px 'Inter','Helvetica Neue',Arial,sans-serif; fill:#6a6a72; }
+      .tiny { font: 400 12px 'Inter','Helvetica Neue',Arial,sans-serif; fill:#777780; }
+      .grid { stroke:#dcdce1; stroke-width:1; }
+      .board { fill:#fafafa; stroke:#a7a7ae; stroke-width:1.25; }
+      .safe { fill:none; stroke:#7477ff; stroke-width:1.75; stroke-dasharray:7 5; }
+      .center { stroke:#4a9cff; stroke-width:1.75; stroke-dasharray:7 5; }
+      .guide { stroke:#6a6dff; stroke-width:1.5; fill:none; }
+      .guideDot { fill:#6a6dff; }
+      .divider { stroke:#c4c4ca; stroke-width:1.2; }
+      .icon { fill:none; stroke:#4c4d52; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+      .iconWhite { fill:none; stroke:#ffffff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+      .lightChip { fill:#ffffff; stroke:#c9c9cf; stroke-width:1.2; }
+      .darkChip { fill:#2f3036; stroke:#23242a; stroke-width:1.2; }
+    ]]></style>
+
+    <!-- 24×24 folder showcase. EDIT THIS GROUP. -->
+    <g id="iconGlyph" aria-label="folder showcase icon">
+      <!-- Transparent 24×24 spacer keeps the export box exact. -->
+      <rect x="0" y="0" width="24" height="24" fill="none" stroke="none"/>
+      <path class="icon"
+        d="M4.5 8.5V18c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2v-6.5c0-1.1-.9-2-2-2H11L9.2 7.5H6.5c-1.1 0-2 .9-2 2z"/>
+    </g>
+
+    <!-- Same showcase rendered for dark preview. -->
+    <g id="iconGlyphWhite" aria-label="folder showcase icon white">
+      <rect x="0" y="0" width="24" height="24" fill="none" stroke="none"/>
+      <path class="iconWhite"
+        d="M4.5 8.5V18c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2v-6.5c0-1.1-.9-2-2-2H11L9.2 7.5H6.5c-1.1 0-2 .9-2 2z"/>
+    </g>
+
+    <!-- Enlarged 24×24 pixel grid: 16 px per source pixel. -->
+    <pattern id="pixelGrid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" class="grid"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1000" height="1200" fill="#f0f0f2"/>
+
+  <!-- 01 Header -->
+  <g inkscape:label="01 - Header" inkscape:groupmode="layer" id="layerHeader">
+    <text x="500" y="65" text-anchor="middle" class="title">Rottools UI Icon Template</text>
+    <text x="500" y="97" text-anchor="middle" class="subtitle">One-icon master template · folder used as showcase</text>
+  </g>
+
+  <!-- 02 Guides -->
+  <g inkscape:label="02 - Guides" inkscape:groupmode="layer" id="layerGuides">
+    <text x="500" y="150" text-anchor="middle" class="section">24×24 master canvas</text>
+
+    <!-- Main enlarged artboard: 24*16 = 384 -->
+    <g id="masterBoard" transform="translate(308 180)">
+      <rect x="0" y="0" width="384" height="384" class="board"/>
+      <rect x="0" y="0" width="384" height="384" fill="url(#pixelGrid)"/>
+
+      <!-- 20×20 safe area = 2 px inset = 32 display px -->
+      <rect x="32" y="32" width="320" height="320" class="safe"/>
+
+      <!-- center guides -->
+      <line x1="192" y1="-10" x2="192" y2="394" class="center"/>
+      <line x1="-10" y1="192" x2="394" y2="192" class="center"/>
+    </g>
+
+    <!-- Callouts -->
+    <text x="85" y="222" class="label">24×24 canvas</text>
+    <line x1="185" y1="218" x2="300" y2="218" class="guide"/>
+    <circle cx="300" cy="218" r="4" class="guideDot"/>
+
+    <text x="85" y="302" class="label">1 px grid</text>
+    <line x1="155" y1="298" x2="324" y2="298" class="guide"/>
+    <circle cx="324" cy="298" r="4" class="guideDot"/>
+
+    <text x="85" y="390" class="label">20×20 safe area</text>
+    <line x1="190" y1="386" x2="340" y2="386" class="guide"/>
+    <circle cx="340" cy="386" r="4" class="guideDot"/>
+
+    <text x="746" y="304" class="label">2 px stroke</text>
+    <line x1="694" y1="300" x2="738" y2="300" class="guide"/>
+    <circle cx="694" cy="300" r="4" class="guideDot"/>
+
+    <text x="746" y="384" class="label">Round joins/caps</text>
+    <line x1="682" y1="380" x2="738" y2="380" class="guide"/>
+    <circle cx="682" cy="380" r="4" class="guideDot"/>
+  </g>
+
+  <!-- 03 Icon Design -->
+  <g inkscape:label="03 - Icon (EDIT HERE)" inkscape:groupmode="layer" id="layerIcon">
+    <!-- Export target. The transparent rect fixes exact 24×24 bounds. -->
+    <g id="iconExport" transform="translate(308 180) scale(16)">
+      <use href="#iconGlyph"/>
+    </g>
+  </g>
+
+  <!-- 04 Live Previews -->
+  <g inkscape:label="04 - Live Previews" inkscape:groupmode="layer" id="layerPreviews">
+    <line x1="80" y1="625" x2="365" y2="625" class="divider"/>
+    <line x1="635" y1="625" x2="920" y2="625" class="divider"/>
+    <text x="500" y="633" text-anchor="middle" class="section">Live size previews</text>
+
+    <text x="125" y="700" class="label">Actual-size checks</text>
+
+    <!-- 48 -->
+    <svg x="245" y="665" width="96" height="96" viewBox="0 0 24 24">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="293" y="785" text-anchor="middle" class="label">48</text>
+
+    <!-- 32 -->
+    <svg x="380" y="681" width="64" height="64" viewBox="0 0 24 24">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="412" y="785" text-anchor="middle" class="label">32</text>
+
+    <!-- 24 -->
+    <svg x="500" y="689" width="48" height="48" viewBox="0 0 24 24">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="524" y="785" text-anchor="middle" class="label">24</text>
+
+    <!-- 20 -->
+    <svg x="605" y="693" width="40" height="40" viewBox="0 0 24 24">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="625" y="785" text-anchor="middle" class="label">20</text>
+
+    <!-- 16 -->
+    <svg x="705" y="697" width="32" height="32" viewBox="0 0 24 24">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="721" y="785" text-anchor="middle" class="label">16</text>
+
+    <!-- Light/dark previews -->
+    <text x="380" y="860" text-anchor="middle" class="label">Light UI</text>
+    <text x="620" y="860" text-anchor="middle" class="label">Dark UI</text>
+
+    <rect x="315" y="880" width="130" height="130" rx="18" class="lightChip"/>
+    <svg x="350" y="915" width="60" height="60" viewBox="0 0 24 24">
+      <use href="#iconGlyph"/>
+    </svg>
+
+    <rect x="555" y="880" width="130" height="130" rx="18" class="darkChip"/>
+    <svg x="590" y="915" width="60" height="60" viewBox="0 0 24 24">
+      <use href="#iconGlyphWhite"/>
+    </svg>
+  </g>
+
+  <!-- 05 Notes -->
+  <g inkscape:label="05 - Notes" inkscape:groupmode="layer" id="layerNotes">
+    <line x1="80" y1="1060" x2="920" y2="1060" class="divider"/>
+    <text x="100" y="1102" class="section" style="font-size:20px;">How to use</text>
+
+    <text x="100" y="1136" class="small">• Edit only the path(s) inside the “iconGlyph” group.</text>
+    <text x="100" y="1160" class="small">• Every preview above references the same master icon, so changes propagate immediately.</text>
+    <text x="100" y="1184" class="small">• Export object “iconExport” when you need the 24×24 source asset.</text>
+  </g>
+</svg>
