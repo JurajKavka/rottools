@@ -94,6 +94,8 @@ class MainFrame : public MainFrameWx {
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);
     MarkdownPreviewOptions GetPreviewOptions(ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop) const;
+    void HandleFileBrowserHomeRequested();
+    void HandleFileBrowserCloseRequested();
     void HandleDirectoryChanged(const wxFileName& filePath);
     void HandleBrowserWatcherChange();
     void RefreshBrowserWatcher();

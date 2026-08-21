@@ -107,8 +107,12 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     // nested splitter holding the rendered preview and the source/editor area
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_fileBrowserPanel = new FileBrowserTreePanel(
-        m_mainSplitter, std::bind_front(&MainFrame::HandleOpenMarkdownFile, this),
-        std::bind_front(&MainFrame::HandleDirectoryChanged, this), std::vector<std::string>{".md", ".markdown"});
+        m_mainSplitter,
+        {.onFileOpened = std::bind_front(&MainFrame::HandleOpenMarkdownFile, this),
+         .onDirectoryChanged = std::bind_front(&MainFrame::HandleDirectoryChanged, this),
+         .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
+         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)},
+        std::vector<std::string>{".md", ".markdown"});
 
     m_rightSplitter =
         new wxSplitterWindow(m_mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
@@ -578,6 +582,16 @@ MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavio
  */
 void MainFrame::HandleOpenMarkdownFile(const wxFileName& filePath) {
     (void)m_markdownEditorPanel->OpenFile(filePath);
+}
+
+void MainFrame::HandleFileBrowserHomeRequested() {
+    wxFileName homeDirectory;
+    homeDirectory.AssignHomeDir();
+    m_fileBrowserPanel->ListDir(homeDirectory);
+}
+
+void MainFrame::HandleFileBrowserCloseRequested() {
+    HideFileBrowser();
 }
 
 void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {

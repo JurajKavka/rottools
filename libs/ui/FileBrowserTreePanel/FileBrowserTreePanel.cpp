@@ -5,15 +5,17 @@
 
 #include <algorithm>
 
-FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened,
-                                           DirectoryChangedCallback onDirectoryChanged,
-                                           std::vector<std::string> extensions)
+FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks, std::vector<std::string> extensions)
     : FileBrowserTreePanelWx(parent),
-      m_onFileOpened(std::move(onFileOpened)),
-      m_onDirectoryChanged(std::move(onDirectoryChanged)) {
+      m_onFileOpened(std::move(callbacks.onFileOpened)),
+      m_onDirectoryChanged(std::move(callbacks.onDirectoryChanged)),
+      m_onHomeRequested(std::move(callbacks.onHomeRequested)),
+      m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
     m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
+    m_homeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleHomeButtonClick, this);
+    m_closeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleCloseButtonClick, this);
 
     m_scanOptions.extensions = std::move(extensions);
     m_scanOptions.showHiddenFiles = m_hiddenFilesCheckbox->IsChecked();
@@ -195,6 +197,18 @@ void FileBrowserTreePanel::HandleItemActivated(wxDataViewEvent& event) {
                 }
             }
         }
+    }
+}
+
+void FileBrowserTreePanel::HandleHomeButtonClick(wxCommandEvent& event) {
+    if (m_onHomeRequested) {
+        m_onHomeRequested();
+    }
+}
+
+void FileBrowserTreePanel::HandleCloseButtonClick(wxCommandEvent& event) {
+    if (m_onCloseRequested) {
+        m_onCloseRequested();
     }
 }
 

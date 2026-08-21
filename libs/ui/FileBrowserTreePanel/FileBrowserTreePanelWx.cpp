@@ -22,44 +22,27 @@ FileBrowserTreePanelWx::FileBrowserTreePanelWx( wxWindow* parent, wxWindowID id,
 	wxBoxSizer* bSizer3;
 	bSizer3 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_bpButton1 = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
+	m_homeButton = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
 
-	m_bpButton1->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_BACK), wxASCII_STR(wxART_BUTTON) ) );
-	m_bpButton1->SetForegroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
-	m_bpButton1->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
-	m_bpButton1->SetToolTip( _("Directory of previous opened file.") );
+	m_homeButton->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ) );
+	m_homeButton->SetBitmapDisabled( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ) );
+	m_homeButton->SetToolTip( _("Users home directory.") );
 
-	bSizer3->Add( m_bpButton1, 0, wxRIGHT, 2 );
+	bSizer3->Add( m_homeButton, 0, wxLEFT, 2 );
 
-	m_bpButton11 = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
+	m_closeButton = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
 
-	m_bpButton11->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_FORWARD), wxASCII_STR(wxART_BUTTON) ) );
-	m_bpButton11->SetForegroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_SCROLLBAR ) );
-	m_bpButton11->SetToolTip( _("Directory of next opened file.") );
+	m_closeButton->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ) );
+	m_closeButton->SetBitmapDisabled( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ) );
+	m_closeButton->SetToolTip( _("Users home directory.") );
 
-	bSizer3->Add( m_bpButton11, 0, wxRIGHT, 2 );
-
-	m_bpButton111 = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
-
-	m_bpButton111->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ) );
-	m_bpButton111->SetBitmapDisabled( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ) );
-	m_bpButton111->SetToolTip( _("Users home directory.") );
-
-	bSizer3->Add( m_bpButton111, 0, wxRIGHT, 2 );
-
-	m_bpButton1111 = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
-
-	m_bpButton1111->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ) );
-	m_bpButton1111->SetBitmapDisabled( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ) );
-	m_bpButton1111->SetToolTip( _("Users home directory.") );
-
-	bSizer3->Add( m_bpButton1111, 0, wxRIGHT, 2 );
+	bSizer3->Add( m_closeButton, 0, wxLEFT, 2 );
 
 
 	m_panel1->SetSizer( bSizer3 );
 	m_panel1->Layout();
 	bSizer3->Fit( m_panel1 );
-	bSizer1->Add( m_panel1, 0, wxALIGN_RIGHT|wxALL, 4 );
+	bSizer1->Add( m_panel1, 0, wxALIGN_RIGHT|wxBOTTOM|wxTOP, 2 );
 
 	m_dataViewTreeCtrl1 = new wxDataViewTreeCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER|wxDV_ROW_LINES );
 	bSizer1->Add( m_dataViewTreeCtrl1, 1, wxEXPAND, 0 );

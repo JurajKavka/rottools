@@ -36,10 +36,8 @@ class FileBrowserTreePanelWx : public wxPanel
 
 	protected:
 		wxPanel* m_panel1;
-		wxBitmapButton* m_bpButton1;
-		wxBitmapButton* m_bpButton11;
-		wxBitmapButton* m_bpButton111;
-		wxBitmapButton* m_bpButton1111;
+		wxBitmapButton* m_homeButton;
+		wxBitmapButton* m_closeButton;
 		wxDataViewTreeCtrl* m_dataViewTreeCtrl1;
 		wxCheckBox* m_hiddenFilesCheckbox;
 

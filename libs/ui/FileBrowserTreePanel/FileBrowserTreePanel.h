@@ -12,14 +12,20 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
    public:
     using FileOpenedCallback = std::function<void(const wxFileName&)>;
     using DirectoryChangedCallback = std::function<void(const wxFileName&)>;
+    using ActionRequestedCallback = std::function<void()>;
+
+    struct Callbacks {
+        FileOpenedCallback onFileOpened;
+        DirectoryChangedCallback onDirectoryChanged;
+        ActionRequestedCallback onHomeRequested;
+        ActionRequestedCallback onCloseRequested;
+    };
 
     /**
      * @param extensions Case-insensitive file extensions to show. An empty
      *        collection shows all ordinary files.
      */
-    explicit FileBrowserTreePanel(wxWindow* parent, FileOpenedCallback onFileOpened = nullptr,
-                                  DirectoryChangedCallback onDirectoryChanged = nullptr,
-                                  std::vector<std::string> extensions = {});
+    explicit FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks = {}, std::vector<std::string> extensions = {});
     ~FileBrowserTreePanel();
 
     /**
@@ -50,6 +56,8 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
 
     FileOpenedCallback m_onFileOpened;
     DirectoryChangedCallback m_onDirectoryChanged;
+    ActionRequestedCallback m_onHomeRequested;
+    ActionRequestedCallback m_onCloseRequested;
 
     void UpdateTree(const std::vector<FileEntry>& entries);
     /// Finds the top-level row with the given text; invalid item if none match
@@ -57,4 +65,6 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
     void HandleHiddenFilesCheckbox(wxCommandEvent& event);
     void HandleItemActivated(wxDataViewEvent& event);
+    void HandleHomeButtonClick(wxCommandEvent& event);
+    void HandleCloseButtonClick(wxCommandEvent& event);
 };
