@@ -41,7 +41,7 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
     using ConfirmOverwritePromptCallback = std::function<OverwritePromptDecision(const OverwritePromptMessage&)>;
 
     struct Callbacks {
-        /** Called after the current Markdown document is opened, reloaded, or saved. */
+        /** Called after the current Markdown document is started, opened, reloaded, or saved. */
         OnDocumentChangedCallback documentChanged;
 
         /** Called with translated text whenever the editor status changes. */

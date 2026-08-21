@@ -22,10 +22,14 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_fileMenu->Append( OpenFileMenuItem );
 
 	wxMenuItem* m_newWindowMenuItem;
-	m_newWindowMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window\tCtrl+N") ) , wxEmptyString, wxITEM_NORMAL );
+	m_newWindowMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window") ) + wxT('\t') + wxT("CTRL+SHIFT+N"), wxEmptyString, wxITEM_NORMAL );
 	m_fileMenu->Append( m_newWindowMenuItem );
 
 	m_fileMenu->AppendSeparator();
+
+	wxMenuItem* m_newFileMenuItem;
+	m_newFileMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW_FILE, wxString( _("New file...") ) + wxT('\t') + wxT("CTRL+N"), wxEmptyString, wxITEM_NORMAL );
+	m_fileMenu->Append( m_newFileMenuItem );
 
 	wxMenuItem* m_saveMenuItem;
 	m_saveMenuItem = new wxMenuItem( m_fileMenu, wxID_SAVE, wxString( _("&Save") ) + wxT('\t') + wxT("CTRL+S"), wxEmptyString, wxITEM_NORMAL );
@@ -114,6 +118,8 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	this->Layout();
 	toolBar = this->CreateToolBar( wxTB_HORIZONTAL, wxID_ANY );
 	m_fileOpenTool = toolBar->AddTool( wxID_ANY, _("Open file"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+
+	m_newFileTool = toolBar->AddTool( wxID_NEW_FILE, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_NEW), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
 
 	m_saveTool = toolBar->AddTool( wxID_ANY, _("Save"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, _("Save"), _("Save the current Markdown file"), NULL );
 

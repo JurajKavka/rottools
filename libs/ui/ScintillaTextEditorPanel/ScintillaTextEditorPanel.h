@@ -34,6 +34,7 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     };
 
     enum class ChangeReason {
+        NewDocument,
         Opened,
         Reloaded,
         Saved,
@@ -122,7 +123,8 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
 
     struct Callbacks {
         /**
-         * Called after a document is opened, reloaded from disk, or saved.
+         * Called after a new document is started, or a document is opened,
+         * reloaded from disk, or saved.
          * DocumentChange identifies the operation and carries the current text
          * and absolute file path. diskEntryChanged is true when saving created,
          * recreated, or switched to a different file.
@@ -205,6 +207,8 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     explicit ScintillaTextEditorPanel(wxWindow* parent);
     explicit ScintillaTextEditorPanel(wxWindow* parent, Options options, Callbacks callbacks = {});
 
+    /** Start an empty untitled document after confirming any pending discard. */
+    [[nodiscard]] bool NewDocument();
     [[nodiscard]] bool ShowOpenDialog();
     [[nodiscard]] bool OpenFile(const wxFileName& filePath);
     [[nodiscard]] bool Save();

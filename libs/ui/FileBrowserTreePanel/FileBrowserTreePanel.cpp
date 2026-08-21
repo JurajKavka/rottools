@@ -134,6 +134,10 @@ void FileBrowserTreePanel::ShowFile(const wxFileName& fileName) {
     m_directoryScanner.StartScan(m_currentPath, m_scanOptions, this);
 }
 
+wxFileName FileBrowserTreePanel::GetCurrentDirectory() const {
+    return m_currentPath;
+}
+
 void FileBrowserTreePanel::HandleDirectoryScanComplete(DirectoryScannerEvent& event) {
     UpdateTree(event.files);
     if (m_onDirectoryChanged) {
