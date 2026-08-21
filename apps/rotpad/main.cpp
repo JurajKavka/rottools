@@ -30,7 +30,7 @@ bool RotpadApp::OnInit() {
     // Linux and Windows desktop shells pass the selected document as a
     // command-line argument. This also makes `rotpad path/to/file` work.
     if (argc > 1) {
-        m_frame->OpenTextFile(wxFileName(argv[1]));
+        m_frame->HandleOpenTextFile(wxFileName(argv[1]));
     }
 
     return true;
@@ -43,6 +43,6 @@ void RotpadApp::MacOpenFiles(const wxArrayString& fileNames) {
     if (fileNames.IsEmpty()) {
         return;
     }
-    m_frame->OpenTextFile(wxFileName(fileNames[0]));
+    m_frame->HandleOpenTextFile(wxFileName(fileNames[0]));
 }
 #endif

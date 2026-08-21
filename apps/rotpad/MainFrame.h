@@ -30,6 +30,9 @@ class MainFrame final : public MainFrameWx {
     void HandleUpdateCutMenuItem(wxUpdateUIEvent& event);
     void HandleUpdatePasteMenuItem(wxUpdateUIEvent& event);
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
+    void HandleFileBrowserHomeRequested();
+    void HandleFileBrowserCloseRequested();
+    void HideFileBrowser();
     void HandleWordWrapMenuItemClick(wxCommandEvent& event);
     void HandleFontMenuItemClick(wxCommandEvent& event);
     bool SaveTextFile(const wxFileName& filePath);
@@ -37,5 +40,5 @@ class MainFrame final : public MainFrameWx {
    public:
     explicit MainFrame(wxWindow* parent);
 
-    void OpenTextFile(const wxFileName& filePath);
+    void HandleOpenTextFile(const wxFileName& filePath);
 };

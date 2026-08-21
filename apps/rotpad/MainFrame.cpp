@@ -61,8 +61,10 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     // The browser and editor are siblings in one splitter, matching rotreader's
     // top-level layout. FileBrowserTreePanel shows every ordinary file by default.
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
-    m_fileBrowserPanel =
-        new FileBrowserTreePanel(m_mainSplitter, std::bind_front(&MainFrame::OpenTextFile, this), nullptr);
+    m_fileBrowserPanel = new FileBrowserTreePanel(
+        m_mainSplitter, {.onFileOpened = std::bind_front(&MainFrame::HandleOpenTextFile, this),
+                         .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
+                         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)});
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
     m_textEditorPanel->SetEditorFont(rottools::LoadEditorFont(m_textEditorPanel->GetEditorFont()));
     m_textEditorPanel->SetWordWrap(true);
@@ -90,7 +92,7 @@ void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
         return;
     }
 
-    OpenTextFile(wxFileName(openFileDialog.GetPath()));
+    HandleOpenTextFile(wxFileName(openFileDialog.GetPath()));
 }
 
 void MainFrame::HandleSaveMenuItemClick(wxCommandEvent& event) {
@@ -165,18 +167,35 @@ void MainFrame::HandleUpdatePasteMenuItem(wxUpdateUIEvent& event) {
 }
 
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
+    if (!event.IsChecked()) {
+        HideFileBrowser();
+    } else if (!m_mainSplitter->IsSplit()) {
+        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_textEditorPanel, m_fileBrowserWidth);
+        m_textEditorPanel->FocusEditor();
+    }
+}
+
+void MainFrame::HandleFileBrowserHomeRequested() {
+    wxFileName homeDirectory;
+    homeDirectory.AssignHomeDir();
+    m_fileBrowserPanel->ListDir(homeDirectory);
+}
+
+void MainFrame::HandleFileBrowserCloseRequested() {
+    HideFileBrowser();
+}
+
+void MainFrame::HideFileBrowser() {
+    m_viewMenu->Check(wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, false);
     if (m_mainSplitter->IsSplit()) {
         // Restore the user's last sash position rather than resetting the
         // browser to its initial width every time it is shown.
-        int sashPosition = m_mainSplitter->GetSashPosition();
+        const int sashPosition = m_mainSplitter->GetSashPosition();
         if (sashPosition > 0) {
             m_fileBrowserWidth = sashPosition;
         }
         m_mainSplitter->Unsplit(m_fileBrowserPanel);
-    } else {
-        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_textEditorPanel, m_fileBrowserWidth);
     }
-
     m_textEditorPanel->FocusEditor();
 }
 
@@ -233,7 +252,7 @@ bool MainFrame::SaveTextFile(const wxFileName& filePath) {
     return true;
 }
 
-void MainFrame::OpenTextFile(const wxFileName& filePath) {
+void MainFrame::HandleOpenTextFile(const wxFileName& filePath) {
     wxFileName absolutePath(filePath);
     absolutePath.MakeAbsolute();
 
