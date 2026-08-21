@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd"
+     width="1200" height="1500" viewBox="0 0 1200 1500"
+     version="1.1"
+     id="rottools-single-ui-icon-template"
+     sodipodi:docname="Rottools-Single-UI-Icon-Template-Fixed.svg">
+
+  <sodipodi:namedview id="namedview" pagecolor="#efeff2" bordercolor="#666666"
+      borderopacity="0.3" inkscape:pageopacity="0" inkscape:document-units="px" showgrid="false"/>
+
+  <defs>
+    <style><![CDATA[
+      .title { font:700 44px sans-serif; fill:#222; }
+      .subtitle { font:400 20px sans-serif; fill:#666; }
+      .section { font:700 28px sans-serif; fill:#222; }
+      .label { font:400 16px sans-serif; fill:#555; }
+      .small { font:400 14px sans-serif; fill:#666; }
+      .grid { stroke:#d8d8dd; stroke-width:1; }
+      .safe { fill:none; stroke:#7678ff; stroke-width:2; stroke-dasharray:8 6; }
+      .center { stroke:#59a3ff; stroke-width:2; stroke-dasharray:8 6; }
+      .board { fill:#fafafa; stroke:#999aa1; stroke-width:1.5; }
+      .divider { stroke:#c4c4ca; stroke-width:1.5; }
+      .iconStroke { fill:none; stroke:#45474d; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    ]]></style>
+
+    <pattern id="gridPattern" width="14" height="14" patternUnits="userSpaceOnUse">
+      <path d="M14 0H0V14" fill="none" class="grid"/>
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="1500" fill="#efeff2"/>
+
+  <!-- 01 Header -->
+  <g inkscape:groupmode="layer" inkscape:label="01 - Header" id="layerHeader">
+    <text x="600" y="78" text-anchor="middle" class="title">Rottools UI Icon Template</text>
+    <text x="600" y="116" text-anchor="middle" class="subtitle">Single 24×24 in-app icon — folder showcase</text>
+  </g>
+
+  <!-- 02 Guides -->
+  <g inkscape:groupmode="layer" inkscape:label="02 - Guides" id="layerGuides">
+    <text x="600" y="175" text-anchor="middle" class="section">Master icon — edit the folder below</text>
+
+    <!-- Enlarged 24×24 board: 1 source px = 14 screen px -->
+    <rect x="432" y="220" width="336" height="336" class="board"/>
+    <rect x="432" y="220" width="336" height="336" fill="url(#gridPattern)"/>
+
+    <!-- 20×20 safe area: 2 px margin each side = 28 display px -->
+    <rect x="460" y="248" width="280" height="280" class="safe"/>
+
+    <!-- center guides -->
+    <line x1="600" y1="206" x2="600" y2="570" class="center"/>
+    <line x1="418" y1="388" x2="782" y2="388" class="center"/>
+
+    <text x="790" y="245" class="label">24×24 canvas</text>
+    <text x="790" y="276" class="label">1 px grid</text>
+    <text x="790" y="307" class="label">20×20 safe area</text>
+    <text x="790" y="338" class="label">2 px rounded stroke</text>
+  </g>
+
+  <!-- 03 ICON: actual editable object, NOT in defs -->
+  <g inkscape:groupmode="layer" inkscape:label="03 - Icon (EDIT HERE)" id="layerIcon">
+    <!--
+      IMPORTANT:
+      This nested SVG is the master editor. It uses native 24×24 coordinates,
+      but is displayed at 336×336 on the page.
+    -->
+    <svg id="iconExport" x="432" y="220" width="336" height="336" viewBox="0 0 24 24" overflow="visible">
+      <g id="iconGlyph">
+        <!-- EDIT THIS PATH in Inkscape with the Node tool -->
+        <path id="folderPath" class="iconStroke"
+              d="M4.5 8.5V18c0 1.1 .9 2 2 2h11c1.1 0 2-.9 2-2v-6.5c0-1.1-.9-2-2-2H11L9.2 7.5H6.5c-1.1 0-2 .9-2 2z"/>
+      </g>
+    </svg>
+  </g>
+
+  <!-- 04 Live previews -->
+  <g inkscape:groupmode="layer" inkscape:label="04 - Live Previews" id="layerPreviews">
+    <line x1="72" y1="650" x2="1128" y2="650" class="divider"/>
+    <text x="600" y="700" text-anchor="middle" class="section">Live size previews</text>
+
+    <!-- Each preview reuses the single editable iconGlyph -->
+    <g id="preview48">
+      <rect x="160" y="760" width="96" height="96" rx="8" fill="#fff" stroke="#c8c8ce"/>
+      <svg x="184" y="784" width="48" height="48" viewBox="0 0 24 24"><use href="#iconGlyph"/></svg>
+      <text x="208" y="888" text-anchor="middle" class="label">48 px</text>
+    </g>
+
+    <g id="preview32">
+      <rect x="320" y="776" width="80" height="80" rx="8" fill="#fff" stroke="#c8c8ce"/>
+      <svg x="344" y="800" width="32" height="32" viewBox="0 0 24 24"><use href="#iconGlyph"/></svg>
+      <text x="360" y="888" text-anchor="middle" class="label">32 px</text>
+    </g>
+
+    <g id="preview24">
+      <rect x="456" y="784" width="72" height="72" rx="8" fill="#fff" stroke="#c8c8ce"/>
+      <svg x="480" y="808" width="24" height="24" viewBox="0 0 24 24"><use href="#iconGlyph"/></svg>
+      <text x="492" y="888" text-anchor="middle" class="label">24 px</text>
+    </g>
+
+    <g id="preview20">
+      <rect x="584" y="786" width="68" height="68" rx="8" fill="#fff" stroke="#c8c8ce"/>
+      <svg x="608" y="810" width="20" height="20" viewBox="0 0 24 24"><use href="#iconGlyph"/></svg>
+      <text x="618" y="888" text-anchor="middle" class="label">20 px</text>
+    </g>
+
+    <g id="preview16">
+      <rect x="708" y="788" width="64" height="64" rx="8" fill="#fff" stroke="#c8c8ce"/>
+      <svg x="732" y="812" width="16" height="16" viewBox="0 0 24 24"><use href="#iconGlyph"/></svg>
+      <text x="740" y="888" text-anchor="middle" class="label">16 px</text>
+    </g>
+
+    <!-- light / dark context -->
+    <text x="910" y="755" text-anchor="middle" class="label">Light</text>
+    <rect x="850" y="776" width="120" height="96" rx="14" fill="#fff" stroke="#c8c8ce"/>
+    <svg x="886" y="800" width="48" height="48" viewBox="0 0 24 24"><use href="#iconGlyph"/></svg>
+
+    <text x="1050" y="755" text-anchor="middle" class="label">Dark</text>
+    <rect x="990" y="776" width="120" height="96" rx="14" fill="#303238" stroke="#22242a"/>
+    <!-- Same geometry, explicit white stroke for contrast -->
+    <svg x="1026" y="800" width="48" height="48" viewBox="0 0 24 24">
+      <use href="#iconGlyph" style="stroke:#fff"/>
+    </svg>
+  </g>
+
+  <!-- 05 Instructions -->
+  <g inkscape:groupmode="layer" inkscape:label="05 - Instructions" id="layerInstructions">
+    <line x1="72" y1="980" x2="1128" y2="980" class="divider"/>
+    <text x="130" y="1040" class="section">How to edit</text>
+
+    <text x="130" y="1090" class="label">1. Open Object → Objects.</text>
+    <text x="130" y="1124" class="label">2. Expand “03 - Icon (EDIT HERE)” → “iconExport” → “iconGlyph”.</text>
+    <text x="130" y="1158" class="label">3. Select “folderPath”, then press N for the Node tool.</text>
+    <text x="130" y="1192" class="label">4. Edit the folder path on the large 24×24 grid.</text>
+    <text x="130" y="1226" class="label">5. All previews below update automatically because they reference iconGlyph.</text>
+    <text x="130" y="1260" class="label">6. Keep the path inside the dashed safe area unless optical balance requires otherwise.</text>
+
+    <text x="130" y="1328" class="small">Master geometry is in native 24×24 coordinates. The large board is only a magnified view.</text>
+    <text x="130" y="1356" class="small">Do not move iconGlyph into &lt;defs&gt;. It is intentionally a normal editable object.</text>
+  </g>
+</svg>
