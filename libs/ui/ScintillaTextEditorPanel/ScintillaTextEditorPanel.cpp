@@ -69,6 +69,19 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
     SetWordWrap(m_options.wordWrap);
 }
 
+bool ScintillaTextEditorPanel::NewDocument() {
+    if (!ConfirmSaveBeforeDiscard()) {
+        return false;
+    }
+
+    m_currentFile = wxFileName();
+    m_loadedText.clear();
+    LoadText(wxString{});
+    RequestDocumentWatch();
+    NotifyDocumentChanged(ChangeReason::NewDocument, wxString{});
+    return true;
+}
+
 bool ScintillaTextEditorPanel::ShowOpenDialog() {
     if (!m_callbacks.selectOpenFile) {
         return false;
