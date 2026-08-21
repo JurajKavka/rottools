@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version 4.2.1-85-gdf26f269)
+// C++ code generated with wxFormBuilder (version 4.2.1-0-g80c4cb6)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO *NOT* EDIT THIS FILE!
@@ -22,7 +22,7 @@ FileBrowserTreePanelWx::FileBrowserTreePanelWx( wxWindow* parent, wxWindowID id,
 	wxBoxSizer* bSizer3;
 	bSizer3 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_homeButton = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
+	m_homeButton = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( -1,-1 ), wxBU_AUTODRAW|0 );
 
 	m_homeButton->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ) );
 	m_homeButton->SetBitmapDisabled( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ) );
@@ -30,13 +30,23 @@ FileBrowserTreePanelWx::FileBrowserTreePanelWx( wxWindow* parent, wxWindowID id,
 
 	bSizer3->Add( m_homeButton, 0, wxLEFT, 2 );
 
-	m_closeButton = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
+	m_closeButton = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( -1,-1 ), wxBU_AUTODRAW|0 );
 
 	m_closeButton->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ) );
 	m_closeButton->SetBitmapDisabled( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ) );
+	m_closeButton->SetForegroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
+	m_closeButton->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
 	m_closeButton->SetToolTip( _("Users home directory.") );
 
 	bSizer3->Add( m_closeButton, 0, wxLEFT, 2 );
+
+	m_toolBar1 = new wxToolBar( m_panel1, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL );
+	m_toolBar1->SetToolBitmapSize( wxSize( 16,16 ) );
+	m_tool1 = m_toolBar1->AddTool( wxID_ANY, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+
+	m_toolBar1->Realize();
+
+	bSizer3->Add( m_toolBar1, 0, wxEXPAND, 5 );
 
 
 	m_panel1->SetSizer( bSizer3 );

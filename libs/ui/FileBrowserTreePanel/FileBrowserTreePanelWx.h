@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version 4.2.1-85-gdf26f269)
+// C++ code generated with wxFormBuilder (version 4.2.1-0-g80c4cb6)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO *NOT* EDIT THIS FILE!
@@ -20,6 +20,7 @@
 #include <wx/colour.h>
 #include <wx/settings.h>
 #include <wx/button.h>
+#include <wx/toolbar.h>
 #include <wx/sizer.h>
 #include <wx/panel.h>
 #include <wx/dataview.h>
@@ -38,6 +39,8 @@ class FileBrowserTreePanelWx : public wxPanel
 		wxPanel* m_panel1;
 		wxBitmapButton* m_homeButton;
 		wxBitmapButton* m_closeButton;
+		wxToolBar* m_toolBar1;
+		wxToolBarToolBase* m_tool1;
 		wxDataViewTreeCtrl* m_dataViewTreeCtrl1;
 		wxCheckBox* m_hiddenFilesCheckbox;
 
