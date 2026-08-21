@@ -33,6 +33,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void ListDir(const wxFileName& fileName, ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop);
     /** List the containing directory and select the given file when the scan completes. */
     void ShowFile(const wxFileName& fileName);
+    [[nodiscard]] wxFileName GetCurrentDirectory() const;
     void ReloadCurrentDir();
     bool IsShowingDir(const wxFileName& dir) const;
 

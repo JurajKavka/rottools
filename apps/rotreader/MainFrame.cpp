@@ -50,6 +50,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
 #endif
 
     Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
+    Bind(wxEVT_MENU, &MainFrame::HandleNewFileMenuItemClick, this, wxID_NEW_FILE);
     Bind(wxEVT_CLOSE_WINDOW, &MainFrame::HandleCloseWindow, this);
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
     Bind(wxEVT_MENU, &MainFrame::HandleSaveMenuItemClick, this, wxID_SAVE);
@@ -81,6 +82,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleWordWrapMenuItemClick, this, wxID_WORDWRAP);
     Bind(wxEVT_MENU, &MainFrame::HandleFontMenuItemClick, this, wxID_FONT);
+    Bind(wxEVT_TOOL, &MainFrame::HandleNewFileMenuItemClick, this, m_newFileTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveAsMenuItemClick, this, m_saveAsTool->GetId());
@@ -171,6 +173,17 @@ MainFrame::~MainFrame() {
 // wx keeps the app running until the last top-level window closes
 void MainFrame::HandleNewWindowMenuItemClick(wxCommandEvent& event) {
     (new MainFrame(nullptr))->Show(true);
+}
+
+void MainFrame::HandleNewFileMenuItemClick(wxCommandEvent& event) {
+    if (!m_markdownEditorPanel->NewDocument()) {
+        return;
+    }
+
+    wxWindow* focusedWindow = wxWindow::FindFocus();
+    m_markdownEditorPanel->Show();
+    ApplySourcePanelVisibility(focusedWindow);
+    m_markdownEditorPanel->FocusEditor();
 }
 
 void MainFrame::HandleCloseWindow(wxCloseEvent& event) {
@@ -587,6 +600,10 @@ void MainFrame::RefreshBrowserWatcher() {
 void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change) {
     if (change.filePath.IsOk()) {
         SetTitle(change.filePath.GetFullName() + " - " + kApplicationTitle);
+    } else {
+        SetTitle(_("Untitled") + wxString(" - ") + kApplicationTitle);
+        statusBar->SetStatusText(wxString{});
+        m_replaceEditorStatusOnPreviewReady = false;
     }
 
     if (change.reason == MarkdownEditorPanel::ChangeReason::Opened || change.diskEntryChanged) {
@@ -595,7 +612,8 @@ void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::Documen
         m_fileBrowserPanel->ShowFile(change.filePath);
     }
 
-    const ScrollBehavior scrollBehavior = change.reason == MarkdownEditorPanel::ChangeReason::Opened
+    const bool isNewDocument = change.reason == MarkdownEditorPanel::ChangeReason::NewDocument;
+    const ScrollBehavior scrollBehavior = change.reason == MarkdownEditorPanel::ChangeReason::Opened || isNewDocument
                                               ? ScrollBehavior::ResetToTop
                                               : ScrollBehavior::KeepPosition;
     m_markdownPreviewPanel->LoadMarkdown(change.text, change.filePath, GetPreviewOptions(scrollBehavior));
@@ -651,7 +669,15 @@ std::optional<wxFileName> MainFrame::HandleSelectOpenFile() {
 }
 
 std::optional<wxFileName> MainFrame::HandleSelectSaveFile(const wxFileName& currentFile) {
-    const wxString defaultDirectory = currentFile.IsOk() ? currentFile.GetPath() : wxString{};
+    wxString defaultDirectory;
+    if (currentFile.IsOk()) {
+        defaultDirectory = currentFile.GetPath();
+    } else {
+        const wxFileName browsedDirectory = m_fileBrowserPanel->GetCurrentDirectory();
+        if (browsedDirectory.IsOk()) {
+            defaultDirectory = browsedDirectory.GetFullPath();
+        }
+    }
     const wxString defaultFileName = currentFile.IsOk() ? currentFile.GetFullName() : wxString{};
     wxFileDialog dialog(this, "Save Markdown File", defaultDirectory, defaultFileName, kMarkdownFileWildcard,
                         wxFD_SAVE | wxFD_OVERWRITE_PROMPT);

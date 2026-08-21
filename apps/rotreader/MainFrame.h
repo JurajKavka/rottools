@@ -57,6 +57,7 @@ class MainFrame : public MainFrameWx {
     bool m_findDialogIsReplace = false;
 
     void HandleNewWindowMenuItemClick(wxCommandEvent& event);
+    void HandleNewFileMenuItemClick(wxCommandEvent& event);
     void HandleCloseWindow(wxCloseEvent& event);
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
     void HandleSaveMenuItemClick(wxCommandEvent& event);
