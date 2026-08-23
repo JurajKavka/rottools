@@ -5,6 +5,8 @@
         rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
+        rotfm rotfm-all rotfm-dev rotfm-build rotfm-rebuild \
+        rotfm-run rotfm-run-fg rotfm-package rotfm-icons rotfm-clean \
         run-filetree run-htmlsource run-texteditor run-scintillatexteditor \
         run-dirscan run-md2html run-helpers \
         build-texteditor build-scintillatexteditor \
@@ -91,6 +93,36 @@ rotpad-icons:             ## Generate rotpad's icons after its master SVG exists
 rotpad-clean:             ## Remove only rotpad's isolated build
 	$(MAKE) -C apps/rotpad clean
 
+##@ App — rotfm
+rotfm: rotfm-dev          ## Configure, build, and run rotfm
+
+rotfm-all:                ## Clean, build, and run rotfm
+	$(MAKE) -C apps/rotfm all
+
+rotfm-dev:                ## Incrementally build and run rotfm
+	$(MAKE) -C apps/rotfm dev
+
+rotfm-build:              ## Configure and build only rotfm
+	$(MAKE) -C apps/rotfm build
+
+rotfm-rebuild:            ## Rebuild rotfm without explicitly reconfiguring
+	$(MAKE) -C apps/rotfm rebuild
+
+rotfm-run:                ## Launch rotfm
+	$(MAKE) -C apps/rotfm run
+
+rotfm-run-fg:             ## Run rotfm in the foreground
+	$(MAKE) -C apps/rotfm run-fg
+
+rotfm-package:            ## Build and package only rotfm
+	$(MAKE) -C apps/rotfm package
+
+rotfm-icons:              ## Generate rotfm icons after its master SVG exists
+	$(MAKE) -C apps/rotfm icons
+
+rotfm-clean:              ## Remove only rotfm's isolated build
+	$(MAKE) -C apps/rotfm clean
+
 ##@ Graphics
 # The suite logo has no binary, so it produces only the favicon set and the
 # square PNGs the website uses.
@@ -149,8 +181,8 @@ format:                ## Format all non-generated sources
 # Static analysis. wxFormBuilder-generated *Wx.h/*Wx.cpp are excluded.
 # constParameterCallback is suppressed globally: wxWidgets' Bind() requires event
 # handlers to take a non-const reference.
-# ctuOneDefinitionRuleViolation is suppressed because rotreader and rotpad are
-# separate executables whose frame classes intentionally share the name MainFrame.
+# ctuOneDefinitionRuleViolation is suppressed because the apps are separate
+# executables whose frame classes intentionally share the name MainFrame.
 check:                 ## Run cppcheck static analysis over libs + apps
 	cppcheck --std=c++20 --enable=warning,style,performance,portability \
 		--suppress=missingIncludeSystem \

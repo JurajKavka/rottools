@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=@ROTTOOLS_APP_DISPLAY_NAME@
+Comment=@ROTTOOLS_APP_DESCRIPTION@
+Exec=@ROTTOOLS_APP_EXE_NAME@ %U
+Icon=@ROTTOOLS_APP_EXE_NAME@
+Terminal=false
+Categories=@ROTTOOLS_APP_CATEGORIES@
+MimeType=inode/directory;

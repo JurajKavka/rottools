@@ -4,6 +4,35 @@
 
 This project is written in C++20.
 
+## Architecture — backend code belongs in `libs/backend`
+
+All project-owned non-UI implementation belongs under `libs/backend`, including filesystem
+operations, platform-native filesystem backends, directory scanning and watching, and background
+workers. Do not place backend code in `libs/ui` or an application directory. UI libraries and
+applications may adapt and orchestrate backend APIs, but filesystem behavior and worker mechanics
+must remain in backend library targets.
+
+## File safety — user deletion means system Trash
+
+User-facing delete operations must move entries through the platform's recoverable system Trash
+API. Never fall back to permanent deletion when Trash is unavailable or fails. Permanent native
+removal is allowed only as a private implementation detail when cleaning up an operation-owned
+partial regular file or completing a verified cross-volume move; it must never be exposed as the
+application's Delete command.
+
+## API design — do not mutate input parameters
+
+Project-owned functions must not communicate results by mutating input or output parameters. Do
+not copy standard-library API patterns such as taking a `std::error_code&` and changing it inside
+the function. Treat parameters as inputs: pass them by value or `const` reference as appropriate,
+and return outputs directly. When an operation produces multiple values, return a named result
+struct containing the value, error, and any other outcome data. Use `std::optional` with
+`std::nullopt` when absence is the only additional state; do not use `nullptr` for value types.
+
+Signatures imposed by frameworks or external APIs are the exception (for example, wxWidgets event
+handlers that require a non-const event reference). Keep any required mutation confined to that
+adapter or callback boundary; internal project APIs must still follow the return-value rule.
+
 ## Platform-native UI — discuss exceptions
 
 Prefer platform-native controls, dialogs, appearance, and behavior. It is acceptable—and often

@@ -1,5 +1,8 @@
-# rottools::ui_filetree — file-browser tree; consumes rottools::dirscan.
-add_library(rottools_ui_filetree STATIC FileBrowserTreePanel.cpp FileBrowserTreePanelWx.cpp)
+# rottools::ui_filetree — file-browser tree UI; consumes rottools::dirscan.
+add_library(rottools_ui_filetree STATIC
+    FileBrowserTreePanel.cpp
+    FileBrowserTreePanelWx.cpp
+)
 add_library(rottools::ui_filetree ALIAS rottools_ui_filetree)
 
 target_include_directories(rottools_ui_filetree PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

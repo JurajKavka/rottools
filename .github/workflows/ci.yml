@@ -20,6 +20,7 @@ jobs:
     outputs:
       rotreader: ${{ steps.filter.outputs.rotreader }}
       rotpad: ${{ steps.filter.outputs.rotpad }}
+      rotfm: ${{ steps.filter.outputs.rotfm }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -29,6 +30,7 @@ jobs:
             shared: &shared
               - 'libs/**'
               - 'cmake/**'
+              - 'apps/CMakeLists.txt'
               - 'CMakeLists.txt'
               - 'CMakePresets.json'
               - 'vcpkg.json'
@@ -40,6 +42,9 @@ jobs:
             rotpad:
               - *shared
               - 'apps/rotpad/**'
+            rotfm:
+              - *shared
+              - 'apps/rotfm/**'
 
   rotreader:
     needs: changes
@@ -57,4 +62,13 @@ jobs:
     uses: ./.github/workflows/_build.yml
     with:
       app: rotpad
+      upload-artifacts: true
+
+  rotfm:
+    needs: changes
+    # A manual run always builds; path filtering only gates automatic push runs.
+    if: needs.changes.outputs.rotfm == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/_build.yml
+    with:
+      app: rotfm
       upload-artifacts: true

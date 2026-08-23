@@ -20,7 +20,7 @@ class ScannerDemoApp : public wxApp {
         printLog("[Main Thread] Launching Async Scan of: {}", rootDir.GetFullPath().ToStdString());
 
         // 6. Just call start. The event loop handles the rest.
-        m_directoryScanner.StartScan(rootDir, scanOptions, this);
+        m_scanId = m_directoryScanner.StartScan(rootDir, scanOptions, this);
 
         return true;
     }
@@ -32,7 +32,11 @@ class ScannerDemoApp : public wxApp {
 
    private:
     DirectoryScanner m_directoryScanner;
+    std::uint64_t m_scanId = 0;
     void HandleScanComplete(DirectoryScannerEvent& event) {
+        if (event.scanId != m_scanId) {
+            return;
+        }
         printLog("[Main Thread] Scan Complete Event Received!");
 
         // Extract the custom data from the event payload

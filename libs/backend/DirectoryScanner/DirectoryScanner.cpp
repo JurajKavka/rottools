@@ -20,63 +20,109 @@ static std::string ToLowerCopy(const std::string& text) {
     return lowered;
 }
 
-DirectoryScanner::DirectoryScanner() = default;
+DirectoryScanner::DirectoryScanner() : m_workerThread([this] { WorkerLoop(); }) {}
 
 DirectoryScanner::~DirectoryScanner() {
-    CancelScan();
+    {
+        const std::lock_guard lock(m_mutex);
+        m_stopping = true;
+        if (m_activeCancellation) {
+            *m_activeCancellation = true;
+        }
+        if (m_pendingRequest) {
+            *m_pendingRequest->cancellation = true;
+            m_pendingRequest.reset();
+        }
+    }
+    m_requestAvailable.notify_one();
     if (m_workerThread.joinable()) {
         m_workerThread.join();
     }
 }
 
 void DirectoryScanner::CancelScan() {
-    m_stopRequested = true;
+    const std::lock_guard lock(m_mutex);
+    if (m_activeCancellation) {
+        *m_activeCancellation = true;
+    }
+    if (m_pendingRequest) {
+        *m_pendingRequest->cancellation = true;
+        m_pendingRequest.reset();
+    }
 }
 
 bool DirectoryScanner::IsScanning() const {
-    return m_isScanning;
+    const std::lock_guard lock(m_mutex);
+    return m_activeCancellation != nullptr || m_pendingRequest.has_value();
 }
 
-void DirectoryScanner::StartScan(const wxFileName& fileName, const ScanOptions& options, wxEvtHandler* eventTarget) {
-    CancelScan();
-    if (m_workerThread.joinable()) {
-        m_workerThread.join();
+std::uint64_t DirectoryScanner::StartScan(const wxFileName& fileName, const ScanOptions& options,
+                                          wxEvtHandler* eventTarget) {
+    std::uint64_t scanId = 0;
+    {
+        const std::lock_guard lock(m_mutex);
+        if (m_activeCancellation) {
+            *m_activeCancellation = true;
+        }
+        if (m_pendingRequest) {
+            *m_pendingRequest->cancellation = true;
+        }
+
+        scanId = m_nextScanId++;
+        m_pendingRequest = ScanRequest{
+            .directory = fileName,
+            .options = options,
+            .eventTarget = eventTarget,
+            .scanId = scanId,
+            .cancellation = std::make_shared<std::atomic<bool>>(false),
+        };
     }
-
-    m_stopRequested = false;
-    m_isScanning = true;
-
-    // Capture a raw `this` rather than extending our own lifetime via a shared_ptr.
-    // The scanner is owned by its parent panel; ~DirectoryScanner (running on the
-    // owner's thread) requests stop and joins this thread before we are destroyed,
-    // so the worker can never end up destroying/joining itself.
-    m_workerThread = std::thread([this, fileName, options, eventTarget] {
-        ScanThreadLogic(fileName, options, eventTarget);
-    });
+    m_requestAvailable.notify_one();
+    return scanId;
 }
 
-// The references point into the lambda's by-value captures, which stay alive
-// for the whole run of the worker thread.
-void DirectoryScanner::ScanThreadLogic(const wxFileName& fileName, const ScanOptions& options,
-                                       wxEvtHandler* eventTarget) {
-    std::vector<FileEntry> results;
-
-    // Convert the vector into an unordered_set right inside the thread for efficient O(1) matching
-    std::unordered_set<std::string> extSet;
-    for (const std::string& extension : options.extensions) {
-        extSet.insert(ToLowerCopy(extension));
-    }
-
-    std::filesystem::path rootPath = fileName.GetFullPath().ToStdWstring();
-
-    // The outer try/catch is mandatory: an exception escaping the worker thread
-    // calls std::terminate. It also covers the iterator increment, which a range-for
-    // performs outside the loop body (so outside the inner try/catch).
+void DirectoryScanner::WorkerLoop() noexcept {
     try {
+        for (;;) {
+            std::optional<ScanRequest> request;
+            {
+                std::unique_lock lock(m_mutex);
+                m_requestAvailable.wait(lock, [this] { return m_stopping || m_pendingRequest.has_value(); });
+                if (m_stopping) {
+                    return;
+                }
+                request = std::move(m_pendingRequest);
+                m_pendingRequest.reset();
+                m_activeCancellation = request->cancellation;
+            }
+
+            ScanThreadLogic(*request);
+
+            {
+                const std::lock_guard lock(m_mutex);
+                if (m_activeCancellation == request->cancellation) {
+                    m_activeCancellation.reset();
+                }
+            }
+        }
+    } catch (...) {
+        // No exception may escape a std::thread entry point.
+    }
+}
+
+void DirectoryScanner::ScanThreadLogic(const ScanRequest& request) noexcept {
+    try {
+        std::vector<FileEntry> results;
+        std::unordered_set<std::string> extSet;
+        for (const std::string& extension : request.options.extensions) {
+            extSet.insert(ToLowerCopy(extension));
+        }
+
+        const fs::path rootPath = request.directory.GetFullPath().ToStdWstring();
         if (fs::exists(rootPath) && fs::is_directory(rootPath)) {
             auto dirOptions = fs::directory_options::skip_permission_denied;
             for (const auto& entry : fs::directory_iterator(rootPath, dirOptions)) {
-                if (m_stopRequested) {
+                if (*request.cancellation) {
                     break;
                 }
 
@@ -89,7 +135,7 @@ void DirectoryScanner::ScanThreadLogic(const wxFileName& fileName, const ScanOpt
 
                     std::string filename = entry.path().filename().string();
                     // 🛠️ Check 1: Handle Hidden Files Option
-                    if (!options.showHiddenFiles && filename.starts_with('.')) {
+                    if (!request.options.showHiddenFiles && filename.starts_with('.')) {
                         continue;
                     }
 
@@ -109,22 +155,25 @@ void DirectoryScanner::ScanThreadLogic(const wxFileName& fileName, const ScanOpt
                 }
             }
         }
-    } catch (const std::exception& e) {
-        printError("[Error] Directory scan aborted: {}", e.what());
+
+        if (!*request.cancellation && request.eventTarget != nullptr) {
+            auto* event = new DirectoryScannerEvent(wxEVT_DIRECTORY_SCAN_COMPLETE, wxID_ANY);
+            event->files = std::move(results);
+            event->currentDirectory = request.directory;
+            event->scanId = request.scanId;
+            wxQueueEvent(request.eventTarget, event);
+        }
+    } catch (const std::exception& error) {
+        try {
+            printError("[Error] Directory scan aborted: {}", error.what());
+        } catch (...) {
+        }
+    } catch (...) {
+        try {
+            printError("[Error] Directory scan aborted by an unknown exception");
+        } catch (...) {
+        }
     }
-
-    // 3. Queue the event to the Main Thread if not cancelled
-    if (!m_stopRequested) {
-        // Create the event
-
-        DirectoryScannerEvent* event = new DirectoryScannerEvent(wxEVT_DIRECTORY_SCAN_COMPLETE, wxID_ANY);
-        event->files = std::move(results);
-        event->currentDirectory = fileName;
-
-        wxQueueEvent(eventTarget, event);
-    }
-
-    m_isScanning = false;
 }
 
 std::vector<FileEntry> DirectoryScanner::SortEntries(const std::vector<FileEntry>& entries) {

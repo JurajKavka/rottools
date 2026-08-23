@@ -1,0 +1,40 @@
+# Independent release for the rotfm tool. Triggered by an app-prefixed tag
+# (e.g. rotfm-v0.1.0), independently of the other tools' versions and tags.
+# Builds the three-OS matrix, then publishes a GitHub Release with the installers.
+name: Release rotfm
+
+on:
+  push:
+    tags: ['rotfm-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build.yml
+    with:
+      app: rotfm
+      upload-artifacts: true
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: rotfm-*
+          merge-multiple: true
+
+      - name: Derive version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#rotfm-}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "rotfm-rottools-${{ steps.ver.outputs.version }}"
+          files: dist/*
+          generate_release_notes: true
