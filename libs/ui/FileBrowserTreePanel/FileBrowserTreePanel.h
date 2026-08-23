@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -19,6 +21,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
         DirectoryChangedCallback onDirectoryChanged;
         ActionRequestedCallback onHomeRequested;
         ActionRequestedCallback onCloseRequested;
+        ActionRequestedCallback onFocus;
     };
 
     /**
@@ -40,11 +43,16 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     /** List the containing directory and select the given file when the scan completes. */
     void ShowFile(const wxFileName& fileName);
     [[nodiscard]] wxFileName GetCurrentDirectory() const;
+    /** Returns the selected file or directory; ".." and no selection return no value. */
+    [[nodiscard]] std::optional<wxFileName> GetSelectedPath() const;
     void ReloadCurrentDir();
     bool IsShowingDir(const wxFileName& dir) const;
+    void FocusTree();
+    void SetCloseButtonVisible(bool visible);
 
    private:
     DirectoryScanner m_directoryScanner;
+    std::uint64_t m_currentScanId = 0;
     ScanOptions m_scanOptions;
     wxFileName m_currentPath;
     wxString m_savedSelectionText;
@@ -58,6 +66,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     DirectoryChangedCallback m_onDirectoryChanged;
     ActionRequestedCallback m_onHomeRequested;
     ActionRequestedCallback m_onCloseRequested;
+    ActionRequestedCallback m_onFocus;
 
     void UpdateTree(const std::vector<FileEntry>& entries);
     /// Finds the top-level row with the given text; invalid item if none match
@@ -67,4 +76,5 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void HandleItemActivated(wxDataViewEvent& event);
     void HandleHomeButtonClick(wxCommandEvent& event);
     void HandleCloseButtonClick(wxCommandEvent& event);
+    void HandleTreeFocus(wxFocusEvent& event);
 };

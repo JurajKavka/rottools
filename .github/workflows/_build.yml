@@ -112,6 +112,7 @@ jobs:
           cmake --preset ${{ matrix.preset }} \
             -DROTTOOLS_BUILD_ROTREADER=OFF \
             -DROTTOOLS_BUILD_ROTPAD=OFF \
+            -DROTTOOLS_BUILD_ROTFM=OFF \
             "-DROTTOOLS_BUILD_${APP_UPPER}=ON"
 
       - name: Build

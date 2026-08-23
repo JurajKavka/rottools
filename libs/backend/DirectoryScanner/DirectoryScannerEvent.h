@@ -22,6 +22,7 @@ class DirectoryScannerEvent : public wxEvent {
     wxString error;
     wxFileName currentDirectory;
     std::vector<FileEntry> files;
+    std::uint64_t scanId = 0;
 
     // Required for wxWidgets event system
     wxEvent* Clone() const override {

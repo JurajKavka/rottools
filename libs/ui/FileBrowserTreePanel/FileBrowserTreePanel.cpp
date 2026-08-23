@@ -10,12 +10,14 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
       m_onFileOpened(std::move(callbacks.onFileOpened)),
       m_onDirectoryChanged(std::move(callbacks.onDirectoryChanged)),
       m_onHomeRequested(std::move(callbacks.onHomeRequested)),
-      m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
+      m_onCloseRequested(std::move(callbacks.onCloseRequested)),
+      m_onFocus(std::move(callbacks.onFocus)) {
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
     m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
     m_homeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleHomeButtonClick, this);
     m_closeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleCloseButtonClick, this);
+    m_dataViewTreeCtrl1->Bind(wxEVT_SET_FOCUS, &FileBrowserTreePanel::HandleTreeFocus, this);
 
     m_scanOptions.extensions = std::move(extensions);
     m_scanOptions.showHiddenFiles = m_hiddenFilesCheckbox->IsChecked();
@@ -116,7 +118,7 @@ void FileBrowserTreePanel::ListDir(const wxFileName& fileName, ScrollBehavior sc
     // It is probably not needed when working with `wxFileName` API ...
     m_currentPath = wxFileName::DirName(fileName.GetFullPath());
 
-    m_directoryScanner.StartScan(fileName, m_scanOptions, this);
+    m_currentScanId = m_directoryScanner.StartScan(fileName, m_scanOptions, this);
 }
 
 /**
@@ -133,14 +135,43 @@ void FileBrowserTreePanel::ShowFile(const wxFileName& fileName) {
     m_savedSelectionText = absoluteFile.GetFullName();
     m_savedTopItemText.clear();
     m_currentPath = wxFileName::DirName(absoluteFile.GetPath());
-    m_directoryScanner.StartScan(m_currentPath, m_scanOptions, this);
+    m_currentScanId = m_directoryScanner.StartScan(m_currentPath, m_scanOptions, this);
 }
 
 wxFileName FileBrowserTreePanel::GetCurrentDirectory() const {
     return m_currentPath;
 }
 
+std::optional<wxFileName> FileBrowserTreePanel::GetSelectedPath() const {
+    const wxDataViewItem selection = m_dataViewTreeCtrl1->GetSelection();
+    if (!selection.IsOk()) {
+        return std::nullopt;
+    }
+
+    const wxString itemText = m_dataViewTreeCtrl1->GetItemText(selection);
+    if (itemText == "..") {
+        return std::nullopt;
+    }
+
+    wxFileName directoryPath = m_currentPath;
+    directoryPath.AppendDir(itemText);
+    if (directoryPath.DirExists()) {
+        return directoryPath;
+    }
+
+    wxFileName filePath = m_currentPath;
+    filePath.SetFullName(itemText);
+    if (filePath.FileExists()) {
+        return filePath;
+    }
+
+    return std::nullopt;
+}
+
 void FileBrowserTreePanel::HandleDirectoryScanComplete(DirectoryScannerEvent& event) {
+    if (event.scanId != m_currentScanId) {
+        return;
+    }
     UpdateTree(event.files);
     if (m_onDirectoryChanged) {
         m_onDirectoryChanged(event.currentDirectory);
@@ -212,6 +243,13 @@ void FileBrowserTreePanel::HandleCloseButtonClick(wxCommandEvent& event) {
     }
 }
 
+void FileBrowserTreePanel::HandleTreeFocus(wxFocusEvent& event) {
+    if (m_onFocus) {
+        m_onFocus();
+    }
+    event.Skip();
+}
+
 bool FileBrowserTreePanel::IsShowingDir(const wxFileName& dir) const {
     return m_currentPath.IsOk() && m_currentPath.SameAs(wxFileName::DirName(dir.GetFullPath()));
 }
@@ -222,4 +260,14 @@ void FileBrowserTreePanel::ReloadCurrentDir() {
         // so the view must not jump to the top.
         ListDir(m_currentPath, ScrollBehavior::KeepPosition);
     }
+}
+
+void FileBrowserTreePanel::FocusTree() {
+    m_dataViewTreeCtrl1->SetFocus();
+}
+
+void FileBrowserTreePanel::SetCloseButtonVisible(bool visible) {
+    m_closeButton->Show(visible);
+    m_panel1->Layout();
+    Layout();
 }

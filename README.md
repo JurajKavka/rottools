@@ -10,6 +10,7 @@ and its own macOS / Linux / Windows builds, and is released independently.
 |--------------|-------------------------------------------------------------------|
 | **rotreader** | A native Markdown reader/editor (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ROT reader**. |
 | **rotpad**    | A small native plain-text editor inspired by classic Notepad. UI name: **ROT pad**. |
+| **rotfm**     | A native dual-pane file manager inspired by Total Commander. UI name: **ROT File Manager**. |
 
 ## Known bugs
 
@@ -44,6 +45,7 @@ rottools/
   libs/                  # SHARED, reusable libraries (rottools::* targets)
     HelperFunctions/         rottools::helpers
     backend/
+      FileOperations/        rottools::fileops
       MarkdownToHtmlAsync/   rottools::md2html
       DirectoryScanner/      rottools::dirscan
     ui/
@@ -57,6 +59,7 @@ rottools/
   apps/
     rotreader/           # Markdown reader: sources, VERSION, packaging inputs
     rotpad/              # plain-text editor: sources, VERSION, packaging inputs
+    rotfm/               # dual-pane file manager
       Makefile           # app-specific build/run/package workflow
       assets/            # generated icons eventually live under assets/icons/
   docs/graphics/         # icon masters (Inkscape) + README.md: how to change an icon
@@ -76,6 +79,8 @@ app-prefixed targets use an isolated build directory and operate on one app:
 | `make rotpad-dev`       | Configure, build, and run only rotpad     |
 | `make rotpad-build`     | Configure and build only rotpad           |
 | `make rotpad-package`   | Build and package only rotpad             |
+| `make rotfm-dev`        | Configure, build, and run only rotfm      |
+| `make rotfm-package`    | Build and package only rotfm              |
 
 Each app also has the same shorter workflow from its own directory, for example
 `make -C apps/rotpad dev`, `make -C apps/rotpad build`, or

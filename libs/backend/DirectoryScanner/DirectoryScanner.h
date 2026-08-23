@@ -3,6 +3,11 @@
 #include <wx/wx.h>
 
 #include <atomic>
+#include <condition_variable>
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -20,16 +25,29 @@ class DirectoryScanner {
    public:
     DirectoryScanner();
     ~DirectoryScanner();
-    void StartScan(const wxFileName& fileName, const ScanOptions& options, wxEvtHandler* eventTarget);
+    [[nodiscard]] std::uint64_t StartScan(const wxFileName& fileName, const ScanOptions& options,
+                                          wxEvtHandler* eventTarget);
     void CancelScan();
     bool IsScanning() const;
     static std::vector<FileEntry> SortEntries(const std::vector<FileEntry>& entries);
 
    private:
-    // Plain std::thread + atomic flag instead of std::jthread/std::stop_token:
-    // Apple's libc++ only ships jthread from Xcode 26.4, too new to require.
+    struct ScanRequest {
+        wxFileName directory;
+        ScanOptions options;
+        wxEvtHandler* eventTarget = nullptr;
+        std::uint64_t scanId = 0;
+        std::shared_ptr<std::atomic<bool>> cancellation;
+    };
+
+    mutable std::mutex m_mutex;
+    std::condition_variable m_requestAvailable;
+    bool m_stopping = false;
+    std::optional<ScanRequest> m_pendingRequest;
+    std::shared_ptr<std::atomic<bool>> m_activeCancellation;
+    std::uint64_t m_nextScanId = 1;
     std::thread m_workerThread;
-    std::atomic<bool> m_stopRequested{false};
-    std::atomic<bool> m_isScanning{false};
-    void ScanThreadLogic(const wxFileName& fileName, const ScanOptions& options, wxEvtHandler* eventTarget);
+
+    void WorkerLoop() noexcept;
+    static void ScanThreadLogic(const ScanRequest& request) noexcept;
 };
