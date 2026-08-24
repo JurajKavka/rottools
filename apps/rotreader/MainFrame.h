@@ -15,6 +15,7 @@
 #include "MarkdownPreviewPanel.h"
 
 // Forward declarations
+class BookmarkStore;
 class HtmlSourcePanel;
 
 class MainFrame : public MainFrameWx {
@@ -29,6 +30,8 @@ class MainFrame : public MainFrameWx {
     HtmlSourcePanel* m_htmlSourcePanel = nullptr;
     MarkdownEditorPanel* m_markdownEditorPanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
+    std::unique_ptr<BookmarkStore> m_bookmarkStore;
+    wxFileName m_currentDocument;
     wxSplitterWindow* m_mainSplitter = nullptr;
     int m_fileBrowserWidth = 100;
     // Right of the always-visible preview it holds the source-views area
@@ -90,12 +93,17 @@ class MainFrame : public MainFrameWx {
     void HandleFontMenuItemClick(wxCommandEvent& event);
     void HandleHtmlSourcePanelClose();
     void HideFileBrowser();
+    void ShowFileBrowser();
     void ApplySourcePanelVisibility(wxWindow* focusedWindowBeforeChange = nullptr);
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);
     MarkdownPreviewOptions GetPreviewOptions(ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop) const;
     void HandleFileBrowserHomeRequested();
     void HandleFileBrowserCloseRequested();
+    [[nodiscard]] wxFileName HandleGetBookmarkDirectory() const;
+    [[nodiscard]] wxFileName HandleGetBookmarkDocument() const;
+    void HandleOpenBookmarkedDirectory(const wxFileName& directory);
+    void HandleOpenBookmarkedDocument(const wxFileName& document);
     void HandleDirectoryChanged(const wxFileName& filePath);
     void HandleBrowserWatcherChange();
     void RefreshBrowserWatcher();

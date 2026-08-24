@@ -16,6 +16,7 @@
 #include "AppConfigFunctions.h"
 #include "AppIcon.h"
 #include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
+#include "BookmarkStore.h"
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
@@ -157,6 +158,16 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     wxFileName initialDirectory;
     initialDirectory.AssignHomeDir();
     m_fileBrowserPanel->ListDir(initialDirectory);
+
+    m_bookmarkStore = std::make_unique<BookmarkStore>(
+        this, m_bookmarksMenu, m_bookmarksMenu->FindItem(wxID_BOOKMARK_CURRENT_DIRECTORY),
+        m_bookmarksMenu->FindItem(wxID_BOOKMARK_CURRENT_DOCUMENT),
+        BookmarkStore::Callbacks{
+            .currentDirectory = std::bind_front(&MainFrame::HandleGetBookmarkDirectory, this),
+            .currentDocument = std::bind_front(&MainFrame::HandleGetBookmarkDocument, this),
+            .openDirectory = std::bind_front(&MainFrame::HandleOpenBookmarkedDirectory, this),
+            .openDocument = std::bind_front(&MainFrame::HandleOpenBookmarkedDocument, this),
+        });
 
     // The browser watcher is created lazily by RefreshBrowserWatcher, which
     // runs once the initial ListDir scan completes (via HandleDirectoryChanged).
@@ -405,10 +416,8 @@ void MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& even
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
     if (!event.IsChecked()) {
         HideFileBrowser();
-    } else if (!m_mainSplitter->IsSplit()) {
-        // The right pane is the nested preview/source splitter, not the web
-        // view itself, which is no longer a direct child of m_mainSplitter.
-        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, m_fileBrowserWidth);
+    } else {
+        ShowFileBrowser();
     }
 }
 
@@ -429,6 +438,15 @@ void MainFrame::HideFileBrowser() {
     m_mainSplitter->Unsplit(m_fileBrowserPanel);
     if (browserHadFocus) {
         m_markdownPreviewPanel->FocusContent();
+    }
+}
+
+void MainFrame::ShowFileBrowser() {
+    m_viewMenu->Check(wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, true);
+    if (!m_mainSplitter->IsSplit()) {
+        // The right pane is the nested preview/source splitter, not the web
+        // view itself, which is no longer a direct child of m_mainSplitter.
+        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, m_fileBrowserWidth);
     }
 }
 
@@ -594,9 +612,35 @@ void MainFrame::HandleFileBrowserCloseRequested() {
     HideFileBrowser();
 }
 
+wxFileName MainFrame::HandleGetBookmarkDirectory() const {
+    return m_fileBrowserPanel->GetCurrentDirectory();
+}
+
+wxFileName MainFrame::HandleGetBookmarkDocument() const {
+    return m_currentDocument;
+}
+
+void MainFrame::HandleOpenBookmarkedDirectory(const wxFileName& directory) {
+    ShowFileBrowser();
+    if (!m_fileBrowserPanel->IsShowingDir(directory)) {
+        m_fileBrowserPanel->ListDir(directory);
+    }
+}
+
+void MainFrame::HandleOpenBookmarkedDocument(const wxFileName& document) {
+    if (m_currentDocument.IsOk() && m_currentDocument.SameAs(document)) {
+        m_markdownPreviewPanel->FocusContent();
+        return;
+    }
+    HandleOpenMarkdownFile(document);
+}
+
 void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
     m_browsedDirectory = wxFileName::DirName(filePath.GetFullPath());
     RefreshBrowserWatcher();
+    if (m_bookmarkStore) {
+        m_bookmarkStore->RefreshCurrentPaths();
+    }
 }
 
 void MainFrame::HandleBrowserWatcherChange() {
@@ -612,6 +656,8 @@ void MainFrame::RefreshBrowserWatcher() {
 }
 
 void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change) {
+    m_currentDocument = change.filePath;
+
     if (change.filePath.IsOk()) {
         SetTitle(change.filePath.GetFullName() + " - " + kApplicationTitle);
     } else {
@@ -624,6 +670,10 @@ void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::Documen
         // Explicit navigation and Save As follow/select the active file. Live
         // reloads deliberately leave the user's browsed directory alone.
         m_fileBrowserPanel->ShowFile(change.filePath);
+    }
+
+    if (m_bookmarkStore) {
+        m_bookmarkStore->RefreshCurrentPaths();
     }
 
     const bool isNewDocument = change.reason == MarkdownEditorPanel::ChangeReason::NewDocument;

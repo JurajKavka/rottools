@@ -9,6 +9,7 @@ add_executable(rotreader
 
 target_compile_features(rotreader PRIVATE cxx_std_20)
 target_link_libraries(rotreader PRIVATE
+    rottools::ui_bookmarks
     rottools::ui_webview
     rottools::ui_markdownpreview
     rottools::ui_htmlsource

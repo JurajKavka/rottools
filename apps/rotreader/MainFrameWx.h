@@ -44,6 +44,8 @@ class MainFrameWx : public wxFrame
 			wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM,
 			wxID_WORDWRAP,
 			wxID_FONT,
+			wxID_BOOKMARK_CURRENT_DIRECTORY,
+			wxID_BOOKMARK_CURRENT_DOCUMENT,
 		};
 
 		wxMenuBar* MenuBar;
@@ -52,6 +54,7 @@ class MainFrameWx : public wxFrame
 		wxMenu* m_viewMenu;
 		wxMenu* m_themeSubmenu;
 		wxMenu* m_settingsMenu;
+		wxMenu* m_bookmarksMenu;
 		wxToolBar* toolBar;
 		wxToolBarToolBase* m_fileOpenTool;
 		wxToolBarToolBase* m_newFileTool;
