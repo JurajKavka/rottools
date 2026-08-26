@@ -6,7 +6,9 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
+#include "BookmarkStore.h"
 #include "CssThemes.h"
 #include "FileBrowserTreePanel.h"
 #include "FsWatcher.h"
@@ -15,7 +17,6 @@
 #include "MarkdownPreviewPanel.h"
 
 // Forward declarations
-class BookmarkStore;
 class HtmlSourcePanel;
 
 class MainFrame : public MainFrameWx {
@@ -31,6 +32,9 @@ class MainFrame : public MainFrameWx {
     MarkdownEditorPanel* m_markdownEditorPanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
     std::unique_ptr<BookmarkStore> m_bookmarkStore;
+    std::vector<BookmarkStore::Bookmark> m_visibleBookmarks;
+    std::vector<wxMenuItem*> m_dynamicBookmarkMenuItems;
+    wxWindowID m_bookmarkMenuBaseId = wxID_ANY;
     wxFileName m_currentDocument;
     wxSplitterWindow* m_mainSplitter = nullptr;
     int m_fileBrowserWidth = 100;
@@ -97,11 +101,16 @@ class MainFrame : public MainFrameWx {
     void ApplySourcePanelVisibility(wxWindow* focusedWindowBeforeChange = nullptr);
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);
+    void HandleBookmarksMenuOpen(wxMenuEvent& event);
+    void HandleAddOrRemoveDirectoryBookmark(wxCommandEvent& event);
+    void HandleAddOrRemoveDocumentBookmark(wxCommandEvent& event);
+    void HandleOpenBookmark(wxCommandEvent& event);
+    void HandleBookmarksChanged(const std::vector<BookmarkStore::Bookmark>& bookmarks);
+    void RebuildBookmarksMenu(const std::vector<BookmarkStore::Bookmark>& bookmarks);
+    void UpdateBookmarkCommands();
     MarkdownPreviewOptions GetPreviewOptions(ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop) const;
     void HandleFileBrowserHomeRequested();
     void HandleFileBrowserCloseRequested();
-    [[nodiscard]] wxFileName HandleGetBookmarkDirectory() const;
-    [[nodiscard]] wxFileName HandleGetBookmarkDocument() const;
     void HandleOpenBookmarkedDirectory(const wxFileName& directory);
     void HandleOpenBookmarkedDocument(const wxFileName& document);
     void HandleDirectoryChanged(const wxFileName& filePath);
