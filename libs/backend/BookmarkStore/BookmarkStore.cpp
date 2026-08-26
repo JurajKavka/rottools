@@ -62,16 +62,11 @@ void BookmarkStore::AddOrRemoveBookmark(Kind kind, const wxFileName& path) {
         return bookmark.kind == kind && SamePath(bookmark.path, normalized);
     });
 
-    bool changed = false;
     if (existing != m_bookmarks.end()) {
         m_bookmarks.erase(existing);
-        changed = true;
+        Save();
     } else if (!IsFull() && (kind == Kind::Directory ? normalized.DirExists() : normalized.FileExists())) {
         m_bookmarks.push_back({.kind = kind, .path = normalized});
-        changed = true;
-    }
-
-    if (changed) {
         Save();
     }
     NotifyBookmarksChanged();
