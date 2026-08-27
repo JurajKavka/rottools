@@ -28,6 +28,15 @@ std::string trimToStdString(const wxString& str) {
     return copy.Trim(true).Trim(false).ToStdString();
 }
 
+wxString GetLastDirectoryName(const wxFileName& directory) {
+    const wxArrayString& directories = directory.GetDirs();
+    return directories.IsEmpty() ? directory.GetFullPath() : directories.Last();
+}
+
+bool IsSameFilePath(const wxFileName& left, const wxFileName& right) {
+    return left.IsOk() && right.IsOk() && left.SameAs(right);
+}
+
 void printCppVersion() {
     switch (__cplusplus) {
         case 202302L:

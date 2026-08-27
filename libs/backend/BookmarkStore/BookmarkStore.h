@@ -1,5 +1,7 @@
 #pragma once
 
+#include <wx/string.h>
+
 #include <cstddef>
 #include <functional>
 #include <vector>
@@ -26,6 +28,12 @@ class BookmarkStore final {
     /** Reload persisted bookmarks and publish the refreshed state. */
     void Refresh();
 
+    /**
+     * Create the shortest automatic label that distinguishes a bookmark from
+     * the other stored bookmarks of the same kind.
+     */
+    [[nodiscard]] wxString MakeBookmarkLabel(const Bookmark& bookmark) const;
+
     void AddOrRemoveBookmark(Kind kind, const wxFileName& path);
     void RemoveBookmark(const Bookmark& bookmark);
 
@@ -35,6 +43,9 @@ class BookmarkStore final {
    private:
     std::vector<Bookmark> m_bookmarks;
     BookmarksChangedCallback m_onBookmarksChanged;
+
+    [[nodiscard]] static wxString BookmarkBaseLabel(const Bookmark& bookmark);
+    [[nodiscard]] static wxString BookmarkParentLabel(const Bookmark& bookmark);
 
     void Load();
     void Save() const;

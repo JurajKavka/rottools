@@ -29,48 +29,6 @@ constexpr auto kApplicationTitle = "ROT Reader";
 constexpr std::size_t kMaximumSearchSeedLength = 150;
 constexpr int kFindDialogMarginDip = 12;
 
-bool SameBookmarkPath(const wxFileName& left, const wxFileName& right) {
-    return left.IsOk() && right.IsOk() && left.SameAs(right);
-}
-
-wxString DirectoryLeaf(const wxFileName& directory) {
-    const wxArrayString& directories = directory.GetDirs();
-    return directories.IsEmpty() ? directory.GetFullPath() : directories.Last();
-}
-
-wxString BookmarkBaseLabel(const BookmarkStore::Bookmark& bookmark) {
-    return bookmark.kind == BookmarkStore::Kind::Directory ? DirectoryLeaf(bookmark.path) : bookmark.path.GetFullName();
-}
-
-wxString BookmarkParentLabel(const BookmarkStore::Bookmark& bookmark) {
-    wxFileName parent = bookmark.kind == BookmarkStore::Kind::Directory
-                            ? wxFileName::DirName(bookmark.path.GetFullPath())
-                            : wxFileName::DirName(bookmark.path.GetPath());
-    if (bookmark.kind == BookmarkStore::Kind::Directory) {
-        parent.RemoveLastDir();
-    }
-    return DirectoryLeaf(parent);
-}
-
-wxString MakeBookmarkLabel(const BookmarkStore::Bookmark& bookmark,
-                           const std::vector<BookmarkStore::Bookmark>& bookmarks) {
-    const wxString base = BookmarkBaseLabel(bookmark);
-    const auto hasSameBase = [&](const BookmarkStore::Bookmark& candidate) {
-        return candidate.kind == bookmark.kind && !SameBookmarkPath(candidate.path, bookmark.path) &&
-               BookmarkBaseLabel(candidate) == base;
-    };
-    if (!std::ranges::any_of(bookmarks, hasSameBase)) {
-        return base;
-    }
-
-    const wxString withParent = base + " — " + BookmarkParentLabel(bookmark);
-    const auto hasSameParentLabel = [&](const BookmarkStore::Bookmark& candidate) {
-        return hasSameBase(candidate) &&
-               BookmarkBaseLabel(candidate) + " — " + BookmarkParentLabel(candidate) == withParent;
-    };
-    return std::ranges::any_of(bookmarks, hasSameParentLabel) ? bookmark.path.GetFullPath() : withParent;
-}
-
 TextSearchOptions GetTextSearchOptions(const wxFindDialogEvent& event) {
     const int flags = event.GetFlags();
     return {
@@ -728,8 +686,8 @@ void MainFrame::RebuildBookmarksMenu(const std::vector<BookmarkStore::Bookmark>&
             }
 
             const int id = m_bookmarkMenuBaseId + static_cast<int>(m_visibleBookmarks.size());
-            wxMenuItem* item =
-                m_bookmarksMenu->Append(id, MakeBookmarkLabel(bookmark, bookmarks), bookmark.path.GetFullPath());
+            wxMenuItem* item = m_bookmarksMenu->Append(id, m_bookmarkStore->MakeBookmarkLabel(bookmark),
+                                                       bookmark.path.GetFullPath());
             const wxArtID artId = kind == BookmarkStore::Kind::Directory ? wxART_FOLDER : wxART_NORMAL_FILE;
             item->SetBitmap(wxArtProvider::GetBitmap(artId, wxART_MENU));
             m_dynamicBookmarkMenuItems.push_back(item);

@@ -3,15 +3,13 @@
 #include <algorithm>
 #include <utility>
 
+#include "HelperFunctions.h"
+
 namespace {
 wxFileName NormalizePath(BookmarkStore::Kind kind, const wxFileName& path) {
     wxFileName normalized = kind == BookmarkStore::Kind::Directory ? wxFileName::DirName(path.GetFullPath()) : path;
     normalized.Normalize(wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE);
     return normalized;
-}
-
-bool SamePath(const wxFileName& left, const wxFileName& right) {
-    return left.IsOk() && right.IsOk() && left.SameAs(right);
 }
 }  // namespace
 
@@ -25,6 +23,37 @@ void BookmarkStore::Initialize() {
 void BookmarkStore::Refresh() {
     Load();
     NotifyBookmarksChanged();
+}
+
+wxString BookmarkStore::BookmarkBaseLabel(const Bookmark& bookmark) {
+    return bookmark.kind == Kind::Directory ? GetLastDirectoryName(bookmark.path) : bookmark.path.GetFullName();
+}
+
+wxString BookmarkStore::BookmarkParentLabel(const Bookmark& bookmark) {
+    wxFileName parent = bookmark.kind == Kind::Directory ? wxFileName::DirName(bookmark.path.GetFullPath())
+                                                         : wxFileName::DirName(bookmark.path.GetPath());
+    if (bookmark.kind == Kind::Directory) {
+        parent.RemoveLastDir();
+    }
+    return GetLastDirectoryName(parent);
+}
+
+wxString BookmarkStore::MakeBookmarkLabel(const Bookmark& bookmark) const {
+    const wxString base = BookmarkBaseLabel(bookmark);
+    const auto hasSameBase = [&](const Bookmark& candidate) {
+        return candidate.kind == bookmark.kind && !IsSameFilePath(candidate.path, bookmark.path) &&
+               BookmarkBaseLabel(candidate) == base;
+    };
+    if (!std::ranges::any_of(m_bookmarks, hasSameBase)) {
+        return base;
+    }
+
+    const wxString withParent = base + " — " + BookmarkParentLabel(bookmark);
+    const auto hasSameParentLabel = [&](const Bookmark& candidate) {
+        return hasSameBase(candidate) &&
+               BookmarkBaseLabel(candidate) + " — " + BookmarkParentLabel(candidate) == withParent;
+    };
+    return std::ranges::any_of(m_bookmarks, hasSameParentLabel) ? bookmark.path.GetFullPath() : withParent;
 }
 
 void BookmarkStore::Load() {
@@ -59,7 +88,7 @@ void BookmarkStore::AddOrRemoveBookmark(Kind kind, const wxFileName& path) {
     Load();
     const wxFileName normalized = NormalizePath(kind, path);
     const auto existing = std::ranges::find_if(m_bookmarks, [&](const Bookmark& bookmark) {
-        return bookmark.kind == kind && SamePath(bookmark.path, normalized);
+        return bookmark.kind == kind && IsSameFilePath(bookmark.path, normalized);
     });
 
     if (existing != m_bookmarks.end()) {
@@ -76,7 +105,7 @@ void BookmarkStore::RemoveBookmark(const Bookmark& bookmark) {
     Load();
     const wxFileName normalized = NormalizePath(bookmark.kind, bookmark.path);
     const auto existing = std::ranges::find_if(m_bookmarks, [&](const Bookmark& candidate) {
-        return candidate.kind == bookmark.kind && SamePath(candidate.path, normalized);
+        return candidate.kind == bookmark.kind && IsSameFilePath(candidate.path, normalized);
     });
     if (existing != m_bookmarks.end()) {
         m_bookmarks.erase(existing);
@@ -92,7 +121,7 @@ bool BookmarkStore::Contains(Kind kind, const wxFileName& path) const {
 
     const wxFileName normalized = NormalizePath(kind, path);
     return std::ranges::any_of(m_bookmarks, [&](const Bookmark& bookmark) {
-        return bookmark.kind == kind && SamePath(bookmark.path, normalized);
+        return bookmark.kind == kind && IsSameFilePath(bookmark.path, normalized);
     });
 }
 
