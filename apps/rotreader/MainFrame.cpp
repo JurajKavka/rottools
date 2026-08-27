@@ -729,6 +729,8 @@ void MainFrame::UpdateBookmarkCommands() {
         if (kind == BookmarkStore::Kind::Directory) {
             command->SetItemLabel(bookmarked ? _("Remove Current Directory Bookmark\tCtrl+Shift+D")
                                              : _("Bookmark Current Directory\tCtrl+Shift+D"));
+            command->SetBitmap(
+                wxArtProvider::GetBitmap(bookmarked ? wxART_MINUS : wxART_PLUS, wxART_MENU));
         } else {
             command->SetItemLabel(bookmarked ? _("Remove Current Document Bookmark\tCtrl+D")
                                              : _("Bookmark Current Document\tCtrl+D"));
