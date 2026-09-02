@@ -82,7 +82,7 @@
         <property name="window_extra_style"></property>
         <property name="window_name"></property>
         <property name="window_style"></property>
-        <object class="wxMenu" expanded="true">
+        <object class="wxMenu" expanded="false">
           <property name="label">File</property>
           <property name="name">m_fileMenu</property>
           <property name="permission">protected</property>
@@ -99,7 +99,7 @@
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
           </object>
-          <object class="wxMenuItem" expanded="true">
+          <object class="wxMenuItem" expanded="false">
             <property name="bitmap"></property>
             <property name="checked">0</property>
             <property name="enabled">1</property>
@@ -116,7 +116,7 @@
             <property name="name">m_separator1</property>
             <property name="permission">none</property>
           </object>
-          <object class="wxMenuItem" expanded="true">
+          <object class="wxMenuItem" expanded="false">
             <property name="bitmap"></property>
             <property name="checked">0</property>
             <property name="enabled">1</property>
@@ -156,7 +156,7 @@
             <property name="unchecked_bitmap"></property>
           </object>
         </object>
-        <object class="wxMenu" expanded="true">
+        <object class="wxMenu" expanded="false">
           <property name="label">Edit</property>
           <property name="name">m_editMenu</property>
           <property name="permission">protected</property>
@@ -229,7 +229,7 @@
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
           </object>
-          <object class="wxMenuItem" expanded="true">
+          <object class="wxMenuItem" expanded="false">
             <property name="bitmap"></property>
             <property name="checked">0</property>
             <property name="enabled">1</property>
@@ -242,7 +242,7 @@
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
           </object>
-          <object class="wxMenuItem" expanded="true">
+          <object class="wxMenuItem" expanded="false">
             <property name="bitmap"></property>
             <property name="checked">0</property>
             <property name="enabled">1</property>
@@ -260,7 +260,7 @@
           <property name="label">View</property>
           <property name="name">m_viewMenu</property>
           <property name="permission">protected</property>
-          <object class="wxMenuItem" expanded="true">
+          <object class="wxMenuItem" expanded="false">
             <property name="bitmap"></property>
             <property name="checked">0</property>
             <property name="enabled">1</property>
@@ -325,7 +325,7 @@
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
           </object>
-          <object class="submenu" expanded="true">
+          <object class="submenu" expanded="false">
             <property name="bitmap"></property>
             <property name="label">Theme</property>
             <property name="name">m_themeSubmenu</property>
@@ -349,6 +349,11 @@
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
           </object>
+        </object>
+        <object class="wxMenu" expanded="true">
+          <property name="label">Bookmarks</property>
+          <property name="name">m_bookmarksMenu</property>
+          <property name="permission">protected</property>
         </object>
       </object>
       <object class="wxBoxSizer" expanded="false">

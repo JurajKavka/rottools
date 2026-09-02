@@ -108,6 +108,9 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 
 	MenuBar->Append( m_settingsMenu, _("Settings") );
 
+	m_bookmarksMenu = new wxMenu();
+	MenuBar->Append( m_bookmarksMenu, _("Bookmarks") );
+
 	this->SetMenuBar( MenuBar );
 
 	wxBoxSizer* MainFrameSizer;

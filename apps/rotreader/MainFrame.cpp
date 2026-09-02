@@ -1,5 +1,6 @@
 #include "MainFrame.h"
 
+#include <wx/artprov.h>
 #include <wx/dnd.h>  // Required for wxFileDropTarget
 #include <wx/filedlg.h>
 #include <wx/fontdlg.h>
@@ -8,6 +9,7 @@
 #include <wx/stockitem.h>
 #include <wx/utils.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <string>
@@ -16,6 +18,7 @@
 #include "AppConfigFunctions.h"
 #include "AppIcon.h"
 #include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
+#include "BookmarkStore.h"
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
@@ -48,6 +51,12 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     // where SetIcons does nothing. Windows and X11 need it set explicitly.
     SetIcons(rottools::MakeIconBundle(kAppIconPngs, kAppIconPngCount));
 #endif
+
+    m_bookmarkCurrentDirectoryMenuItem =
+        m_bookmarksMenu->Append(wxWindow::NewControlId(), _("Bookmark Current Directory\tCtrl+Shift+D"));
+    m_bookmarkCurrentDocumentMenuItem =
+        m_bookmarksMenu->Append(wxWindow::NewControlId(), _("Bookmark Current Document\tCtrl+D"));
+    m_bookmarkMenuBaseId = wxWindow::NewControlId(static_cast<int>(BookmarkStore::MaximumBookmarks));
 
     Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleNewFileMenuItemClick, this, wxID_NEW_FILE);
@@ -86,6 +95,13 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveAsMenuItemClick, this, m_saveAsTool->GetId());
+    Bind(wxEVT_MENU_OPEN, &MainFrame::HandleBookmarksMenuOpen, this);
+    Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDirectoryBookmark, this,
+         m_bookmarkCurrentDirectoryMenuItem->GetId());
+    Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDocumentBookmark, this,
+         m_bookmarkCurrentDocumentMenuItem->GetId());
+    Bind(wxEVT_MENU, &MainFrame::HandleOpenBookmark, this, m_bookmarkMenuBaseId,
+         m_bookmarkMenuBaseId + static_cast<int>(BookmarkStore::MaximumBookmarks) - 1);
 
     // Let the active wxWidgets port supply its standard labels and accelerators.
     const long stockLabelFlags = wxSTOCK_WITH_MNEMONIC | wxSTOCK_WITH_ACCELERATOR;
@@ -157,6 +173,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     wxFileName initialDirectory;
     initialDirectory.AssignHomeDir();
     m_fileBrowserPanel->ListDir(initialDirectory);
+
+    m_bookmarkStore = std::make_unique<BookmarkStore>(std::bind_front(&MainFrame::HandleBookmarksChanged, this));
+    m_bookmarkStore->Initialize();
 
     // The browser watcher is created lazily by RefreshBrowserWatcher, which
     // runs once the initial ListDir scan completes (via HandleDirectoryChanged).
@@ -405,10 +424,8 @@ void MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& even
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
     if (!event.IsChecked()) {
         HideFileBrowser();
-    } else if (!m_mainSplitter->IsSplit()) {
-        // The right pane is the nested preview/source splitter, not the web
-        // view itself, which is no longer a direct child of m_mainSplitter.
-        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, m_fileBrowserWidth);
+    } else {
+        ShowFileBrowser();
     }
 }
 
@@ -429,6 +446,15 @@ void MainFrame::HideFileBrowser() {
     m_mainSplitter->Unsplit(m_fileBrowserPanel);
     if (browserHadFocus) {
         m_markdownPreviewPanel->FocusContent();
+    }
+}
+
+void MainFrame::ShowFileBrowser() {
+    m_viewMenu->Check(wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, true);
+    if (!m_mainSplitter->IsSplit()) {
+        // The right pane is the nested preview/source splitter, not the web
+        // view itself, which is no longer a direct child of m_mainSplitter.
+        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, m_fileBrowserWidth);
     }
 }
 
@@ -594,9 +620,149 @@ void MainFrame::HandleFileBrowserCloseRequested() {
     HideFileBrowser();
 }
 
+void MainFrame::HandleBookmarksMenuOpen(wxMenuEvent& event) {
+    if (event.GetMenu() == m_bookmarksMenu && m_bookmarkStore) {
+        m_bookmarkStore->Refresh();
+    }
+    event.Skip();
+}
+
+void MainFrame::HandleAddOrRemoveDirectoryBookmark(wxCommandEvent& event) {
+    (void)event;
+    if (m_bookmarkStore) {
+        m_bookmarkStore->AddOrRemoveBookmark(BookmarkStore::Kind::Directory, m_fileBrowserPanel->GetCurrentDirectory());
+    }
+}
+
+void MainFrame::HandleAddOrRemoveDocumentBookmark(wxCommandEvent& event) {
+    (void)event;
+    if (m_bookmarkStore) {
+        m_bookmarkStore->AddOrRemoveBookmark(BookmarkStore::Kind::Document, m_currentDocument);
+    }
+}
+
+void MainFrame::HandleOpenBookmark(wxCommandEvent& event) {
+    const std::size_t index = static_cast<std::size_t>(event.GetId() - m_bookmarkMenuBaseId);
+    if (index >= m_visibleBookmarks.size()) {
+        return;
+    }
+
+    const BookmarkStore::Bookmark bookmark = m_visibleBookmarks[index];
+    const bool exists =
+        bookmark.kind == BookmarkStore::Kind::Directory ? bookmark.path.DirExists() : bookmark.path.FileExists();
+    if (!exists) {
+        const wxString target = bookmark.kind == BookmarkStore::Kind::Directory ? _("directory") : _("document");
+        wxMessageDialog dialog(
+            this, wxString::Format(_("This bookmarked %s no longer exists.\n\nRemove the bookmark?"), target.c_str()),
+            _("Missing Bookmark"), wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+        dialog.SetOKCancelLabels(_("Remove Bookmark"), wxGetStockLabel(wxID_CANCEL));
+        if (dialog.ShowModal() == wxID_OK && m_bookmarkStore) {
+            m_bookmarkStore->RemoveBookmark(bookmark);
+        }
+        return;
+    }
+
+    if (bookmark.kind == BookmarkStore::Kind::Directory) {
+        HandleOpenBookmarkedDirectory(bookmark.path);
+    } else {
+        HandleOpenBookmarkedDocument(bookmark.path);
+    }
+}
+
+void MainFrame::HandleBookmarksChanged(const std::vector<BookmarkStore::Bookmark>& bookmarks) {
+    RebuildBookmarksMenu(bookmarks);
+    UpdateBookmarkCommands();
+}
+
+void MainFrame::RebuildBookmarksMenu(const std::vector<BookmarkStore::Bookmark>& bookmarks) {
+    for (wxMenuItem* item : m_dynamicBookmarkMenuItems) {
+        m_bookmarksMenu->Destroy(item);
+    }
+    m_dynamicBookmarkMenuItems.clear();
+    m_visibleBookmarks.clear();
+
+    if (bookmarks.empty()) {
+        return;
+    }
+
+    m_dynamicBookmarkMenuItems.push_back(m_bookmarksMenu->AppendSeparator());
+    const auto appendKind = [&](BookmarkStore::Kind kind) {
+        for (const BookmarkStore::Bookmark& bookmark : bookmarks) {
+            if (bookmark.kind != kind) {
+                continue;
+            }
+
+            const int id = m_bookmarkMenuBaseId + static_cast<int>(m_visibleBookmarks.size());
+            wxMenuItem* item = m_bookmarksMenu->Append(id, m_bookmarkStore->MakeBookmarkLabel(bookmark),
+                                                       bookmark.path.GetFullPath());
+            const wxArtID artId = kind == BookmarkStore::Kind::Directory ? wxART_FOLDER : wxART_NORMAL_FILE;
+            item->SetBitmap(wxArtProvider::GetBitmap(artId, wxART_MENU));
+            m_dynamicBookmarkMenuItems.push_back(item);
+            m_visibleBookmarks.push_back(bookmark);
+        }
+    };
+
+    const bool hasDirectories = std::ranges::any_of(bookmarks, [](const BookmarkStore::Bookmark& bookmark) {
+        return bookmark.kind == BookmarkStore::Kind::Directory;
+    });
+    const bool hasDocuments = std::ranges::any_of(bookmarks, [](const BookmarkStore::Bookmark& bookmark) {
+        return bookmark.kind == BookmarkStore::Kind::Document;
+    });
+
+    appendKind(BookmarkStore::Kind::Directory);
+    if (hasDirectories && hasDocuments) {
+        m_dynamicBookmarkMenuItems.push_back(m_bookmarksMenu->AppendSeparator());
+    }
+    appendKind(BookmarkStore::Kind::Document);
+}
+
+void MainFrame::UpdateBookmarkCommands() {
+    if (!m_bookmarkStore) {
+        return;
+    }
+
+    const auto updateCommand = [&](wxMenuItem* command, BookmarkStore::Kind kind, const wxFileName& currentPath) {
+        const bool validPath = currentPath.IsOk();
+        const bool bookmarked = validPath && m_bookmarkStore->Contains(kind, currentPath);
+        const bool targetExists =
+            validPath && (kind == BookmarkStore::Kind::Directory ? currentPath.DirExists() : currentPath.FileExists());
+        command->Enable(bookmarked || (targetExists && !m_bookmarkStore->IsFull()));
+
+        if (kind == BookmarkStore::Kind::Directory) {
+            command->SetItemLabel(bookmarked ? _("Remove Current Directory Bookmark\tCtrl+Shift+D")
+                                             : _("Bookmark Current Directory\tCtrl+Shift+D"));
+            command->SetBitmap(
+                wxArtProvider::GetBitmap(bookmarked ? wxART_MINUS : wxART_PLUS, wxART_MENU));
+        } else {
+            command->SetItemLabel(bookmarked ? _("Remove Current Document Bookmark\tCtrl+D")
+                                             : _("Bookmark Current Document\tCtrl+D"));
+        }
+    };
+
+    updateCommand(m_bookmarkCurrentDirectoryMenuItem, BookmarkStore::Kind::Directory,
+                  m_fileBrowserPanel->GetCurrentDirectory());
+    updateCommand(m_bookmarkCurrentDocumentMenuItem, BookmarkStore::Kind::Document, m_currentDocument);
+}
+
+void MainFrame::HandleOpenBookmarkedDirectory(const wxFileName& directory) {
+    ShowFileBrowser();
+    if (!m_fileBrowserPanel->IsShowingDir(directory)) {
+        m_fileBrowserPanel->ListDir(directory);
+    }
+}
+
+void MainFrame::HandleOpenBookmarkedDocument(const wxFileName& document) {
+    if (m_currentDocument.IsOk() && m_currentDocument.SameAs(document)) {
+        m_markdownPreviewPanel->FocusContent();
+        return;
+    }
+    HandleOpenMarkdownFile(document);
+}
+
 void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
     m_browsedDirectory = wxFileName::DirName(filePath.GetFullPath());
     RefreshBrowserWatcher();
+    UpdateBookmarkCommands();
 }
 
 void MainFrame::HandleBrowserWatcherChange() {
@@ -612,6 +778,8 @@ void MainFrame::RefreshBrowserWatcher() {
 }
 
 void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change) {
+    m_currentDocument = change.filePath;
+
     if (change.filePath.IsOk()) {
         SetTitle(change.filePath.GetFullName() + " - " + kApplicationTitle);
     } else {
@@ -625,6 +793,8 @@ void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::Documen
         // reloads deliberately leave the user's browsed directory alone.
         m_fileBrowserPanel->ShowFile(change.filePath);
     }
+
+    UpdateBookmarkCommands();
 
     const bool isNewDocument = change.reason == MarkdownEditorPanel::ChangeReason::NewDocument;
     const ScrollBehavior scrollBehavior = change.reason == MarkdownEditorPanel::ChangeReason::Opened || isNewDocument

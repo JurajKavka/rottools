@@ -46,6 +46,29 @@ void printCppVersion();
 std::string trimToStdString(const wxString& str);
 
 /**
+ * @brief Returns the last named directory component of a directory path.
+ *
+ * Root paths have no named directory components, so their full path is
+ * returned instead (for example, "/" or "C:\\").
+ *
+ * @param directory Directory path to inspect
+ * @return Last named directory component, or the full path for a root
+ */
+[[nodiscard]] wxString GetLastDirectoryName(const wxFileName& directory);
+
+/**
+ * @brief Tests whether two valid filesystem paths identify the same location.
+ *
+ * Path comparison follows the platform-specific rules implemented by
+ * wxFileName::SameAs().
+ *
+ * @param left First path to compare
+ * @param right Second path to compare
+ * @return true when both paths are valid and compare equal
+ */
+[[nodiscard]] bool IsSameFilePath(const wxFileName& left, const wxFileName& right);
+
+/**
  * @brief Reads a whole file as UTF-8 text.
  *
  * @param filePath File to read
