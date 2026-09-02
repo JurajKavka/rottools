@@ -32,6 +32,8 @@ class MainFrame : public MainFrameWx {
     MarkdownEditorPanel* m_markdownEditorPanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
     std::unique_ptr<BookmarkStore> m_bookmarkStore;
+    wxMenuItem* m_bookmarkCurrentDirectoryMenuItem = nullptr;
+    wxMenuItem* m_bookmarkCurrentDocumentMenuItem = nullptr;
     std::vector<BookmarkStore::Bookmark> m_visibleBookmarks;
     std::vector<wxMenuItem*> m_dynamicBookmarkMenuItems;
     wxWindowID m_bookmarkMenuBaseId = wxID_ANY;

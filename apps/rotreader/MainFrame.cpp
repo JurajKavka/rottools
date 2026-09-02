@@ -52,6 +52,12 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     SetIcons(rottools::MakeIconBundle(kAppIconPngs, kAppIconPngCount));
 #endif
 
+    m_bookmarkCurrentDirectoryMenuItem =
+        m_bookmarksMenu->Append(wxWindow::NewControlId(), _("Bookmark Current Directory\tCtrl+Shift+D"));
+    m_bookmarkCurrentDocumentMenuItem =
+        m_bookmarksMenu->Append(wxWindow::NewControlId(), _("Bookmark Current Document\tCtrl+D"));
+    m_bookmarkMenuBaseId = wxWindow::NewControlId(static_cast<int>(BookmarkStore::MaximumBookmarks));
+
     Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleNewFileMenuItemClick, this, wxID_NEW_FILE);
     Bind(wxEVT_CLOSE_WINDOW, &MainFrame::HandleCloseWindow, this);
@@ -89,10 +95,11 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveAsMenuItemClick, this, m_saveAsTool->GetId());
-    m_bookmarkMenuBaseId = wxWindow::NewControlId(static_cast<int>(BookmarkStore::MaximumBookmarks));
     Bind(wxEVT_MENU_OPEN, &MainFrame::HandleBookmarksMenuOpen, this);
-    Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDirectoryBookmark, this, wxID_BOOKMARK_CURRENT_DIRECTORY);
-    Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDocumentBookmark, this, wxID_BOOKMARK_CURRENT_DOCUMENT);
+    Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDirectoryBookmark, this,
+         m_bookmarkCurrentDirectoryMenuItem->GetId());
+    Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDocumentBookmark, this,
+         m_bookmarkCurrentDocumentMenuItem->GetId());
     Bind(wxEVT_MENU, &MainFrame::HandleOpenBookmark, this, m_bookmarkMenuBaseId,
          m_bookmarkMenuBaseId + static_cast<int>(BookmarkStore::MaximumBookmarks) - 1);
 
@@ -714,12 +721,7 @@ void MainFrame::UpdateBookmarkCommands() {
         return;
     }
 
-    const auto updateCommand = [&](wxWindowID commandId, BookmarkStore::Kind kind, const wxFileName& currentPath) {
-        wxMenuItem* command = m_bookmarksMenu->FindItem(commandId);
-        if (command == nullptr) {
-            return;
-        }
-
+    const auto updateCommand = [&](wxMenuItem* command, BookmarkStore::Kind kind, const wxFileName& currentPath) {
         const bool validPath = currentPath.IsOk();
         const bool bookmarked = validPath && m_bookmarkStore->Contains(kind, currentPath);
         const bool targetExists =
@@ -737,9 +739,9 @@ void MainFrame::UpdateBookmarkCommands() {
         }
     };
 
-    updateCommand(wxID_BOOKMARK_CURRENT_DIRECTORY, BookmarkStore::Kind::Directory,
+    updateCommand(m_bookmarkCurrentDirectoryMenuItem, BookmarkStore::Kind::Directory,
                   m_fileBrowserPanel->GetCurrentDirectory());
-    updateCommand(wxID_BOOKMARK_CURRENT_DOCUMENT, BookmarkStore::Kind::Document, m_currentDocument);
+    updateCommand(m_bookmarkCurrentDocumentMenuItem, BookmarkStore::Kind::Document, m_currentDocument);
 }
 
 void MainFrame::HandleOpenBookmarkedDirectory(const wxFileName& directory) {

@@ -44,8 +44,6 @@ class MainFrameWx : public wxFrame
 			wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM,
 			wxID_WORDWRAP,
 			wxID_FONT,
-			wxID_BOOKMARK_CURRENT_DIRECTORY,
-			wxID_BOOKMARK_CURRENT_DOCUMENT,
 		};
 
 		wxMenuBar* MenuBar;

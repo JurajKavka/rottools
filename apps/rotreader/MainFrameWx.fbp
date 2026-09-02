@@ -354,32 +354,6 @@
           <property name="label">Bookmarks</property>
           <property name="name">m_bookmarksMenu</property>
           <property name="permission">protected</property>
-          <object class="wxMenuItem" expanded="true">
-            <property name="bitmap"></property>
-            <property name="checked">0</property>
-            <property name="enabled">1</property>
-            <property name="help"></property>
-            <property name="id">wxID_BOOKMARK_CURRENT_DIRECTORY</property>
-            <property name="kind">wxITEM_NORMAL</property>
-            <property name="label">Bookmark Current Directory</property>
-            <property name="name">m_bookmarkCurrentDirectoryManuItem</property>
-            <property name="permission">none</property>
-            <property name="shortcut">Ctrl+Shift+D</property>
-            <property name="unchecked_bitmap"></property>
-          </object>
-          <object class="wxMenuItem" expanded="true">
-            <property name="bitmap"></property>
-            <property name="checked">0</property>
-            <property name="enabled">1</property>
-            <property name="help"></property>
-            <property name="id">wxID_BOOKMARK_CURRENT_DOCUMENT</property>
-            <property name="kind">wxITEM_NORMAL</property>
-            <property name="label">Bookmark Current Document</property>
-            <property name="name">m_bookmarkCurrentDocumentMenuItem</property>
-            <property name="permission">none</property>
-            <property name="shortcut">Ctrl+D</property>
-            <property name="unchecked_bitmap"></property>
-          </object>
         </object>
       </object>
       <object class="wxBoxSizer" expanded="false">

@@ -109,14 +109,6 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	MenuBar->Append( m_settingsMenu, _("Settings") );
 
 	m_bookmarksMenu = new wxMenu();
-	wxMenuItem* m_bookmarkCurrentDirectoryManuItem;
-	m_bookmarkCurrentDirectoryManuItem = new wxMenuItem( m_bookmarksMenu, wxID_BOOKMARK_CURRENT_DIRECTORY, wxString( _("Bookmark Current Directory") ) + wxT('\t') + wxT("Ctrl+Shift+D"), wxEmptyString, wxITEM_NORMAL );
-	m_bookmarksMenu->Append( m_bookmarkCurrentDirectoryManuItem );
-
-	wxMenuItem* m_bookmarkCurrentDocumentMenuItem;
-	m_bookmarkCurrentDocumentMenuItem = new wxMenuItem( m_bookmarksMenu, wxID_BOOKMARK_CURRENT_DOCUMENT, wxString( _("Bookmark Current Document") ) + wxT('\t') + wxT("Ctrl+D"), wxEmptyString, wxITEM_NORMAL );
-	m_bookmarksMenu->Append( m_bookmarkCurrentDocumentMenuItem );
-
 	MenuBar->Append( m_bookmarksMenu, _("Bookmarks") );
 
 	this->SetMenuBar( MenuBar );
