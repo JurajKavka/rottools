@@ -1,4 +1,5 @@
 add_subdirectory(AppConfigFunctions)
+add_subdirectory(BookmarkStore)
 
 # Backend workers (async, non-UI logic).
 add_subdirectory(MarkdownToHtmlAsync)
