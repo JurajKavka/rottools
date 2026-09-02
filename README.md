@@ -171,8 +171,9 @@ make release-tag TOOL=rotreader
 ```
 
 This checks out and fast-forwards `main`, reads the merged app version, creates
-the annotated tag `rotreader-v0.3.0`, and pushes it to `origin`, which starts the
-release workflow.
+the annotated tag `rotreader-v0.3.0`, and pushes it to `origin`. The release
+workflow builds and publishes the installers, then redeploys the website using
+the version from the app's `VERSION` file.
 
 After merged work accumulates, clean up its local and remote branches with:
 

@@ -1,6 +1,7 @@
 # Independent release for the rotreader tool. Triggered by an app-prefixed tag
 # (e.g. rotreader-v0.1.0) so each tool releases on its own schedule/version.
-# Builds the three-OS matrix, then publishes a GitHub Release with the installers.
+# Builds the three-OS matrix, publishes a GitHub Release with the installers,
+# then redeploys the website with the version from this tag.
 name: Release rotreader
 
 on:
@@ -41,3 +42,11 @@ jobs:
           name: "rotreader-rottools-${{ steps.ver.outputs.version }}"
           files: dist/*
           generate_release_notes: true
+
+  website:
+    needs: release
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
