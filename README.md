@@ -174,6 +174,17 @@ This checks out and fast-forwards `main`, reads the merged app version, creates
 the annotated tag `rotreader-v0.3.0`, and pushes it to `origin`, which starts the
 release workflow.
 
+After merged work accumulates, clean up its local and remote branches with:
+
+```sh
+make cleanup-branches
+```
+
+The command updates `main` and the remote-tracking refs, lists only branches
+whose tips are contained in `origin/main`, and asks for confirmation before
+deleting them. It preserves `main`, unmerged branches, and tags. For
+non-interactive use, run `scripts/cleanup-merged-branches.zsh --yes` directly.
+
 ## Adding a new tool
 
 1. Create `apps/<tool>/` with `main.cpp`, a `VERSION` file, and `packaging/`
