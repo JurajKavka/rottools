@@ -155,6 +155,17 @@ name. Releases are per-tool and tag-driven: push a tag like `rotreader-v0.1.0`
 and the `Release rotreader` GitHub Actions workflow builds all three OSes and
 publishes a GitHub Release. Other tools are untouched.
 
+Prepare a version bump from a clean, up-to-date `main` with:
+
+```sh
+make bump-version TOOL=rotreader VERSION=0.3.0
+```
+
+This creates and checks out `rotreader-0.3.0`, updates only the app's `VERSION`
+file, commits it as `bump 0.3.0`, and pushes the new branch to `origin`. After
+the branch is reviewed and merged, pushing the matching `rotreader-v0.3.0` tag
+starts the release workflow.
+
 ## Adding a new tool
 
 1. Create `apps/<tool>/` with `main.cpp`, a `VERSION` file, and `packaging/`
