@@ -162,9 +162,17 @@ make bump-version TOOL=rotreader VERSION=0.3.0
 ```
 
 This creates and checks out `rotreader-0.3.0`, updates only the app's `VERSION`
-file, commits it as `bump 0.3.0`, and pushes the new branch to `origin`. After
-the branch is reviewed and merged, pushing the matching `rotreader-v0.3.0` tag
-starts the release workflow.
+file, commits it as `bump 0.3.0`, and pushes the new branch to `origin`.
+
+After the branch is reviewed and merged, publish its release tag with:
+
+```sh
+make release-tag TOOL=rotreader
+```
+
+This checks out and fast-forwards `main`, reads the merged app version, creates
+the annotated tag `rotreader-v0.3.0`, and pushes it to `origin`, which starts the
+release workflow.
 
 ## Adding a new tool
 
