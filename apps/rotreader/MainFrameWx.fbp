@@ -280,7 +280,7 @@
             <property name="help"></property>
             <property name="id">wxID_TOGGLE_FILE_BROWSER_MENU_ITEM</property>
             <property name="kind">wxITEM_CHECK</property>
-            <property name="label">Toggle file browser</property>
+            <property name="label">File Browser</property>
             <property name="name">m_toggleFileBrowserMenuItem</property>
             <property name="permission">none</property>
             <property name="shortcut"></property>
@@ -293,7 +293,7 @@
             <property name="help"></property>
             <property name="id">wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM</property>
             <property name="kind">wxITEM_CHECK</property>
-            <property name="label">Toggle HTML Source</property>
+            <property name="label">HTML Source</property>
             <property name="name">m_toggleHtmlSourcePanelMenuItem</property>
             <property name="permission">none</property>
             <property name="shortcut"></property>
@@ -306,7 +306,7 @@
             <property name="help"></property>
             <property name="id">wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM</property>
             <property name="kind">wxITEM_CHECK</property>
-            <property name="label">Toggle Markdown Editor</property>
+            <property name="label">Markdown Editor</property>
             <property name="name">m_toggleMarkdownEditorPanelMenuItem</property>
             <property name="permission">none</property>
             <property name="shortcut"></property>
