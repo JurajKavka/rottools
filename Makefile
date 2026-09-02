@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help all dev configure build rebuild web-icons \
+.PHONY: help all dev configure build rebuild bump-version web-icons \
         rotreader rotreader-all rotreader-dev rotreader-build rotreader-rebuild \
         rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
@@ -162,6 +162,14 @@ check:                 ## Run cppcheck static analysis over libs + apps
 
 clean:                 ## Remove build/ and dist/
 	rm -rf ./build ./dist
+
+##@ Releases
+bump-version:          ## Create and push <tool>-<version> (TOOL=<tool> VERSION=<X.Y.Z>)
+	@if [ -z "$(TOOL)" ] || [ -z "$(VERSION)" ]; then \
+		echo "usage: make bump-version TOOL=<tool> VERSION=<X.Y.Z>" >&2; \
+		exit 2; \
+	fi
+	./scripts/bump-version.zsh "$(TOOL)" "$(VERSION)"
 
 # internal: (re)configure the tree with the per-library demo apps enabled
 _demos:
