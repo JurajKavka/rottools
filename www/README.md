@@ -135,7 +135,8 @@ The download links point at real GitHub Release assets and were checked with
 `.github/workflows/release-rotreader.yml`; the asset names come from CPack's
 `CPACK_PACKAGE_FILE_NAME`.
 
-`ROTREADER_VERSION` in `src/data/tools.ts` must match a **published** release,
-not necessarily `apps/rotreader/VERSION`. When preparing a release, deploy the
-website change only after the corresponding `rotreader-v<version>` release
-exists, or every download button will 404.
+`src/data/tools.ts` imports each tool's version directly from
+`apps/<tool>/VERSION`. A version-bump merge does not deploy the site by itself:
+the matching release workflow calls the reusable Pages workflow only after the
+GitHub Release and its assets have been published. This keeps the app, package,
+and website versions in sync without exposing download links early.
