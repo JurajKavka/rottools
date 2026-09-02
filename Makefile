@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help all dev configure build rebuild bump-version release-tag web-icons \
+.PHONY: help all dev configure build rebuild bump-version release-tag cleanup-branches web-icons \
         rotreader rotreader-all rotreader-dev rotreader-build rotreader-rebuild \
         rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
@@ -177,6 +177,9 @@ release-tag:           ## Pull main and push its <tool>-v<version> tag (TOOL=<to
 		exit 2; \
 	fi
 	./scripts/release-tag.zsh "$(TOOL)"
+
+cleanup-branches:      ## Delete local and origin branches already merged into main
+	./scripts/cleanup-merged-branches.zsh
 
 # internal: (re)configure the tree with the per-library demo apps enabled
 _demos:
