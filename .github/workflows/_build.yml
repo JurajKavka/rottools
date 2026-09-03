@@ -60,11 +60,12 @@ jobs:
             exit 1
           fi
 
-      # Hosted runner images contain a vcpkg snapshot that can lag behind the
-      # registry. Select the manifest's baseline explicitly so dependency
-      # versions stay identical even when the runner image changes.
-      - name: Select pinned vcpkg snapshot
+      # Hosted runner images can contain a dirty preinstalled vcpkg checkout.
+      # Use an isolated checkout so selecting the manifest baseline never
+      # depends on, or modifies, that runner-managed working tree.
+      - name: Read pinned vcpkg baseline
         if: runner.os != 'Linux'
+        id: vcpkg
         shell: bash
         run: |
           VCPKG_BASELINE=$(awk -F'"' '/"builtin-baseline"/ { print $4; exit }' vcpkg.json)
@@ -73,9 +74,31 @@ jobs:
             exit 1
           fi
 
-          git -C "${VCPKG_INSTALLATION_ROOT}" fetch --depth=1 origin "${VCPKG_BASELINE}"
-          git -C "${VCPKG_INSTALLATION_ROOT}" checkout --detach "${VCPKG_BASELINE}"
-          printf 'VCPKG_ROOT=%s\n' "${VCPKG_INSTALLATION_ROOT}" >> "${GITHUB_ENV}"
+          printf 'baseline=%s\n' "${VCPKG_BASELINE}" >> "${GITHUB_OUTPUT}"
+
+      - name: Check out pinned vcpkg
+        if: runner.os != 'Linux'
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          ref: ${{ steps.vcpkg.outputs.baseline }}
+          path: .vcpkg
+          persist-credentials: false
+
+      - name: Bootstrap pinned vcpkg (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: ./.vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+      - name: Bootstrap pinned vcpkg (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: .\.vcpkg\bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Use pinned vcpkg
+        if: runner.os != 'Linux'
+        shell: bash
+        run: printf 'VCPKG_ROOT=%s/.vcpkg\n' "${GITHUB_WORKSPACE}" >> "${GITHUB_ENV}"
 
       - name: Create vcpkg cache directory
         shell: bash
