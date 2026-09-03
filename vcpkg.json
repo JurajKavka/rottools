@@ -4,6 +4,7 @@
   "version-string": "0.0.0",
   "description": "A suite of small desktop utilities (rotreader, ...) sharing common libraries.",
   "homepage": "https://github.com/jurajkavka/rottools",
+  "builtin-baseline": "b327e4b7d511355169c831c477008eca88c80c19",
   "dependencies": [
     {
       "name": "wxwidgets",
@@ -13,5 +14,11 @@
       ]
     },
     "md4c"
+  ],
+  "overrides": [
+    {
+      "name": "wxwidgets",
+      "version": "3.3.3#1"
+    }
   ]
 }
