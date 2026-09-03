@@ -53,6 +53,7 @@ class MainFrameWx : public wxFrame
 		wxMenu* m_themeSubmenu;
 		wxMenu* m_settingsMenu;
 		wxMenu* m_bookmarksMenu;
+		wxMenu* m_helpMenu;
 		wxToolBar* toolBar;
 		wxToolBarToolBase* m_fileOpenTool;
 		wxToolBarToolBase* m_newFileTool;

@@ -111,6 +111,13 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_bookmarksMenu = new wxMenu();
 	MenuBar->Append( m_bookmarksMenu, _("Bookmarks") );
 
+	m_helpMenu = new wxMenu();
+	wxMenuItem* m_aboutMenuItem;
+	m_aboutMenuItem = new wxMenuItem( m_helpMenu, wxID_ABOUT, wxString( _("About ROT Reader") ) , wxEmptyString, wxITEM_NORMAL );
+	m_helpMenu->Append( m_aboutMenuItem );
+
+	MenuBar->Append( m_helpMenu, _("Help") );
+
 	this->SetMenuBar( MenuBar );
 
 	wxBoxSizer* MainFrameSizer;
