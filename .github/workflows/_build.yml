@@ -60,6 +60,23 @@ jobs:
             exit 1
           fi
 
+      # Hosted runner images contain a vcpkg snapshot that can lag behind the
+      # registry. Select the manifest's baseline explicitly so dependency
+      # versions stay identical even when the runner image changes.
+      - name: Select pinned vcpkg snapshot
+        if: runner.os != 'Linux'
+        shell: bash
+        run: |
+          VCPKG_BASELINE=$(awk -F'"' '/"builtin-baseline"/ { print $4; exit }' vcpkg.json)
+          if [[ ! "${VCPKG_BASELINE}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "vcpkg.json does not contain a valid builtin-baseline." >&2
+            exit 1
+          fi
+
+          git -C "${VCPKG_INSTALLATION_ROOT}" fetch --depth=1 origin "${VCPKG_BASELINE}"
+          git -C "${VCPKG_INSTALLATION_ROOT}" checkout --detach "${VCPKG_BASELINE}"
+          printf 'VCPKG_ROOT=%s\n' "${VCPKG_INSTALLATION_ROOT}" >> "${GITHUB_ENV}"
+
       - name: Create vcpkg cache directory
         shell: bash
         run: mkdir -p "${{ github.workspace }}/vcpkg-cache"
@@ -103,16 +120,32 @@ jobs:
         with:
           arch: x64
 
-      # Use the vcpkg preinstalled on the runner image.
       - name: Configure
         shell: bash
         run: |
           APP_UPPER=$(echo "${{ inputs.app }}" | tr '[:lower:]' '[:upper:]')
-          export VCPKG_ROOT="${VCPKG_INSTALLATION_ROOT}"
           cmake --preset ${{ matrix.preset }} \
             -DROTTOOLS_BUILD_ROTREADER=OFF \
             -DROTTOOLS_BUILD_ROTPAD=OFF \
             "-DROTTOOLS_BUILD_${APP_UPPER}=ON"
+
+      - name: Verify wxWidgets version (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          WX_CONFIG=$(find "build/${{ matrix.preset }}/vcpkg_installed" \
+            -type f -path '*/tools/wxwidgets/wx-config' -print -quit)
+          if [[ -z "${WX_CONFIG}" ]]; then
+            echo "Unable to find the vcpkg wx-config executable." >&2
+            exit 1
+          fi
+
+          WX_VERSION=$("${WX_CONFIG}" --version)
+          if [[ "${WX_VERSION}" != "3.3.3" ]]; then
+            echo "Expected wxWidgets 3.3.3, found ${WX_VERSION}." >&2
+            exit 1
+          fi
+          echo "Verified wxWidgets ${WX_VERSION}."
 
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }}
