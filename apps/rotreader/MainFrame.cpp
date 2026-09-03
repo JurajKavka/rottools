@@ -1,5 +1,6 @@
 #include "MainFrame.h"
 
+#include <wx/aboutdlg.h>
 #include <wx/artprov.h>
 #include <wx/dnd.h>  // Required for wxFileDropTarget
 #include <wx/filedlg.h>
@@ -22,6 +23,7 @@
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
+#include "version.h"
 
 namespace {
 constexpr auto kMarkdownFileWildcard = "Markdown files (*.md;*.markdown)|*.md;*.markdown";
@@ -91,6 +93,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleWordWrapMenuItemClick, this, wxID_WORDWRAP);
     Bind(wxEVT_MENU, &MainFrame::HandleFontMenuItemClick, this, wxID_FONT);
+    Bind(wxEVT_MENU, &MainFrame::HandleAboutMenuItemClick, this, wxID_ABOUT);
     Bind(wxEVT_TOOL, &MainFrame::HandleNewFileMenuItemClick, this, m_newFileTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
@@ -503,6 +506,17 @@ void MainFrame::HandleFontMenuItemClick(wxCommandEvent& event) {
     if (editorHadFocus) {
         m_markdownEditorPanel->FocusEditor();
     }
+}
+
+void MainFrame::HandleAboutMenuItemClick(wxCommandEvent&) {
+    const wxString wxWidgetsVersion = wxGetLibraryVersionInfo().GetVersionString();
+
+    wxAboutDialogInfo info;
+    info.SetName(kApplicationTitle);
+    info.SetVersion(ROTREADER_VERSION_STRING);
+    info.SetDescription(_("A native Markdown reader and editor") + wxS("\n\n") +
+                        wxString::Format(_("Built with %s"), wxWidgetsVersion));
+    wxAboutBox(info, this);
 }
 
 // Lays the right-hand side out as columns: the always-visible preview, then
