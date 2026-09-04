@@ -62,9 +62,14 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void UpdateTree(const std::vector<FileEntry>& entries);
     /// Finds the top-level row with the given text; invalid item if none match
     wxDataViewItem FindChildByText(const wxString& text) const;
+    /// Resolves a file-browser row, including "..", to its filesystem path.
+    [[nodiscard]] wxFileName ResolveItemPath(const wxDataViewItem& item) const;
+    void OpenPath(const wxFileName& path);
+    void CopyPath(const wxFileName& path);
     void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
     void HandleHiddenFilesCheckbox(wxCommandEvent& event);
     void HandleItemActivated(wxDataViewEvent& event);
+    void HandleItemContextMenu(wxDataViewEvent& event);
     void HandleHomeButtonClick(wxCommandEvent& event);
     void HandleCloseButtonClick(wxCommandEvent& event);
 };
