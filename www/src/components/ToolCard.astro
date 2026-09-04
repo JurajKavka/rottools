@@ -22,7 +22,7 @@ const downloadGroups = platformOrder
   .filter((group) => group.downloads.length > 0);
 ---
 
-<article class="card">
+<article class="card" data-tool={tool.slug}>
   <header>
     {/* alt="" on purpose: the heading beside it already names the tool, so a
         described icon would just repeat it to a screen reader. */}
@@ -66,10 +66,16 @@ const downloadGroups = platformOrder
 
 <style>
   .card {
+    --card-accent: var(--rd-accent);
+
     background: var(--rd-surface);
     border: var(--rd-rule-width) solid var(--rd-border);
     border-radius: var(--rd-radius);
     padding: var(--rd-space-4) var(--rd-space-6);
+  }
+
+  .card[data-tool='rotpad'] {
+    --card-accent: var(--tool-rotpad-accent);
   }
 
   @media (min-width: 64rem) {
@@ -166,7 +172,7 @@ const downloadGroups = platformOrder
   }
 
   .download:hover {
-    border-color: var(--rd-accent);
+    border-color: var(--card-accent);
     color: var(--rd-ink);
     transform: translateY(-1px);
   }
