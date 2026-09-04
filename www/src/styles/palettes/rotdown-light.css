@@ -26,7 +26,10 @@
   /* The rotreader logo's blue: hsl(240, 100%, 65%). It is the icon background
      composited over white, so the site and the app mark are literally the same
      colour — see `scripts/icon-tools.py bg-color`. */
-  --rd-accent: #4d4dff;
+  --tool-rotreader-accent: #4d4dff;
+  --tool-rotpad-accent: #4d854d;
+
+  --rd-accent: var(--tool-rotreader-accent);
   --rd-accent-hover: #2929ff;
   --rd-accent-soft: #ebebff;
 
