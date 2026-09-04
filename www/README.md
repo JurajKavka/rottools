@@ -28,7 +28,7 @@ www/
     data/tools.ts         # THE place to edit tools, versions, download URLs
     layouts/Layout.astro  # <head>, header, footer, global CSS
     components/
-      ToolCard.astro      # one tool: name, description, download buttons
+      ToolCard.astro      # one tool: name, description, platform download boxes
       MacNote.astro       # the Gatekeeper "damaged" warning
       ThemeToggle.astro   # Rotdown Light <-> Rotdown Dark switch
     pages/index.astro     # landing page
@@ -63,10 +63,11 @@ entry to the `tools` array, or change a `version`, and the page follows. Nothing
 else needs touching.
 
 Download file names are built to match CPack's `CPACK_PACKAGE_FILE_NAME` from
-[../cmake/RotToolsPackaging.cmake](../cmake/RotToolsPackaging.cmake):
+[../cmake/RotToolsPackaging.cmake](../cmake/RotToolsPackaging.cmake), plus any
+deliberately named build variant such as `macos-26`:
 
 ```
-<exe>-<version>-<os>-<arch>.<ext>
+<exe>-<version>-<package>-<arch>.<ext>
 ```
 
 If the packaging naming changes, update `buildFileName()` to match.
@@ -130,8 +131,8 @@ Moving to a domain root later is a one-line change: drop `base` from
 
 ## Verified, not assumed
 
-The download links point at real GitHub Release assets and were checked with
-`curl` — all three return 200. The tag format (`rotreader-v0.1.0`) comes from
+The download links point at real GitHub Release assets and are checked with
+`curl`. The tag format (`rotreader-v0.1.0`) comes from
 `.github/workflows/release-rotreader.yml`; the asset names come from CPack's
 `CPACK_PACKAGE_FILE_NAME`.
 

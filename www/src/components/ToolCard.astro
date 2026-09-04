@@ -1,5 +1,5 @@
 ---
-import type { Tool } from '../data/tools';
+import type { Platform, Tool } from '../data/tools';
 import { asset } from '../lib/url';
 
 interface Props {
@@ -7,6 +7,19 @@ interface Props {
 }
 
 const { tool } = Astro.props;
+const platformOrder: Platform[] = ['macos', 'windows', 'linux'];
+const platformLabels: Record<Platform, string> = {
+  macos: 'MacOS',
+  windows: 'Windows',
+  linux: 'Linux',
+};
+const downloadGroups = platformOrder
+  .map((platform) => ({
+    platform,
+    label: platformLabels[platform],
+    downloads: tool.downloads.filter((download) => download.platform === platform),
+  }))
+  .filter((group) => group.downloads.length > 0);
 ---
 
 <article class="card">
@@ -22,18 +35,29 @@ const { tool } = Astro.props;
 
   {tool.description && <p class="description">{tool.description}</p>}
 
-  <ul class="downloads">
+  <div class="download-groups">
     {
-      tool.downloads.map((download) => (
-        <li>
-          <a class="download" href={download.href} data-platform={download.platform}>
-            <span class="label">{download.label}</span>
-            <span class="note">{download.note}</span>
-          </a>
-        </li>
+      downloadGroups.map((group) => (
+        <section class="download-group" aria-labelledby={`${tool.slug}-${group.platform}-downloads`}>
+          <h3 id={`${tool.slug}-${group.platform}-downloads`}>{group.label}</h3>
+          <ul class="downloads">
+            {group.downloads.map((download) => (
+              <li>
+                <a
+                  class="download"
+                  href={download.href}
+                  data-platform={download.platform}
+                >
+                  <span class="label">{download.label}</span>
+                  <span class="note">{download.note}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
       ))
     }
-  </ul>
+  </div>
 
   <p class="version">
     Version {tool.version} &middot; <code>{tool.slug}</code>
@@ -91,25 +115,51 @@ const { tool } = Astro.props;
     max-width: var(--site-measure);
   }
 
+  .download-groups {
+    margin-top: var(--rd-space-6);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--rd-space-3);
+  }
+
+  .download-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rd-space-3);
+    padding: var(--rd-space-4);
+    border: var(--rd-rule-width) solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    background: var(--rd-canvas);
+  }
+
+  .download-group h3 {
+    margin: 0;
+    border: 0;
+    padding: 0;
+    color: var(--rd-ink);
+    font-size: 0.95rem;
+    font-weight: var(--rd-weight-bold);
+    line-height: var(--rd-line-height-tight);
+  }
+
   .downloads {
     list-style: none;
-    margin: var(--rd-space-6) 0 0;
+    margin: 0;
     padding: 0;
     display: grid;
-    /* Buttons sit side by side when there's room and stack when there isn't,
-       with no breakpoint to maintain. */
-    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-    gap: var(--rd-space-3);
+    gap: var(--rd-space-2);
   }
 
   .download {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
-    padding: var(--rd-space-3) var(--rd-space-4);
+    justify-content: center;
+    gap: 0.05rem;
+    min-height: 3rem;
+    padding: var(--rd-space-2) var(--rd-space-4);
     border: var(--rd-rule-width) solid var(--rd-border);
     border-radius: var(--rd-radius);
-    background: var(--rd-canvas);
+    background: var(--rd-surface);
     color: var(--rd-ink);
     text-decoration: none;
     transition: border-color 0.15s ease, transform 0.15s ease;
@@ -122,12 +172,15 @@ const { tool } = Astro.props;
   }
 
   .label {
+    font-size: 0.9rem;
     font-weight: var(--rd-weight-medium);
+    line-height: var(--rd-line-height-tight);
   }
 
   .note {
-    font-size: var(--rd-size-small);
+    font-size: 0.78rem;
     color: var(--rd-ink-muted);
+    line-height: 1.35;
   }
 
   .version {

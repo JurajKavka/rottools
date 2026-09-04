@@ -11,12 +11,13 @@ import rotreaderVersionFile from '../../../apps/rotreader/VERSION?raw';
  *          set by the `on: push: tags` filter in
  *          .github/workflows/release-<tool>.yml
  *
- *   asset  <slug>-<version>-<os>-<arch>.<ext>
+ *   asset  <slug>-<version>-<package>-<arch>.<ext>
  *          CPack's CPACK_PACKAGE_FILE_NAME from cmake/RotToolsPackaging.cmake,
- *          where <os> is macos|linux|windows and <arch> is a lowercased
+ *          where <package> is normally macos|linux|windows (or a deliberate
+ *          variant such as macos-26) and <arch> is a lowercased
  *          CMAKE_SYSTEM_PROCESSOR.
  *
- * Keep releaseUrl() and buildFileName() in step if either ever changes.
+ * Keep releaseTag() and buildFileName() in step if either ever changes.
  */
 
 /** GitHub's release asset root for this repo. No trailing slash. */
@@ -29,9 +30,9 @@ export type Platform = 'macos' | 'windows' | 'linux';
 
 export interface Download {
   platform: Platform;
-  /** Shown on the button, e.g. "macOS (Apple Silicon)". */
+  /** Package choice shown inside its platform box, e.g. "MacOS 26" or "Portable". */
   label: string;
-  /** Shown under it, e.g. ".dmg - 3.4 MB". */
+  /** Supporting package details, e.g. "Apple Silicon · .dmg". */
   note: string;
   href: string;
 }
@@ -56,8 +57,8 @@ export interface Tool {
   downloads: Download[];
 }
 
-function buildFileName(slug: string, version: string, os: string, arch: string, ext: string): string {
-  return `${slug}-${version}-${os}-${arch}.${ext}`;
+function buildFileName(slug: string, version: string, packageSlug: string, arch: string, ext: string): string {
+  return `${slug}-${version}-${packageSlug}-${arch}.${ext}`;
 }
 
 /** The release tag a tool's assets hang off: rotreader-v0.1.0. */
@@ -82,7 +83,17 @@ export const tools: Tool[] = [
     downloads: [
       {
         platform: 'macos',
-        label: 'macOS',
+        label: 'MacOS 26',
+        note: 'Apple Silicon · .dmg',
+        href: downloadUrl(
+          'rotreader',
+          ROTREADER_VERSION,
+          buildFileName('rotreader', ROTREADER_VERSION, 'macos-26', 'arm64', 'dmg'),
+        ),
+      },
+      {
+        platform: 'macos',
+        label: 'MacOS 15+',
         note: 'Apple Silicon · .dmg',
         href: downloadUrl(
           'rotreader',
@@ -92,8 +103,8 @@ export const tools: Tool[] = [
       },
       {
         platform: 'windows',
-        label: 'Windows',
-        note: '64-bit · installer',
+        label: 'Installer',
+        note: '64-bit · .exe',
         href: downloadUrl(
           'rotreader',
           ROTREADER_VERSION,
@@ -101,13 +112,33 @@ export const tools: Tool[] = [
         ),
       },
       {
+        platform: 'windows',
+        label: 'Portable',
+        note: '64-bit · .zip',
+        href: downloadUrl(
+          'rotreader',
+          ROTREADER_VERSION,
+          buildFileName('rotreader', ROTREADER_VERSION, 'windows', 'amd64', 'zip'),
+        ),
+      },
+      {
         platform: 'linux',
-        label: 'Linux',
-        note: 'Debian / Ubuntu · .deb',
+        label: 'Debian / Ubuntu',
+        note: 'x86-64 · .deb',
         href: downloadUrl(
           'rotreader',
           ROTREADER_VERSION,
           buildFileName('rotreader', ROTREADER_VERSION, 'linux', 'x86_64', 'deb'),
+        ),
+      },
+      {
+        platform: 'linux',
+        label: 'Archive',
+        note: 'x86-64 · .tar.gz',
+        href: downloadUrl(
+          'rotreader',
+          ROTREADER_VERSION,
+          buildFileName('rotreader', ROTREADER_VERSION, 'linux', 'x86_64', 'tar.gz'),
         ),
       },
     ],
@@ -121,8 +152,8 @@ export const tools: Tool[] = [
     downloads: [
       {
         platform: 'macos',
-        label: 'macOS',
-        note: 'Apple Silicon · .dmg',
+        label: 'Apple Silicon',
+        note: '.dmg',
         href: downloadUrl(
           'rotpad',
           ROTPAD_VERSION,
@@ -131,8 +162,8 @@ export const tools: Tool[] = [
       },
       {
         platform: 'windows',
-        label: 'Windows',
-        note: '64-bit · installer',
+        label: 'Installer',
+        note: '64-bit · .exe',
         href: downloadUrl(
           'rotpad',
           ROTPAD_VERSION,
@@ -140,13 +171,33 @@ export const tools: Tool[] = [
         ),
       },
       {
+        platform: 'windows',
+        label: 'Portable',
+        note: '64-bit · .zip',
+        href: downloadUrl(
+          'rotpad',
+          ROTPAD_VERSION,
+          buildFileName('rotpad', ROTPAD_VERSION, 'windows', 'amd64', 'zip'),
+        ),
+      },
+      {
         platform: 'linux',
-        label: 'Linux',
-        note: 'Debian / Ubuntu · .deb',
+        label: 'Debian / Ubuntu',
+        note: 'x86-64 · .deb',
         href: downloadUrl(
           'rotpad',
           ROTPAD_VERSION,
           buildFileName('rotpad', ROTPAD_VERSION, 'linux', 'x86_64', 'deb'),
+        ),
+      },
+      {
+        platform: 'linux',
+        label: 'Archive',
+        note: 'x86-64 · .tar.gz',
+        href: downloadUrl(
+          'rotpad',
+          ROTPAD_VERSION,
+          buildFileName('rotpad', ROTPAD_VERSION, 'linux', 'x86_64', 'tar.gz'),
         ),
       },
     ],
