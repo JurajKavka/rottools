@@ -97,6 +97,7 @@ class MainFrame : public MainFrameWx {
     void HandleToggleMarkdownEditorPanelMenuItemClick(wxCommandEvent& event);
     void HandleWordWrapMenuItemClick(wxCommandEvent& event);
     void HandleFontMenuItemClick(wxCommandEvent& event);
+    void HandleAboutMenuItemClick(wxCommandEvent& event);
     void HandleHtmlSourcePanelClose();
     void HideFileBrowser();
     void ShowFileBrowser();

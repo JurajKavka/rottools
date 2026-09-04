@@ -80,15 +80,15 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_viewMenu->Append( m_soloWebViewPanelMenuItem );
 
 	wxMenuItem* m_toggleFileBrowserMenuItem;
-	m_toggleFileBrowserMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_CHECK );
+	m_toggleFileBrowserMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("File Browser") ) , wxEmptyString, wxITEM_CHECK );
 	m_viewMenu->Append( m_toggleFileBrowserMenuItem );
 
 	wxMenuItem* m_toggleHtmlSourcePanelMenuItem;
-	m_toggleHtmlSourcePanelMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM, wxString( _("Toggle HTML Source") ) , wxEmptyString, wxITEM_CHECK );
+	m_toggleHtmlSourcePanelMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM, wxString( _("HTML Source") ) , wxEmptyString, wxITEM_CHECK );
 	m_viewMenu->Append( m_toggleHtmlSourcePanelMenuItem );
 
 	wxMenuItem* m_toggleMarkdownEditorPanelMenuItem;
-	m_toggleMarkdownEditorPanelMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM, wxString( _("Toggle Markdown Editor") ) , wxEmptyString, wxITEM_CHECK );
+	m_toggleMarkdownEditorPanelMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM, wxString( _("Markdown Editor") ) , wxEmptyString, wxITEM_CHECK );
 	m_viewMenu->Append( m_toggleMarkdownEditorPanelMenuItem );
 
 	wxMenuItem* m_wordWrap;
@@ -110,6 +110,13 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 
 	m_bookmarksMenu = new wxMenu();
 	MenuBar->Append( m_bookmarksMenu, _("Bookmarks") );
+
+	m_helpMenu = new wxMenu();
+	wxMenuItem* m_aboutMenuItem;
+	m_aboutMenuItem = new wxMenuItem( m_helpMenu, wxID_ABOUT, wxString( _("About ROT Reader") ) , wxEmptyString, wxITEM_NORMAL );
+	m_helpMenu->Append( m_aboutMenuItem );
+
+	MenuBar->Append( m_helpMenu, _("Help") );
 
 	this->SetMenuBar( MenuBar );
 

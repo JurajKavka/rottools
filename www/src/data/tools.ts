@@ -1,3 +1,6 @@
+import rotpadVersionFile from '../../../apps/rotpad/VERSION?raw';
+import rotreaderVersionFile from '../../../apps/rotreader/VERSION?raw';
+
 /**
  * Single source of truth for the site's tool list and download links.
  *
@@ -66,8 +69,8 @@ function downloadUrl(slug: string, version: string, file: string): string {
   return `${DOWNLOAD_BASE}/${releaseTag(slug, version)}/${file}`;
 }
 
-const ROTREADER_VERSION = '0.2.0';
-const ROTPAD_VERSION = '0.1.0';
+const ROTREADER_VERSION = rotreaderVersionFile.trim();
+const ROTPAD_VERSION = rotpadVersionFile.trim();
 
 export const tools: Tool[] = [
   {

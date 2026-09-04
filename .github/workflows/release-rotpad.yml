@@ -1,6 +1,7 @@
 # Independent release for the rotpad tool. Triggered by an app-prefixed tag
 # (e.g. rotpad-v0.1.0), independently of rotreader's version and tags.
-# Builds the three-OS matrix, then publishes a GitHub Release with the installers.
+# Builds the three-OS matrix, publishes a GitHub Release with the installers,
+# then redeploys the website with the version from this tag.
 name: Release rotpad
 
 on:
@@ -38,3 +39,11 @@ jobs:
           name: "rotpad-rottools-${{ steps.ver.outputs.version }}"
           files: dist/*
           generate_release_notes: true
+
+  website:
+    needs: release
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml

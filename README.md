@@ -155,6 +155,37 @@ name. Releases are per-tool and tag-driven: push a tag like `rotreader-v0.1.0`
 and the `Release rotreader` GitHub Actions workflow builds all three OSes and
 publishes a GitHub Release. Other tools are untouched.
 
+Prepare a version bump from a clean, up-to-date `main` with:
+
+```sh
+make bump-version TOOL=rotreader VERSION=0.3.0
+```
+
+This creates and checks out `rotreader-0.3.0`, updates only the app's `VERSION`
+file, commits it as `bump 0.3.0`, and pushes the new branch to `origin`.
+
+After the branch is reviewed and merged, publish its release tag with:
+
+```sh
+make release-tag TOOL=rotreader
+```
+
+This checks out and fast-forwards `main`, reads the merged app version, creates
+the annotated tag `rotreader-v0.3.0`, and pushes it to `origin`. The release
+workflow builds and publishes the installers, then redeploys the website using
+the version from the app's `VERSION` file.
+
+After merged work accumulates, clean up its local and remote branches with:
+
+```sh
+make cleanup-branches
+```
+
+The command updates `main` and the remote-tracking refs, lists only branches
+whose tips are contained in `origin/main`, and asks for confirmation before
+deleting them. It preserves `main`, unmerged branches, and tags. For
+non-interactive use, run `scripts/cleanup-merged-branches.zsh --yes` directly.
+
 ## Adding a new tool
 
 1. Create `apps/<tool>/` with `main.cpp`, a `VERSION` file, and `packaging/`
