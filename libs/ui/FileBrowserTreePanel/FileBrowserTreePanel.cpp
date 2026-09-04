@@ -1,7 +1,10 @@
 #include "FileBrowserTreePanel.h"
 
 #include <wx/artprov.h>
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
 #include <wx/imaglist.h>
+#include <wx/menu.h>
 
 #include <algorithm>
 
@@ -14,6 +17,7 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
     m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
+    m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &FileBrowserTreePanel::HandleItemContextMenu, this);
     m_homeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleHomeButtonClick, this);
     m_closeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleCloseButtonClick, this);
 
@@ -159,44 +163,84 @@ void FileBrowserTreePanel::HandleHiddenFilesCheckbox(wxCommandEvent& event) {
 }
 
 void FileBrowserTreePanel::HandleItemActivated(wxDataViewEvent& event) {
-    wxDataViewItem item = event.GetItem();
-    if (!item.IsOk()) {
+    const wxFileName path = ResolveItemPath(event.GetItem());
+    if (!path.IsOk()) {
         return;
     }
 
-    // Extract the string label of the row that was clicked
-    wxString itemText = m_dataViewTreeCtrl1->GetItemText(item);
+    OpenPath(path);
+}
 
-    // Case 1: Going up a level ("..")
+wxFileName FileBrowserTreePanel::ResolveItemPath(const wxDataViewItem& item) const {
+    if (!item.IsOk() || !m_currentPath.IsOk()) {
+        return {};
+    }
+
+    const wxString itemText = m_dataViewTreeCtrl1->GetItemText(item);
     if (itemText == "..") {
         wxFileName parentPath = m_currentPath;
-
-        // wxFileName::Up() cleanly pops the last directory component off the path stack
         if (parentPath.GetDirCount() > 0) {
             parentPath.RemoveLastDir();
         }
-
-        ListDir(parentPath);
+        return parentPath;
     }
-    // Case 2: Attempting to go down into a folder
-    else {
-        // Construct the combined prospective target path purely using the wxFileName API
-        wxFileName targetPath = m_currentPath;
-        targetPath.AppendDir(itemText);
 
-        // Only trigger a re-scan if the clicked item is actually an accessible folder
-        if (targetPath.DirExists()) {
-            ListDir(targetPath);
-        } else {
-            wxFileName filePath = m_currentPath;
-            filePath.SetFullName(itemText);
+    wxFileName directoryPath = m_currentPath;
+    directoryPath.AppendDir(itemText);
+    if (directoryPath.DirExists()) {
+        return directoryPath;
+    }
 
-            if (filePath.FileExists()) {
-                if (m_onFileOpened) {
-                    m_onFileOpened(filePath);
-                }
-            }
+    wxFileName filePath = m_currentPath;
+    filePath.SetFullName(itemText);
+    if (filePath.FileExists()) {
+        return filePath;
+    }
+
+    return {};
+}
+
+void FileBrowserTreePanel::OpenPath(const wxFileName& path) {
+    // DirExists() checks the directory portion of a wxFileName, which also
+    // exists for an ordinary file. Test the complete file path first.
+    if (path.FileExists()) {
+        if (m_onFileOpened) {
+            m_onFileOpened(path);
         }
+    } else if (path.DirExists()) {
+        ListDir(path);
+    }
+}
+
+void FileBrowserTreePanel::CopyPath(const wxFileName& path) {
+    wxClipboardLocker clipboard;
+    if (!clipboard) {
+        return;
+    }
+
+    wxTheClipboard->SetData(new wxTextDataObject(path.GetFullPath()));
+}
+
+void FileBrowserTreePanel::HandleItemContextMenu(wxDataViewEvent& event) {
+    const wxDataViewItem item = event.GetItem();
+    const wxFileName path = ResolveItemPath(item);
+    if (!path.IsOk()) {
+        return;
+    }
+
+    m_dataViewTreeCtrl1->Select(item);
+
+    wxMenu menu;
+    // Custom IDs avoid macOS applying responder-chain validation for stock
+    // commands such as wxID_COPY and disabling the item.
+    const int openId = menu.Append(wxID_ANY, "Open")->GetId();
+    const int copyPathId = menu.Append(wxID_ANY, "Copy Path")->GetId();
+
+    const int selection = m_dataViewTreeCtrl1->GetPopupMenuSelectionFromUser(menu);
+    if (selection == openId) {
+        OpenPath(path);
+    } else if (selection == copyPathId) {
+        CopyPath(path);
     }
 }
 
