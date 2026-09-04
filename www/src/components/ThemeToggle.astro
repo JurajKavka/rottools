@@ -2,8 +2,7 @@
 // Switches between the two Rotdown themes the app ships.
 //
 // The button advertises the action, never the current state: in Rotdown Light it
-// shows a moon and is painted in the dark palette, so it is a preview of what you
-// get by pressing it. In Rotdown Dark, the reverse.
+// shows a moon; in Rotdown Dark, it shows a sun.
 //
 // Icon only. The theme name lives in aria-label and title, so screen readers and
 // a hover tooltip still say which theme the press switches to.
@@ -60,35 +59,22 @@
     justify-content: center;
   }
 
-  /* Painted in the palette it switches to, so the button previews the result.
-     Values are the palettes' own (see src/styles/palettes/); they are literals
-     rather than var() because the page only ever exposes the *active* theme's
-     tokens. No media-query variant is needed: the button is hidden until the
-     script runs, and the script always stamps data-theme.
-
-     Default state is Rotdown Light active, so the button wears Rotdown Dark. */
   #theme-toggle {
-    /* Fixed height rather than vertical padding, so the button's size does not
-       drift if the icon changes. box-sizing is border-box globally, so 2rem is
-       the outer height, border included. */
+    /* Fixed square dimensions keep this aligned with the GitHub control. */
+    width: 2rem;
     height: 2rem;
-    padding: 0 var(--rd-space-2);
-    background: #17171a;
-    color: #e6e4e0;
-    border: var(--rd-rule-width) solid #34333a;
+    padding: 0;
+    background: transparent;
+    color: var(--rd-ink-muted);
+    border: var(--rd-rule-width) solid transparent;
     border-radius: var(--rd-radius);
     cursor: pointer;
     transition: border-color 0.15s ease, opacity 0.15s ease;
   }
 
-  :global(:root[data-theme='dark']) #theme-toggle {
-    background: #fdfdfb;
-    color: #1e1d1a;
-    border-color: #e2e0d9;
-  }
-
   #theme-toggle:hover {
     border-color: var(--rd-accent);
+    color: var(--rd-ink);
     opacity: 0.9;
   }
 
@@ -102,12 +88,10 @@
     stroke-linejoin: round;
   }
 
-  /* Filled as well as stroked: a crescent outline at 16px reads as a smudge, a
-     solid one reads as a moon. The moon only ever appears on the dark-painted
-     button, so it is always this yellow on #17171a. */
+  /* Filled as well as stroked: a crescent outline at 16px reads as a smudge. */
   .moon {
-    fill: #ffcc33;
-    stroke: #ffcc33;
+    fill: currentColor;
+    stroke: currentColor;
   }
 
   /* Show the icon for the theme the button switches to. */
