@@ -1,6 +1,7 @@
 #include "WebViewPanel.h"
 
 #include <wx/sizer.h>
+#include <wx/utils.h>
 #include <wx/webview.h>
 
 namespace {
@@ -102,11 +103,27 @@ void WebViewPanel::HandleWebViewLeftDown(wxMouseEvent& event) {
     event.Skip();
 }
 
+void WebViewPanel::HandleWebViewNavigation(wxWebViewEvent& event) {
+    const wxString url = event.GetURL();
+    const wxString lowerUrl = url.Lower();
+    if (!(lowerUrl.StartsWith("http://") || lowerUrl.StartsWith("https://"))) {
+        // Allow SetPage() and fragment navigation within the preview.
+        event.Skip();
+        return;
+    }
+
+    // Keep the rendered document in place, even if the browser cannot launch.
+    event.Veto();
+    wxLaunchDefaultBrowser(url);
+}
+
 void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior) {
     if (!m_webView) {
         // 3. Instantiate the wxWebView
         m_webView = wxWebView::New(this, wxID_ANY);
         m_webView->Bind(wxEVT_LEFT_DOWN, &WebViewPanel::HandleWebViewLeftDown, this);
+        m_webView->Bind(wxEVT_WEBVIEW_NAVIGATING, &WebViewPanel::HandleWebViewNavigation, this);
+        m_webView->Bind(wxEVT_WEBVIEW_NEWWINDOW, &WebViewPanel::HandleWebViewNavigation, this);
         wxSizer* mainSizer = GetSizer();
         // 4. Add it to the sizer, expanding to fill the panel
         mainSizer->Add(m_webView, 1, wxEXPAND | wxALL, 0);
