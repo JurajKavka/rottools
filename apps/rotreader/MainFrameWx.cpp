@@ -131,6 +131,8 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 
 	m_newFileTool = toolBar->AddTool( wxID_NEW_FILE, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_NEW), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
 
+	m_editTool = toolBar->AddTool( wxID_EDIT_TOOL, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_EDIT), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+
 	m_saveTool = toolBar->AddTool( wxID_ANY, _("Save"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, _("Save"), _("Save the current Markdown file"), NULL );
 
 	m_saveAsTool = toolBar->AddTool( wxID_ANY, _("Save As"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE_AS), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, _("Save As"), _("Save the current Markdown file with a new name"), NULL );

@@ -44,6 +44,7 @@ class MainFrameWx : public wxFrame
 			wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM,
 			wxID_WORDWRAP,
 			wxID_FONT,
+			wxID_EDIT_TOOL,
 		};
 
 		wxMenuBar* MenuBar;
@@ -57,6 +58,7 @@ class MainFrameWx : public wxFrame
 		wxToolBar* toolBar;
 		wxToolBarToolBase* m_fileOpenTool;
 		wxToolBarToolBase* m_newFileTool;
+		wxToolBarToolBase* m_editTool;
 		wxToolBarToolBase* m_saveTool;
 		wxToolBarToolBase* m_saveAsTool;
 		wxStatusBar* statusBar;
