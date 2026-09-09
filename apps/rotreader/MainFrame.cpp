@@ -60,6 +60,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
         m_bookmarksMenu->Append(wxWindow::NewControlId(), _("Bookmark Current Document\tCtrl+D"));
     m_bookmarkMenuBaseId = wxWindow::NewControlId(static_cast<int>(BookmarkStore::MaximumBookmarks));
 
+    toolBar->EnableTool(m_editTool->GetId(), false);
+
     Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleNewFileMenuItemClick, this, wxID_NEW_FILE);
     Bind(wxEVT_CLOSE_WINDOW, &MainFrame::HandleCloseWindow, this);
@@ -96,6 +98,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_MENU, &MainFrame::HandleAboutMenuItemClick, this, wxID_ABOUT);
     Bind(wxEVT_TOOL, &MainFrame::HandleNewFileMenuItemClick, this, m_newFileTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
+    Bind(wxEVT_TOOL, &MainFrame::HandleEditToolClick, this, m_editTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveAsMenuItemClick, this, m_saveAsTool->GetId());
     Bind(wxEVT_MENU_OPEN, &MainFrame::HandleBookmarksMenuOpen, this);
@@ -223,6 +226,13 @@ void MainFrame::HandleCloseWindow(wxCloseEvent& event) {
 
 void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
     (void)m_markdownEditorPanel->ShowOpenDialog();
+}
+
+void MainFrame::HandleEditToolClick(wxCommandEvent& event) {
+    wxWindow* focusedWindow = wxWindow::FindFocus();
+    m_markdownEditorPanel->Show();
+    ApplySourcePanelVisibility(focusedWindow);
+    m_markdownEditorPanel->FocusEditor();
 }
 
 void MainFrame::HandleSaveMenuItemClick(wxCommandEvent& event) {
@@ -793,6 +803,7 @@ void MainFrame::RefreshBrowserWatcher() {
 
 void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change) {
     m_currentDocument = change.filePath;
+    toolBar->EnableTool(m_editTool->GetId(), true);
 
     if (change.filePath.IsOk()) {
         SetTitle(change.filePath.GetFullName() + " - " + kApplicationTitle);

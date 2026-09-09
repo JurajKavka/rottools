@@ -460,6 +460,17 @@
           <property name="tooltip"></property>
         </object>
         <object class="tool" expanded="true">
+          <property name="bitmap">Load From Art Provider; wxART_EDIT; wxART_TOOLBAR</property>
+          <property name="context_menu">0</property>
+          <property name="id">wxID_EDIT_TOOL</property>
+          <property name="kind">wxITEM_NORMAL</property>
+          <property name="label">tool</property>
+          <property name="name">m_editTool</property>
+          <property name="permission">protected</property>
+          <property name="statusbar"></property>
+          <property name="tooltip"></property>
+        </object>
+        <object class="tool" expanded="true">
           <property name="bitmap">Load From Art Provider; wxART_FILE_SAVE; wxART_TOOLBAR</property>
           <property name="context_menu">0</property>
           <property name="id">wxID_ANY</property>

@@ -69,6 +69,7 @@ class MainFrame : public MainFrameWx {
     void HandleNewFileMenuItemClick(wxCommandEvent& event);
     void HandleCloseWindow(wxCloseEvent& event);
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
+    void HandleEditToolClick(wxCommandEvent& event);
     void HandleSaveMenuItemClick(wxCommandEvent& event);
     void HandleSaveAsMenuItemClick(wxCommandEvent& event);
     void HandleUndoMenuItemClick(wxCommandEvent& event);
