@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version 4.2.1-85-gdf26f269)
+// C++ code generated with wxFormBuilder (version 4.2.1-0-g80c4cb6)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO *NOT* EDIT THIS FILE!
@@ -16,33 +16,18 @@ FileBrowserTreePanelWx::FileBrowserTreePanelWx( wxWindow* parent, wxWindowID id,
 	wxBoxSizer* bSizer1;
 	bSizer1 = new wxBoxSizer( wxVERTICAL );
 
-	m_panel1 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	m_panel1->SetForegroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOWTEXT ) );
+	m_toolBar2 = new wxToolBar( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL );
+	m_toolBar2->SetToolBitmapSize( wxSize( 16,16 ) );
+	m_toolBar2->SetForegroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
+	m_toolBar2->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
 
-	wxBoxSizer* bSizer3;
-	bSizer3 = new wxBoxSizer( wxHORIZONTAL );
+	m_homeTool = m_toolBar2->AddTool( wxID_ANY, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
 
-	m_homeButton = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
+	m_closeTool = m_toolBar2->AddTool( wxID_ANY, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
 
-	m_homeButton->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ) );
-	m_homeButton->SetBitmapDisabled( wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_BUTTON) ) );
-	m_homeButton->SetToolTip( _("Users home directory.") );
+	m_toolBar2->Realize();
 
-	bSizer3->Add( m_homeButton, 0, wxLEFT, 2 );
-
-	m_closeButton = new wxBitmapButton( m_panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxSize( 16,16 ), wxBU_AUTODRAW|0 );
-
-	m_closeButton->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ) );
-	m_closeButton->SetBitmapDisabled( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ) );
-	m_closeButton->SetToolTip( _("Users home directory.") );
-
-	bSizer3->Add( m_closeButton, 0, wxLEFT, 2 );
-
-
-	m_panel1->SetSizer( bSizer3 );
-	m_panel1->Layout();
-	bSizer3->Fit( m_panel1 );
-	bSizer1->Add( m_panel1, 0, wxALIGN_RIGHT|wxBOTTOM|wxTOP, 2 );
+	bSizer1->Add( m_toolBar2, 0, wxALIGN_RIGHT|wxALL, 0 );
 
 	m_dataViewTreeCtrl1 = new wxDataViewTreeCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER|wxDV_ROW_LINES );
 	bSizer1->Add( m_dataViewTreeCtrl1, 1, wxEXPAND, 0 );

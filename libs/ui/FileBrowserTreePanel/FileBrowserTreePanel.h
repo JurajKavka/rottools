@@ -70,6 +70,6 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void HandleHiddenFilesCheckbox(wxCommandEvent& event);
     void HandleItemActivated(wxDataViewEvent& event);
     void HandleItemContextMenu(wxDataViewEvent& event);
-    void HandleHomeButtonClick(wxCommandEvent& event);
-    void HandleCloseButtonClick(wxCommandEvent& event);
+    void HandleHomeToolClick(wxCommandEvent& event);
+    void HandleCloseToolClick(wxCommandEvent& event);
 };
