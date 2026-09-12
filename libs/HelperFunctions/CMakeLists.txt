@@ -5,7 +5,7 @@ add_library(rottools::helpers ALIAS rottools_helpers)
 
 target_include_directories(rottools_helpers PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(rottools_helpers PUBLIC cxx_std_20)
-target_link_libraries(rottools_helpers PUBLIC ${wxWidgets_LIBRARIES})
+target_link_libraries(rottools_helpers PUBLIC ${ROTTOOLS_WX_CORE_LIBRARIES})
 
 if(ROTTOOLS_BUILD_LIB_APPS)
     add_executable(rottools_helpers_app main.cpp)
