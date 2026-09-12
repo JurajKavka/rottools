@@ -2,6 +2,8 @@
 
 #include <wx/aboutdlg.h>
 #include <wx/artprov.h>
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
 #include <wx/dnd.h>  // Required for wxFileDropTarget
 #include <wx/filedlg.h>
 #include <wx/fontdlg.h>
@@ -16,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "AgentPrompts.h"
 #include "AppConfigFunctions.h"
 #include "AppIcon.h"
 #include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
@@ -95,6 +98,10 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleWordWrapMenuItemClick, this, wxID_WORDWRAP);
     Bind(wxEVT_MENU, &MainFrame::HandleFontMenuItemClick, this, wxID_FONT);
+    Bind(wxEVT_MENU, &MainFrame::HandleCopyEnglishReviewPromptMenuItemClick, this,
+         wxID_COPY_ENGLISH_REVIEW_PROMPT_MENU_ITEM);
+    Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateCopyEnglishReviewPromptMenuItem, this,
+         wxID_COPY_ENGLISH_REVIEW_PROMPT_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleAboutMenuItemClick, this, wxID_ABOUT);
     Bind(wxEVT_TOOL, &MainFrame::HandleNewFileMenuItemClick, this, m_newFileTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
@@ -516,6 +523,40 @@ void MainFrame::HandleFontMenuItemClick(wxCommandEvent& event) {
     if (editorHadFocus) {
         m_markdownEditorPanel->FocusEditor();
     }
+}
+
+void MainFrame::HandleCopyEnglishReviewPromptMenuItemClick(wxCommandEvent&) {
+    if (!m_currentDocument.IsOk() || !m_currentDocument.FileExists() ||
+        m_markdownEditorPanel->HasUnsavedChanges()) {
+        wxMessageBox(_("The document has not been saved. Save it before copying an English review prompt."),
+                     _("Document Not Saved"), wxOK | wxICON_ERROR, this);
+        return;
+    }
+
+    wxMessageDialog confirmation(
+        this,
+        _("The agent will be instructed to overwrite the file in place. External changes cannot be reversed with "
+          "ROT Reader's Undo command.\n\nCopy the English review prompt to the clipboard?"),
+        _("External Agent Will Overwrite Document"), wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+    confirmation.SetOKCancelLabels(_("Copy Prompt"), wxGetStockLabel(wxID_CANCEL));
+    if (confirmation.ShowModal() != wxID_OK) {
+        return;
+    }
+
+    wxClipboardLocker clipboard;
+    if (!clipboard ||
+        !wxTheClipboard->SetData(new wxTextDataObject(agent_prompts::MakeEnglishReview(m_currentDocument)))) {
+        wxMessageBox(_("Could not copy the English review prompt to the clipboard."), _("Error"),
+                     wxOK | wxICON_ERROR, this);
+        return;
+    }
+
+    statusBar->SetStatusText(_("English review prompt copied. Paste it into Codex or Claude Code."));
+    m_replaceEditorStatusOnPreviewReady = false;
+}
+
+void MainFrame::HandleUpdateCopyEnglishReviewPromptMenuItem(wxUpdateUIEvent& event) {
+    event.Enable(m_currentDocument.IsOk());
 }
 
 void MainFrame::HandleAboutMenuItemClick(wxCommandEvent&) {
