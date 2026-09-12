@@ -111,6 +111,13 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_bookmarksMenu = new wxMenu();
 	MenuBar->Append( m_bookmarksMenu, _("Bookmarks") );
 
+	m_toolMenu = new wxMenu();
+	wxMenuItem* m_copyEnglishReviewPromptMenuItem;
+	m_copyEnglishReviewPromptMenuItem = new wxMenuItem( m_toolMenu, wxID_COPY_ENGLISH_REVIEW_PROMPT_MENU_ITEM, wxString( _("Copy English Review Prompt") ) , _("Copy a prompt for an AI agent to proofread the current document"), wxITEM_NORMAL );
+	m_toolMenu->Append( m_copyEnglishReviewPromptMenuItem );
+
+	MenuBar->Append( m_toolMenu, _("Tools") );
+
 	m_helpMenu = new wxMenu();
 	wxMenuItem* m_aboutMenuItem;
 	m_aboutMenuItem = new wxMenuItem( m_helpMenu, wxID_ABOUT, wxString( _("About ROT Reader") ) , wxEmptyString, wxITEM_NORMAL );
