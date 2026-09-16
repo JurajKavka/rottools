@@ -6,13 +6,15 @@
 #include <wx/statusbr.h>
 #include <wx/stockitem.h>
 
+#include <algorithm>
 #include <functional>
+#include <utility>
 
 #if defined(ROTTOOLS_HAS_EMBEDDED_APP_ICON) && !defined(__WXOSX__)
 #include "AppIcon.h"
 #include "AppIconData.h"
 #endif
-#include "ui/ChessBoardPanel.h"
+#include "ChessBoardPanel.h"
 #include "version.h"
 
 namespace {
@@ -44,7 +46,8 @@ MainFrame::MainFrame(wxWindow* parent)
 
     CreateStatusBar(1, wxSTB_DEFAULT_STYLE);
 
-    m_boardPanel = new ChessBoardPanel(this, m_game, std::bind_front(&MainFrame::HandleGameChanged, this));
+    m_boardPanel = new ChessBoardPanel(this, std::bind_front(&MainFrame::HandlePiecePressed, this),
+                                       std::bind_front(&MainFrame::HandleSquareReleased, this));
     auto* mainSizer = new wxBoxSizer(wxVERTICAL);
     mainSizer->Add(m_boardPanel, 1, wxEXPAND);
     SetSizer(mainSizer);
@@ -56,12 +59,16 @@ MainFrame::MainFrame(wxWindow* parent)
     SetMinClientSize(FromDIP(wxSize(288, 312)));
     SetClientSize(FromDIP(wxSize(376, 400)));
     Centre();
+    UpdateBoard();
     UpdateStatus();
 }
 
 void MainFrame::HandleNewGameMenuItemClick(wxCommandEvent&) {
     m_game.Reset();
-    m_boardPanel->ResetInteraction();
+    m_selected.reset();
+    m_lastMove.reset();
+    m_legalDestinations.clear();
+    UpdateBoard();
     UpdateStatus();
 }
 
@@ -77,8 +84,49 @@ void MainFrame::HandleAboutMenuItemClick(wxCommandEvent&) {
     wxAboutBox(info, this);
 }
 
-void MainFrame::HandleGameChanged() {
-    UpdateStatus();
+void MainFrame::HandlePiecePressed(rottools::chess::Piece piece, rottools::chess::Position position) {
+    if (m_game.Status() != rottools::chess::GameStatus::Playing || piece.color != m_game.SideToMove()) {
+        return;
+    }
+
+    m_selected = position;
+    m_legalDestinations = m_game.LegalDestinations(position);
+    UpdateBoard();
+}
+
+void MainFrame::HandleSquareReleased(std::optional<rottools::chess::Position> destination) {
+    if (m_game.Status() != rottools::chess::GameStatus::Playing || !m_selected) {
+        return;
+    }
+
+    if (destination == m_selected) {
+        return;
+    }
+
+    if (destination &&
+        std::find(m_legalDestinations.begin(), m_legalDestinations.end(), *destination) != m_legalDestinations.end() &&
+        m_game.TryMove(*m_selected, *destination)) {
+        m_lastMove = rottools::chess::Move{*m_selected, *destination};
+        UpdateStatus();
+    }
+
+    m_selected.reset();
+    m_legalDestinations.clear();
+    UpdateBoard();
+}
+
+void MainFrame::UpdateBoard() {
+    ChessBoardPanel::State state;
+    for (int rank = 0; rank < rottools::chess::kBoardSize; ++rank) {
+        for (int file = 0; file < rottools::chess::kBoardSize; ++file) {
+            const rottools::chess::Position position{file, rank};
+            state.pieces[rank * rottools::chess::kBoardSize + file] = m_game.PieceAt(position);
+        }
+    }
+    state.selected = m_selected;
+    state.lastMove = m_lastMove;
+    state.legalDestinations = m_legalDestinations;
+    m_boardPanel->SetState(std::move(state));
 }
 
 void MainFrame::UpdateStatus() {

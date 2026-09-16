@@ -25,24 +25,24 @@ namespace {
 
 }  // namespace
 
-ChessBoardPanel::ChessBoardPanel(wxWindow* parent, rottools::chess::ChessGame& game,
-                                 std::function<void()> onMoveCompleted)
-    : wxPanel(parent), m_game(game), m_onMoveCompleted(std::move(onMoveCompleted)) {
+ChessBoardPanel::ChessBoardPanel(wxWindow* parent, PiecePressedHandler onPiecePressed,
+                                 SquareReleasedHandler onSquareReleased)
+    : wxPanel(parent), m_onPiecePressed(std::move(onPiecePressed)), m_onSquareReleased(std::move(onSquareReleased)) {
     SetBackgroundStyle(wxBG_STYLE_PAINT);
     SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
     SetName(_("Chess board"));
-    SetToolTip(_("Select a piece, then click a highlighted square."));
+    SetToolTip(_("Drag a piece to a highlighted square, or select it and then click a destination."));
 
     Bind(wxEVT_PAINT, &ChessBoardPanel::HandlePaint, this);
     Bind(wxEVT_LEFT_DOWN, &ChessBoardPanel::HandleLeftDown, this);
+    Bind(wxEVT_LEFT_UP, &ChessBoardPanel::HandleLeftUp, this);
+    Bind(wxEVT_MOUSE_CAPTURE_LOST, &ChessBoardPanel::HandleMouseCaptureLost, this);
     Bind(wxEVT_SIZE, &ChessBoardPanel::HandleSize, this);
     Bind(wxEVT_SYS_COLOUR_CHANGED, &ChessBoardPanel::HandleSystemColourChanged, this);
 }
 
-void ChessBoardPanel::ResetInteraction() {
-    m_selected.reset();
-    m_lastMove.reset();
-    m_legalDestinations.clear();
+void ChessBoardPanel::SetState(State state) {
+    m_state = std::move(state);
     Refresh();
 }
 
@@ -73,13 +73,8 @@ std::optional<rottools::chess::Position> ChessBoardPanel::PositionAt(wxPoint poi
     return rottools::chess::Position{file, rottools::chess::kBoardSize - 1 - screenRank};
 }
 
-bool ChessBoardPanel::IsLegalDestination(rottools::chess::Position position) const {
-    return std::find(m_legalDestinations.begin(), m_legalDestinations.end(), position) != m_legalDestinations.end();
-}
-
-void ChessBoardPanel::Select(rottools::chess::Position position) {
-    m_selected = position;
-    m_legalDestinations = m_game.LegalDestinations(position);
+std::optional<rottools::chess::Piece> ChessBoardPanel::PieceAt(rottools::chess::Position position) const {
+    return m_state.pieces[position.rank * rottools::chess::kBoardSize + position.file];
 }
 
 void ChessBoardPanel::HandlePaint(wxPaintEvent&) {
@@ -107,10 +102,10 @@ void ChessBoardPanel::HandlePaint(wxPaintEvent&) {
             const bool light = (file + rank) % 2 != 0;
             wxColour squareColour = light ? lightSquare : darkSquare;
 
-            if (m_lastMove && (m_lastMove->from == position || m_lastMove->to == position)) {
+            if (m_state.lastMove && (m_state.lastMove->from == position || m_state.lastMove->to == position)) {
                 squareColour = Mix(squareColour, accent, 0.22);
             }
-            if (m_selected == position) {
+            if (m_state.selected == position) {
                 squareColour = Mix(squareColour, accent, 0.48);
             }
 
@@ -120,9 +115,9 @@ void ChessBoardPanel::HandlePaint(wxPaintEvent&) {
     }
 
     const int squareSize = board.width / rottools::chess::kBoardSize;
-    for (const auto destination : m_legalDestinations) {
+    for (const auto destination : m_state.legalDestinations) {
         wxRect marker = SquareRectangle(destination);
-        if (m_game.PieceAt(destination)) {
+        if (PieceAt(destination)) {
             const int inset = std::max(2, squareSize / 12);
             marker.Deflate(inset);
             dc.SetPen(wxPen(accent, std::max(2, FromDIP(2))));
@@ -142,7 +137,7 @@ void ChessBoardPanel::HandlePaint(wxPaintEvent&) {
         for (int rank = 0; rank < rottools::chess::kBoardSize; ++rank) {
             for (int file = 0; file < rottools::chess::kBoardSize; ++file) {
                 const rottools::chess::Position position{file, rank};
-                const auto piece = m_game.PieceAt(position);
+                const auto piece = PieceAt(position);
                 if (piece) {
                     DrawPiece(*graphics, SquareRectangle(position), *piece);
                 }
@@ -288,33 +283,37 @@ void ChessBoardPanel::DrawPiece(wxGraphicsContext& graphics, const wxRect& recta
 
 void ChessBoardPanel::HandleLeftDown(wxMouseEvent& event) {
     SetFocus();
-    const auto clicked = PositionAt(event.GetPosition());
-    if (!clicked || m_game.Status() != rottools::chess::GameStatus::Playing) {
-        return;
-    }
-
-    if (m_selected && IsLegalDestination(*clicked)) {
-        const rottools::chess::Move move{*m_selected, *clicked};
-        if (m_game.TryMove(move.from, move.to)) {
-            m_lastMove = move;
-            m_selected.reset();
-            m_legalDestinations.clear();
-            Refresh();
-            if (m_onMoveCompleted) {
-                m_onMoveCompleted();
-            }
-            return;
+    m_mouseDown = true;
+    CaptureMouse();
+    const auto position = PositionAt(event.GetPosition());
+    if (position && m_onPiecePressed) {
+        if (const auto piece = PieceAt(*position)) {
+            m_onPiecePressed(*piece, *position);
         }
     }
+}
 
-    const auto piece = m_game.PieceAt(*clicked);
-    if (piece && piece->color == m_game.SideToMove()) {
-        Select(*clicked);
-    } else {
-        m_selected.reset();
-        m_legalDestinations.clear();
+void ChessBoardPanel::HandleLeftUp(wxMouseEvent& event) {
+    if (!m_mouseDown) {
+        return;
     }
-    Refresh();
+    m_mouseDown = false;
+    if (HasCapture()) {
+        ReleaseMouse();
+    }
+    if (m_onSquareReleased) {
+        m_onSquareReleased(PositionAt(event.GetPosition()));
+    }
+}
+
+void ChessBoardPanel::HandleMouseCaptureLost(wxMouseCaptureLostEvent&) {
+    if (!m_mouseDown) {
+        return;
+    }
+    m_mouseDown = false;
+    if (m_onSquareReleased) {
+        m_onSquareReleased(std::nullopt);
+    }
 }
 
 void ChessBoardPanel::HandleSize(wxSizeEvent& event) {

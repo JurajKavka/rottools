@@ -5,11 +5,11 @@ include(RotToolsPackaging)
 add_executable(rotchess
     main.cpp
     MainFrame.cpp
-    ui/ChessBoardPanel.cpp
 )
 
 target_compile_features(rotchess PRIVATE cxx_std_20)
 target_link_libraries(rotchess PRIVATE
+    rottools::ui_chessboard
     rottools::chessgame
     rottools::helpers
     ${ROTTOOLS_WX_CORE_LIBRARIES}
