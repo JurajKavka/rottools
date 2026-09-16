@@ -17,14 +17,6 @@ constexpr std::array<PieceType, kBoardSize> kBackRank = {
 
 }  // namespace
 
-bool Position::IsValid() const {
-    return file >= 0 && file < kBoardSize && rank >= 0 && rank < kBoardSize;
-}
-
-Color Opposite(Color color) {
-    return color == Color::White ? Color::Black : Color::White;
-}
-
 ChessGame::ChessGame() {
     Reset();
 }

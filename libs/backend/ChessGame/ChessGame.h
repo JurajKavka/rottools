@@ -8,6 +8,13 @@
 #include "ChessTypes.h"
 
 namespace rottools::chess {
+
+enum class GameStatus {
+    Playing,
+    Checkmate,
+    Stalemate,
+};
+
 class ChessGame final {
    public:
     ChessGame();

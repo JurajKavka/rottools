@@ -20,17 +20,13 @@ enum class PieceType {
     King,
 };
 
-enum class GameStatus {
-    Playing,
-    Checkmate,
-    Stalemate,
-};
-
 struct Position {
     int file = 0;
     int rank = 0;
 
-    [[nodiscard]] bool IsValid() const;
+    [[nodiscard]] constexpr bool IsValid() const {
+        return file >= 0 && file < kBoardSize && rank >= 0 && rank < kBoardSize;
+    }
     auto operator<=>(const Position&) const = default;
 };
 
@@ -48,6 +44,8 @@ struct Move {
     auto operator<=>(const Move&) const = default;
 };
 
-[[nodiscard]] Color Opposite(Color color);
+[[nodiscard]] constexpr Color Opposite(Color color) {
+    return color == Color::White ? Color::Black : Color::White;
+}
 
 }  // namespace rottools::chess
