@@ -36,13 +36,24 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # --- Per-tool build toggles (each tool builds/releases independently) --------
 option(ROTTOOLS_BUILD_ROTREADER "Build the rotreader tool" ON)
 option(ROTTOOLS_BUILD_ROTPAD    "Build the rotpad tool" ON)
+option(ROTTOOLS_BUILD_ROTCHESS  "Build the rotchess tool" ON)
 # Optional per-library standalone smoke-test executables (was the old
 # `if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)` app-per-folder trick).
 option(ROTTOOLS_BUILD_LIB_APPS  "Build per-library standalone smoke-test apps" OFF)
 
 # --- wxWidgets: found once for the whole tree --------------------------------
 # The classic FindwxWidgets path works with Homebrew, apt, and the vcpkg port.
-find_package(wxWidgets COMPONENTS core base stc webview REQUIRED)
+# Keep a core/base-only link set for native tools that do not need the editor or
+# WebView components. An isolated rotchess configuration therefore has no
+# WebView requirement and the application never links the WebView libraries.
+find_package(wxWidgets COMPONENTS core base REQUIRED)
+set(ROTTOOLS_WX_CORE_LIBRARIES ${wxWidgets_LIBRARIES})
+
+set(ROTTOOLS_NEEDS_WX_EXTENDED OFF)
+if(ROTTOOLS_BUILD_ROTREADER OR ROTTOOLS_BUILD_LIB_APPS)
+    set(ROTTOOLS_NEEDS_WX_EXTENDED ON)
+    find_package(wxWidgets COMPONENTS core base stc webview REQUIRED)
+endif()
 include(${wxWidgets_USE_FILE})
 
 # --- Windows: WebView2 loader search path ------------------------------------
@@ -54,7 +65,7 @@ include(${wxWidgets_USE_FILE})
 # final link fails with LNK1104. Put the directory holding the loader back on the
 # search path. link_directories() only affects targets created afterwards, hence
 # the placement above add_subdirectory().
-if(WIN32)
+if(WIN32 AND ROTTOOLS_NEEDS_WX_EXTENDED)
     find_library(ROTTOOLS_WEBVIEW2_LOADER NAMES WebView2LoaderStatic WebView2Loader.dll)
     if(ROTTOOLS_WEBVIEW2_LOADER)
         get_filename_component(ROTTOOLS_WEBVIEW2_LOADER_DIR "${ROTTOOLS_WEBVIEW2_LOADER}" DIRECTORY)
@@ -72,7 +83,7 @@ endif()
 # LexerNameFromID / Lexilla::Load. Search for it the way FindwxWidgets would and
 # append it, so every target that already links ${wxWidgets_LIBRARIES} picks it
 # up after wxscintilla.
-if(WIN32 AND NOT "lexilla" IN_LIST wxWidgets_FIND_COMPONENTS)
+if(WIN32 AND ROTTOOLS_NEEDS_WX_EXTENDED AND NOT "lexilla" IN_LIST wxWidgets_FIND_COMPONENTS)
     find_library(ROTTOOLS_WX_LEXILLA_RELEASE NAMES wxlexilla
         PATHS "${wxWidgets_LIB_DIR}" NO_DEFAULT_PATH)
     find_library(ROTTOOLS_WX_LEXILLA_DEBUG NAMES wxlexillad

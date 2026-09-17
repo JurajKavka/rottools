@@ -7,3 +7,7 @@ endif()
 if(ROTTOOLS_BUILD_ROTPAD)
     add_subdirectory(rotpad)
 endif()
+
+if(ROTTOOLS_BUILD_ROTCHESS)
+    add_subdirectory(rotchess)
+endif()

@@ -5,6 +5,8 @@
         rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
+        rotchess rotchess-all rotchess-dev rotchess-build rotchess-rebuild \
+        rotchess-run rotchess-run-fg rotchess-package rotchess-icons rotchess-clean \
         run-filetree run-htmlsource run-texteditor run-scintillatexteditor \
         run-dirscan run-md2html run-helpers \
         build-texteditor build-scintillatexteditor \
@@ -91,6 +93,36 @@ rotpad-icons:             ## Generate rotpad's icons after its master SVG exists
 rotpad-clean:             ## Remove only rotpad's isolated build
 	$(MAKE) -C apps/rotpad clean
 
+##@ App — rotchess
+rotchess: rotchess-dev    ## Configure, build, and run rotchess
+
+rotchess-all:             ## Clean, build, and run rotchess
+	$(MAKE) -C apps/rotchess all
+
+rotchess-dev:             ## Incrementally build and run rotchess
+	$(MAKE) -C apps/rotchess dev
+
+rotchess-build:           ## Configure and build only rotchess
+	$(MAKE) -C apps/rotchess build
+
+rotchess-rebuild:         ## Rebuild rotchess without explicitly reconfiguring
+	$(MAKE) -C apps/rotchess rebuild
+
+rotchess-run:             ## Launch rotchess
+	$(MAKE) -C apps/rotchess run
+
+rotchess-run-fg:          ## Run rotchess in the foreground
+	$(MAKE) -C apps/rotchess run-fg
+
+rotchess-package:         ## Build and package only rotchess
+	$(MAKE) -C apps/rotchess package
+
+rotchess-icons:           ## Generate rotchess's icons after its master SVG exists
+	$(MAKE) -C apps/rotchess icons
+
+rotchess-clean:           ## Remove only rotchess's isolated build
+	$(MAKE) -C apps/rotchess clean
+
 ##@ Graphics
 # The suite logo has no binary, so it produces only the favicon set and the
 # square PNGs the website uses.
@@ -149,7 +181,7 @@ format:                ## Format all non-generated sources
 # Static analysis. wxFormBuilder-generated *Wx.h/*Wx.cpp are excluded.
 # constParameterCallback is suppressed globally: wxWidgets' Bind() requires event
 # handlers to take a non-const reference.
-# ctuOneDefinitionRuleViolation is suppressed because rotreader and rotpad are
+# ctuOneDefinitionRuleViolation is suppressed because the applications are
 # separate executables whose frame classes intentionally share the name MainFrame.
 check:                 ## Run cppcheck static analysis over libs + apps
 	cppcheck --std=c++20 --enable=warning,style,performance,portability \

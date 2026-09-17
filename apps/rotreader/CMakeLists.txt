@@ -37,4 +37,5 @@ rottools_package_app(
     DESCRIPTION  "A native Markdown reader (and editor)"
     ICON_DIR     "${CMAKE_CURRENT_SOURCE_DIR}/assets/icons"
     DESKTOP_CATEGORIES "Utility;TextTools;"
+    USES_WEBVIEW
 )
