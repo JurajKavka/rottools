@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
-#include <string>
 #include <vector>
 
 #include "AppConfigFunctions.h"
@@ -23,12 +22,15 @@
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
+#include "TextFilePreviewDialog.h"
 #include "version.h"
 
 namespace {
 constexpr auto kMarkdownFileWildcard = "Markdown files (*.md;*.markdown)|*.md;*.markdown";
+constexpr auto kOpenFileWildcard = "All files (*)|*";
 constexpr auto kApplicationTitle = "ROT Reader";
 constexpr std::size_t kMaximumSearchSeedLength = 150;
+constexpr std::size_t kMaximumReferenceBytes = 2 * 1024 * 1024;
 constexpr int kFindDialogMarginDip = 12;
 
 TextSearchOptions GetTextSearchOptions(const wxFindDialogEvent& event) {
@@ -130,11 +132,10 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_fileBrowserPanel = new FileBrowserTreePanel(
         m_mainSplitter,
-        {.onFileOpened = std::bind_front(&MainFrame::HandleOpenMarkdownFile, this),
+        {.onFileOpened = std::bind_front(&MainFrame::HandleOpenFile, this),
          .onDirectoryChanged = std::bind_front(&MainFrame::HandleDirectoryChanged, this),
          .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
-         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)},
-        std::vector<std::string>{".md", ".markdown"});
+         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)});
 
     m_rightSplitter =
         new wxSplitterWindow(m_mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
@@ -152,7 +153,6 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          .confirmSaveBeforeDiscard = std::bind_front(&MainFrame::HandleConfirmSaveBeforeDiscard, this),
          .confirmOverwriteExternalChanges = std::bind_front(&MainFrame::HandleConfirmOverwriteExternalChanges, this),
          .error = std::bind_front(&MainFrame::HandleMarkdownEditorError, this),
-         .selectOpenFile = std::bind_front(&MainFrame::HandleSelectOpenFile, this),
          .selectSaveFile = std::bind_front(&MainFrame::HandleSelectSaveFile, this)});
     m_markdownEditorPanel->SetEditorFont(rottools::LoadEditorFont(m_markdownEditorPanel->GetEditorFont()));
     m_viewMenu->Check(wxID_WORDWRAP, m_markdownEditorPanel->IsWordWrapEnabled());
@@ -189,7 +189,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Layout();
 
     // 4. Register drag and drop targets
-    this->SetDropTarget(new FileDropTarget(std::bind_front(&MainFrame::HandleOpenMarkdownFile, this)));
+    this->SetDropTarget(new FileDropTarget(std::bind_front(&MainFrame::HandleOpenFile, this)));
 }
 
 MainFrame::~MainFrame() {
@@ -225,7 +225,10 @@ void MainFrame::HandleCloseWindow(wxCloseEvent& event) {
 }
 
 void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
-    (void)m_markdownEditorPanel->ShowOpenDialog();
+    const std::optional<wxFileName> selectedFile = HandleSelectOpenFile();
+    if (selectedFile) {
+        HandleOpenFile(*selectedFile);
+    }
 }
 
 void MainFrame::HandleEditToolClick(wxCommandEvent& event) {
@@ -622,16 +625,36 @@ MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavio
             .scrollBehavior = scrollBehavior};
 }
 
-/**
- * Opens a Markdown file through the editor, which owns the document lifecycle.
- *
- * OpenFile() reads the UTF-8 file into the editor and reports the resulting
- * in-memory text through HandleMarkdownDocumentChanged(). That handler passes
- * the text to MarkdownPreviewPanel for asynchronous Markdown-to-HTML parsing;
- * once rendering finishes, HandleMarkdownReady() receives the generated HTML.
- */
-void MainFrame::HandleOpenMarkdownFile(const wxFileName& filePath) {
-    (void)m_markdownEditorPanel->OpenFile(filePath);
+/** Markdown documents replace the editor document; other files open for reference only. */
+void MainFrame::HandleOpenFile(const wxFileName& filePath) {
+    if (IsMarkdownFile(filePath)) {
+        (void)m_markdownEditorPanel->OpenFile(filePath);
+    } else {
+        ShowReferenceText(filePath);
+    }
+}
+
+void MainFrame::ShowReferenceText(const wxFileName& filePath) {
+    wxString text;
+    switch (ReadTextFileUtf8(filePath, text, kMaximumReferenceBytes)) {
+        case TextFileReadResult::TooLarge:
+            wxMessageBox(_("This file exceeds the 2 MiB quick-view limit. Use a search or chunked viewer instead."),
+                         _("File Too Large"), wxOK | wxICON_INFORMATION, this);
+            return;
+        case TextFileReadResult::NotUtf8Text:
+            wxMessageBox(_("This file is not UTF-8 text."), _("Cannot Preview File"), wxOK | wxICON_ERROR, this);
+            return;
+        case TextFileReadResult::IoError:
+            wxMessageBox(wxString::Format(_("Could not read file: %s"), filePath.GetFullPath().c_str()),
+                         _("Cannot Preview File"), wxOK | wxICON_ERROR, this);
+            return;
+        case TextFileReadResult::Ok:
+            break;
+    }
+
+    TextFilePreviewDialog dialog(this, filePath.GetFullName());
+    dialog.ShowText(text);
+    dialog.ShowModal();
 }
 
 void MainFrame::HandleFileBrowserHomeRequested() {
@@ -780,7 +803,7 @@ void MainFrame::HandleOpenBookmarkedDocument(const wxFileName& document) {
         m_markdownPreviewPanel->FocusContent();
         return;
     }
-    HandleOpenMarkdownFile(document);
+    HandleOpenFile(document);
 }
 
 void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
@@ -869,7 +892,17 @@ void MainFrame::HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessag
 }
 
 std::optional<wxFileName> MainFrame::HandleSelectOpenFile() {
-    wxFileDialog dialog(this, "Open Markdown File", {}, {}, kMarkdownFileWildcard, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+    wxString defaultDirectory;
+    if (m_currentDocument.IsOk()) {
+        defaultDirectory = m_currentDocument.GetPath();
+    } else {
+        const wxFileName browsedDirectory = m_fileBrowserPanel->GetCurrentDirectory();
+        if (browsedDirectory.IsOk()) {
+            defaultDirectory = browsedDirectory.GetFullPath();
+        }
+    }
+    wxFileDialog dialog(this, "Open File", defaultDirectory, {}, kOpenFileWildcard,
+                        wxFD_OPEN | wxFD_FILE_MUST_EXIST);
     if (dialog.ShowModal() != wxID_OK) {
         return std::nullopt;
     }

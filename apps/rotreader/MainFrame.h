@@ -129,6 +129,7 @@ class MainFrame : public MainFrameWx {
         const MarkdownEditorPanel::OverwritePromptMessage& prompt);
     void HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessage& message);
     std::optional<wxFileName> HandleSelectOpenFile();
+    void ShowReferenceText(const wxFileName& filePath);
     std::optional<wxFileName> HandleSelectSaveFile(const wxFileName& currentFile);
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
     void HandleMarkdownError(const wxString& error);
@@ -137,5 +138,5 @@ class MainFrame : public MainFrameWx {
     explicit MainFrame(wxWindow* parent);
     ~MainFrame();
 
-    void HandleOpenMarkdownFile(const wxFileName& filePath);
+    void HandleOpenFile(const wxFileName& filePath);
 };
