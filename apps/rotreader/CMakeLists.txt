@@ -14,6 +14,7 @@ target_link_libraries(rotreader PRIVATE
     rottools::ui_webview
     rottools::ui_markdownpreview
     rottools::ui_htmlsource
+    rottools::ui_textfilepreviewdialog
     rottools::ui_markdowneditor
     rottools::ui_filetree
     rottools::ui_filedrop

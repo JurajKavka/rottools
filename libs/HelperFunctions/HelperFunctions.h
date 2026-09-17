@@ -3,6 +3,7 @@
 #include <wx/filename.h>
 #include <wx/string.h>
 
+#include <cstddef>
 #include <format>
 #include <iostream>
 #include <string>
@@ -68,6 +69,9 @@ std::string trimToStdString(const wxString& str);
  */
 [[nodiscard]] bool IsSameFilePath(const wxFileName& left, const wxFileName& right);
 
+/** Returns true for .md and .markdown files, ignoring extension case. */
+[[nodiscard]] bool IsMarkdownFile(const wxFileName& filePath);
+
 /**
  * @brief Reads a whole file as UTF-8 text.
  *
@@ -76,6 +80,22 @@ std::string trimToStdString(const wxString& str);
  * @return false when the file could not be opened or read
  */
 bool ReadFileUtf8(const wxFileName& filePath, wxString& contents);
+
+enum class TextFileReadResult {
+    Ok,
+    TooLarge,
+    NotUtf8Text,
+    IoError,
+};
+
+/**
+ * @brief Reads a bounded UTF-8 text file for a quick preview.
+ *
+ * Removes a UTF-8 BOM and rejects NUL bytes or invalid UTF-8. The output is
+ * untouched on failure. The size limit applies to the original file bytes.
+ */
+[[nodiscard]] TextFileReadResult ReadTextFileUtf8(const wxFileName& filePath, wxString& contents,
+                                                  std::size_t maximumBytes);
 
 /**
  * @brief Writes text to a file as UTF-8, replacing anything already there.
