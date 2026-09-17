@@ -2,6 +2,7 @@ include(RotToolsVersion)
 include(RotToolsPackaging)
 
 add_executable(rotreader
+    AgentPrompts.cpp
     main.cpp
     MainFrame.cpp
     MainFrameWx.cpp
