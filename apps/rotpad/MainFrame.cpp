@@ -59,12 +59,14 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_editMenu->FindItem(wxID_PASTE)->SetItemLabel(wxGetStockLabel(wxID_PASTE, stockLabelFlags));
 
     // The browser and editor are siblings in one splitter, matching rotreader's
-    // top-level layout. FileBrowserTreePanel shows every ordinary file by default.
+    // top-level layout. Start with the file types from the Open dialog.
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_fileBrowserPanel = new FileBrowserTreePanel(
         m_mainSplitter, {.onFileOpened = std::bind_front(&MainFrame::HandleOpenTextFile, this),
                          .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
-                         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)});
+                         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)},
+        {{_("Supported text files"), {"txt", "json", "csv", "md", "sql"}},
+         {_("All files"), {FileBrowserTreePanel::kFilterAllFiles}}});
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
     m_textEditorPanel->SetEditorFont(rottools::LoadEditorFont(m_textEditorPanel->GetEditorFont()));
     m_textEditorPanel->SetWordWrap(true);

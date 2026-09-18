@@ -24,6 +24,7 @@
 #include <wx/panel.h>
 #include <wx/dataview.h>
 #include <wx/checkbox.h>
+#include <wx/choice.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -40,6 +41,7 @@ class FileBrowserTreePanelWx : public wxPanel
 		wxBitmapButton* m_closeButton;
 		wxDataViewTreeCtrl* m_dataViewTreeCtrl1;
 		wxCheckBox* m_hiddenFilesCheckbox;
+		wxChoice* m_fileTypeChoice;
 
 	public:
 

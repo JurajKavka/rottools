@@ -10,6 +10,13 @@
 
 class FileBrowserTreePanel : public FileBrowserTreePanelWx {
    public:
+    static constexpr char kFilterAllFiles[] = "*";
+
+    struct FileTypeFilter {
+        wxString label;
+        std::vector<std::string> extensions;
+    };
+
     using FileOpenedCallback = std::function<void(const wxFileName&)>;
     using DirectoryChangedCallback = std::function<void(const wxFileName&)>;
     using ActionRequestedCallback = std::function<void()>;
@@ -22,10 +29,14 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     };
 
     /**
-     * @param extensions Case-insensitive file extensions to show. An empty
-     *        collection shows all ordinary files.
+     * @param fileTypeFilter File type choices in display order. Each choice has a
+     *        label and case-insensitive extensions (with or without a leading
+     *        dot). The first choice is selected initially. An empty collection
+     *        hides the file type dropdown and shows all ordinary files. Use
+     *        kFilterAllFiles for an explicit unfiltered choice.
      */
-    explicit FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks = {}, std::vector<std::string> extensions = {});
+    explicit FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks = {},
+                                  std::vector<FileTypeFilter> fileTypeFilter = {});
     ~FileBrowserTreePanel();
 
     /**
@@ -46,6 +57,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
    private:
     DirectoryScanner m_directoryScanner;
     ScanOptions m_scanOptions;
+    std::vector<FileTypeFilter> m_fileTypeFilters;
     wxFileName m_currentPath;
     wxString m_savedSelectionText;
     /// Text of the row at the top of the viewport, saved so a KeepPosition
@@ -68,6 +80,8 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void CopyPath(const wxFileName& path);
     void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
     void HandleHiddenFilesCheckbox(wxCommandEvent& event);
+    void HandleFileTypeChoice(wxCommandEvent& event);
+    void ApplySelectedFileType();
     void HandleItemActivated(wxDataViewEvent& event);
     void HandleItemContextMenu(wxDataViewEvent& event);
     void HandleHomeButtonClick(wxCommandEvent& event);

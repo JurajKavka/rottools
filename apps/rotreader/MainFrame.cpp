@@ -142,7 +142,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
         {.onFileOpened = std::bind_front(&MainFrame::HandleOpenFile, this),
          .onDirectoryChanged = std::bind_front(&MainFrame::HandleDirectoryChanged, this),
          .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
-         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)});
+         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)},
+        {{_("Markdown"), {"md", "markdown"}}, {_("All files"), {FileBrowserTreePanel::kFilterAllFiles}}});
 
     m_rightSplitter =
         new wxSplitterWindow(m_mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
