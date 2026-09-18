@@ -7,21 +7,37 @@
 #include <wx/menu.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <utility>
 
-FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks, std::vector<std::string> extensions)
+FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks,
+                                           std::vector<FileTypeFilter> fileTypeFilter)
     : FileBrowserTreePanelWx(parent),
+      m_fileTypeFilters(std::move(fileTypeFilter)),
       m_onFileOpened(std::move(callbacks.onFileOpened)),
       m_onDirectoryChanged(std::move(callbacks.onDirectoryChanged)),
       m_onHomeRequested(std::move(callbacks.onHomeRequested)),
       m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
     m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
+    m_fileTypeChoice->Bind(wxEVT_CHOICE, &FileBrowserTreePanel::HandleFileTypeChoice, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &FileBrowserTreePanel::HandleItemContextMenu, this);
     m_homeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleHomeButtonClick, this);
     m_closeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleCloseButtonClick, this);
 
-    m_scanOptions.extensions = std::move(extensions);
+    if (m_fileTypeFilters.empty()) {
+        // No file type choices means no extension filter and no dropdown.
+        m_fileTypeChoice->Hide();
+        Layout();
+    } else {
+        // Keep the supplied order and use its first choice for the initial scan.
+        for (const FileTypeFilter& filter : m_fileTypeFilters) {
+            m_fileTypeChoice->Append(filter.label);
+        }
+        m_fileTypeChoice->SetSelection(0);
+        ApplySelectedFileType();
+    }
     m_scanOptions.showHiddenFiles = m_hiddenFilesCheckbox->IsChecked();
 
     // 2. Create an Image List (16x16 is the standard size for tree nodes)
@@ -157,6 +173,34 @@ void FileBrowserTreePanel::HandleHiddenFilesCheckbox(wxCommandEvent& event) {
 
     // 2. If a valid directory is currently being shown, re-scan it immediately
     // with the updated configuration layout
+    if (m_currentPath.IsOk()) {
+        ListDir(m_currentPath);
+    }
+}
+
+void FileBrowserTreePanel::ApplySelectedFileType() {
+    m_scanOptions.extensions.clear();
+
+    const int selection = m_fileTypeChoice->GetSelection();
+    if (selection == wxNOT_FOUND) {
+        return;
+    }
+
+    const auto& extensions = m_fileTypeFilters[static_cast<std::size_t>(selection)].extensions;
+    if (std::ranges::find(extensions, kFilterAllFiles) != extensions.end()) {
+        return;
+    }
+
+    for (const std::string& extension : extensions) {
+        if (!extension.empty()) {
+            // DirectoryScanner compares against path::extension(), which includes the dot.
+            m_scanOptions.extensions.push_back(extension.front() == '.' ? extension : "." + extension);
+        }
+    }
+}
+
+void FileBrowserTreePanel::HandleFileTypeChoice(wxCommandEvent& event) {
+    ApplySelectedFileType();
     if (m_currentPath.IsOk()) {
         ListDir(m_currentPath);
     }
