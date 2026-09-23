@@ -8,6 +8,8 @@
 #include "FileBrowserTreePanelWx.h"
 #include "HelperFunctions.h"
 
+class wxContextMenuEvent;
+
 class FileBrowserTreePanel : public FileBrowserTreePanelWx {
    public:
     static constexpr char kFilterAllFiles[] = "*";
@@ -84,6 +86,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void ApplySelectedFileType();
     void HandleItemActivated(wxDataViewEvent& event);
     void HandleItemContextMenu(wxDataViewEvent& event);
-    void HandleHomeToolClick(wxCommandEvent& event);
-    void HandleCloseToolClick(wxCommandEvent& event);
+    void HandleHeaderContextMenu(wxContextMenuEvent& event);
+    void HandleCloseButtonClick(wxCommandEvent& event);
+    void ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path);
 };

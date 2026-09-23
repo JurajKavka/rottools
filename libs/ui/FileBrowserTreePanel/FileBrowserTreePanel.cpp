@@ -2,13 +2,140 @@
 
 #include <wx/artprov.h>
 #include <wx/clipbrd.h>
+#include <wx/control.h>
 #include <wx/dataobj.h>
+#include <wx/dcbuffer.h>
 #include <wx/imaglist.h>
 #include <wx/menu.h>
+#include <wx/settings.h>
+#include <wx/sizer.h>
+#include <wx/stattext.h>
+#include <wx/toolbar.h>
 
 #include <algorithm>
 #include <cstddef>
 #include <utility>
+
+namespace {
+wxColour BlendColours(const wxColour& background, const wxColour& foreground, int foregroundAlpha) {
+    const int backgroundAlpha = 255 - foregroundAlpha;
+    return wxColour((background.Red() * backgroundAlpha + foreground.Red() * foregroundAlpha) / 255,
+                    (background.Green() * backgroundAlpha + foreground.Green() * foregroundAlpha) / 255,
+                    (background.Blue() * backgroundAlpha + foreground.Blue() * foregroundAlpha) / 255);
+}
+
+class FlatCloseButton final : public wxControl {
+   public:
+    explicit FlatCloseButton(wxWindow* parent)
+        : wxControl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxWANTS_CHARS) {
+        SetBackgroundStyle(wxBG_STYLE_PAINT);
+        SetLabel(_("Close File Browser"));
+        Bind(wxEVT_PAINT, &FlatCloseButton::HandlePaint, this);
+        Bind(wxEVT_ENTER_WINDOW, &FlatCloseButton::HandleEnter, this);
+        Bind(wxEVT_LEAVE_WINDOW, &FlatCloseButton::HandleLeave, this);
+        Bind(wxEVT_LEFT_DOWN, &FlatCloseButton::HandleLeftDown, this);
+        Bind(wxEVT_LEFT_UP, &FlatCloseButton::HandleLeftUp, this);
+        Bind(wxEVT_MOUSE_CAPTURE_LOST, &FlatCloseButton::HandleCaptureLost, this);
+        Bind(wxEVT_KEY_DOWN, &FlatCloseButton::HandleKeyDown, this);
+        Bind(wxEVT_SET_FOCUS, &FlatCloseButton::HandleFocusChanged, this);
+        Bind(wxEVT_KILL_FOCUS, &FlatCloseButton::HandleFocusChanged, this);
+        Bind(wxEVT_SYS_COLOUR_CHANGED, &FlatCloseButton::HandleSystemColourChanged, this);
+    }
+
+   protected:
+    wxSize DoGetBestSize() const override {
+        return FromDIP(wxSize(24, 24));
+    }
+
+   private:
+    bool m_hovered = false;
+    bool m_pressed = false;
+
+    void Activate() {
+        wxCommandEvent click(wxEVT_BUTTON, GetId());
+        click.SetEventObject(this);
+        ProcessWindowEvent(click);
+    }
+
+    void HandlePaint(wxPaintEvent& event) {
+        wxAutoBufferedPaintDC dc(this);
+        const wxColour background = GetParent()->GetBackgroundColour();
+        const wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+        const wxColour foreground = m_hovered ? textColour : BlendColours(background, textColour, 180);
+        dc.SetBackground(wxBrush(background));
+        dc.Clear();
+
+        wxRect buttonRect = GetClientRect();
+        buttonRect.Deflate(FromDIP(2));
+        dc.SetPen(wxPen(foreground, FromDIP(1)));
+        const wxSize size = GetClientSize();
+        const wxPoint center(size.x / 2, size.y / 2);
+        const int arm = FromDIP(4);
+        dc.DrawLine(center.x - arm, center.y - arm, center.x + arm, center.y + arm);
+        dc.DrawLine(center.x - arm, center.y + arm, center.x + arm, center.y - arm);
+
+        if (HasFocus()) {
+            dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT), FromDIP(1)));
+            dc.SetBrush(*wxTRANSPARENT_BRUSH);
+            dc.DrawRoundedRectangle(buttonRect, FromDIP(4));
+        }
+    }
+
+    void HandleEnter(wxMouseEvent& event) {
+        m_hovered = true;
+        Refresh();
+    }
+
+    void HandleLeave(wxMouseEvent& event) {
+        m_hovered = false;
+        Refresh();
+    }
+
+    void HandleLeftDown(wxMouseEvent& event) {
+        SetFocus();
+        CaptureMouse();
+        m_pressed = true;
+        m_hovered = true;
+        Refresh();
+    }
+
+    void HandleLeftUp(wxMouseEvent& event) {
+        const bool activate = m_pressed && GetClientRect().Contains(event.GetPosition());
+        m_pressed = false;
+        if (HasCapture()) {
+            ReleaseMouse();
+        }
+        Refresh();
+        if (activate) {
+            Activate();
+        }
+    }
+
+    void HandleCaptureLost(wxMouseCaptureLostEvent& event) {
+        m_pressed = false;
+        Refresh();
+    }
+
+    void HandleKeyDown(wxKeyEvent& event) {
+        const int key = event.GetKeyCode();
+        if (key == WXK_SPACE || key == WXK_RETURN || key == WXK_NUMPAD_ENTER) {
+            Activate();
+        } else {
+            event.Skip();
+        }
+    }
+
+    void HandleFocusChanged(wxFocusEvent& event) {
+        Refresh();
+        event.Skip();
+    }
+
+    void HandleSystemColourChanged(wxSysColourChangedEvent& event) {
+        Refresh();
+        event.Skip();
+    }
+};
+}  // namespace
 
 FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks,
                                            std::vector<FileTypeFilter> fileTypeFilter)
@@ -18,16 +145,27 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
       m_onDirectoryChanged(std::move(callbacks.onDirectoryChanged)),
       m_onHomeRequested(std::move(callbacks.onHomeRequested)),
       m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
-    // wxFormBuilder cannot add a stretchable toolbar space, so insert one before Close to keep it right-aligned.
-    const int closeToolPosition = m_toolBar2->GetToolPos(m_closeTool->GetId());
-    if (closeToolPosition != wxNOT_FOUND) {
-        m_toolBar2->InsertStretchableSpace(static_cast<std::size_t>(closeToolPosition));
-        m_toolBar2->Realize();
+    // The checked-in generated base still contains the old toolbar. Hide it
+    // until wxFormBuilder regenerates the base from the updated project.
+    wxSizerItem* firstItem = GetSizer()->GetItem(static_cast<std::size_t>(0));
+    if (auto* oldToolbar = dynamic_cast<wxToolBar*>(firstItem ? firstItem->GetWindow() : nullptr)) {
+        oldToolbar->Hide();
     }
 
+    wxPanel* header = new wxPanel(this);
+    wxBoxSizer* headerSizer = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* title = new wxStaticText(header, wxID_ANY, _("File Browser"));
+    FlatCloseButton* closeButton = new FlatCloseButton(header);
+    headerSizer->Add(title, 1, wxALIGN_CENTER_VERTICAL | wxLEFT, FromDIP(6));
+    headerSizer->Add(closeButton, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(4));
+    header->SetSizer(headerSizer);
+    GetSizer()->Insert(0, header, 0, wxEXPAND);
+    header->Bind(wxEVT_CONTEXT_MENU, &FileBrowserTreePanel::HandleHeaderContextMenu, this);
+    title->Bind(wxEVT_CONTEXT_MENU, &FileBrowserTreePanel::HandleHeaderContextMenu, this);
+    closeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleCloseButtonClick, this);
+    Layout();
+
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
-    Bind(wxEVT_TOOL, &FileBrowserTreePanel::HandleHomeToolClick, this, m_homeTool->GetId());
-    Bind(wxEVT_TOOL, &FileBrowserTreePanel::HandleCloseToolClick, this, m_closeTool->GetId());
     m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
     m_fileTypeChoice->Bind(wxEVT_CHOICE, &FileBrowserTreePanel::HandleFileTypeChoice, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
@@ -275,33 +413,41 @@ void FileBrowserTreePanel::CopyPath(const wxFileName& path) {
 void FileBrowserTreePanel::HandleItemContextMenu(wxDataViewEvent& event) {
     const wxDataViewItem item = event.GetItem();
     const wxFileName path = ResolveItemPath(item);
-    if (!path.IsOk()) {
-        return;
+    if (path.IsOk()) {
+        m_dataViewTreeCtrl1->Select(item);
     }
 
-    m_dataViewTreeCtrl1->Select(item);
-
-    wxMenu menu;
-    // Custom IDs avoid macOS applying responder-chain validation for stock
-    // commands such as wxID_COPY and disabling the item.
-    const int openId = menu.Append(wxID_ANY, "Open")->GetId();
-    const int copyPathId = menu.Append(wxID_ANY, "Copy Path")->GetId();
-
-    const int selection = m_dataViewTreeCtrl1->GetPopupMenuSelectionFromUser(menu);
-    if (selection == openId) {
-        OpenPath(path);
-    } else if (selection == copyPathId) {
-        CopyPath(path);
-    }
+    ShowBrowserContextMenu(m_dataViewTreeCtrl1, path);
 }
 
-void FileBrowserTreePanel::HandleHomeToolClick(wxCommandEvent& event) {
-    if (m_onHomeRequested) {
+void FileBrowserTreePanel::HandleHeaderContextMenu(wxContextMenuEvent& event) {
+    ShowBrowserContextMenu(this, {});
+}
+
+void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path) {
+    wxMenu menu;
+    int openId = wxID_NONE;
+    int copyPathId = wxID_NONE;
+    // Custom IDs avoid macOS applying responder-chain validation for stock
+    // commands such as wxID_COPY and disabling the item.
+    if (path.IsOk()) {
+        openId = menu.Append(wxID_ANY, _("Open"))->GetId();
+        copyPathId = menu.Append(wxID_ANY, _("Copy Path"))->GetId();
+        menu.AppendSeparator();
+    }
+    const int homeId = menu.Append(wxID_ANY, _("Home"))->GetId();
+
+    const int selection = owner->GetPopupMenuSelectionFromUser(menu);
+    if (path.IsOk() && selection == openId) {
+        OpenPath(path);
+    } else if (path.IsOk() && selection == copyPathId) {
+        CopyPath(path);
+    } else if (selection == homeId && m_onHomeRequested) {
         m_onHomeRequested();
     }
 }
 
-void FileBrowserTreePanel::HandleCloseToolClick(wxCommandEvent& event) {
+void FileBrowserTreePanel::HandleCloseButtonClick(wxCommandEvent& event) {
     if (m_onCloseRequested) {
         m_onCloseRequested();
     }
