@@ -62,7 +62,7 @@
         <property name="permission">none</property>
         <object class="sizeritem" expanded="true">
           <property name="border">0</property>
-          <property name="flag">wxALIGN_RIGHT|wxBOTTOM|wxTOP</property>
+          <property name="flag">wxEXPAND</property>
           <property name="proportion">0</property>
           <object class="wxToolBar" expanded="true">
             <property name="BottomDockable">1</property>
@@ -122,22 +122,22 @@
             <property name="window_name"></property>
             <property name="window_style"></property>
             <object class="tool" expanded="true">
-              <property name="bitmap">Load From Art Provider; wxART_GO_HOME; wxART_BUTTON</property>
+              <property name="bitmap">Load From Art Provider; wxART_GO_HOME; wxART_TOOLBAR</property>
               <property name="context_menu">0</property>
-              <property name="id">wxID_ANY</property>
+              <property name="id">wxID_HOME_TOOL</property>
               <property name="kind">wxITEM_NORMAL</property>
-              <property name="label">tool</property>
+              <property name="label">Home</property>
               <property name="name">m_homeTool</property>
               <property name="permission">protected</property>
               <property name="statusbar"></property>
               <property name="tooltip"></property>
             </object>
             <object class="tool" expanded="true">
-              <property name="bitmap">Load From Art Provider; wxART_CLOSE; wxART_BUTTON</property>
+              <property name="bitmap">Load From Art Provider; wxART_CLOSE; wxART_TOOLBAR</property>
               <property name="context_menu">0</property>
-              <property name="id">wxID_ANY</property>
+              <property name="id">wxID_CLOSE_TOOL</property>
               <property name="kind">wxITEM_NORMAL</property>
-              <property name="label">tool</property>
+              <property name="label">Close</property>
               <property name="name">m_closeTool</property>
               <property name="permission">protected</property>
               <property name="statusbar"></property>

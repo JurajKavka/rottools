@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version 4.2.1-85-gdf26f269)
+// C++ code generated with wxFormBuilder (version 4.2.1-0-g80c4cb6)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO *NOT* EDIT THIS FILE!
@@ -35,6 +35,12 @@ class FileBrowserTreePanelWx : public wxPanel
 	private:
 
 	protected:
+		enum
+		{
+			wxID_HOME_TOOL = 6000,
+			wxID_CLOSE_TOOL,
+		};
+
 		wxToolBar* m_toolBar2;
 		wxToolBarToolBase* m_homeTool;
 		wxToolBarToolBase* m_closeTool;

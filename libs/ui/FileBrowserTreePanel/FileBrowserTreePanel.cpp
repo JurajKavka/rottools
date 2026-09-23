@@ -18,6 +18,13 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
       m_onDirectoryChanged(std::move(callbacks.onDirectoryChanged)),
       m_onHomeRequested(std::move(callbacks.onHomeRequested)),
       m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
+    // wxFormBuilder cannot add a stretchable toolbar space, so insert one before Close to keep it right-aligned.
+    const int closeToolPosition = m_toolBar2->GetToolPos(m_closeTool->GetId());
+    if (closeToolPosition != wxNOT_FOUND) {
+        m_toolBar2->InsertStretchableSpace(static_cast<std::size_t>(closeToolPosition));
+        m_toolBar2->Realize();
+    }
+
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
     Bind(wxEVT_TOOL, &FileBrowserTreePanel::HandleHomeToolClick, this, m_homeTool->GetId());
     Bind(wxEVT_TOOL, &FileBrowserTreePanel::HandleCloseToolClick, this, m_closeTool->GetId());
