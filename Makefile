@@ -6,8 +6,9 @@
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
         run-filetree run-htmlsource run-texteditor run-scintillatexteditor \
+        run-textfilepreviewdialog \
         run-dirscan run-md2html run-helpers \
-        build-texteditor build-scintillatexteditor \
+        build-texteditor build-scintillatexteditor build-textfilepreviewdialog \
         build-webview build-filedrop \
         format check clean _demos
 
@@ -121,6 +122,12 @@ build-texteditor: _demos ## Build TextEditorPanel smoke app
 
 run-texteditor: build-texteditor ## Run TextEditorPanel smoke app
 	./build/libs/ui/TextEditorPanel/rottools_ui_texteditor_app
+
+build-textfilepreviewdialog: _demos ## Build TextFilePreviewDialog smoke app
+	cmake --build build --target rottools_ui_textfilepreviewdialog_app
+
+run-textfilepreviewdialog: build-textfilepreviewdialog ## Run TextFilePreviewDialog smoke app
+	./build/libs/ui/TextFilePreviewDialog/rottools_ui_textfilepreviewdialog_app
 
 run-dirscan: _demos    ## DirectoryScanner       (rottools::dirscan)
 	cmake --build build --target rottools_dirscan_app

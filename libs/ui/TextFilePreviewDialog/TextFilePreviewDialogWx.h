@@ -11,42 +11,35 @@
 #include <wx/xrc/xmlres.h>
 #include <wx/intl.h>
 #include <wx/string.h>
-#include <wx/bitmap.h>
-#include <wx/image.h>
-#include <wx/icon.h>
+#include <wx/checkbox.h>
 #include <wx/gdicmn.h>
-#include <wx/toolbar.h>
 #include <wx/font.h>
 #include <wx/colour.h>
 #include <wx/settings.h>
-#include <wx/dataview.h>
-#include <wx/checkbox.h>
-#include <wx/choice.h>
+#include <wx/toolbar.h>
+#include <wx/textctrl.h>
 #include <wx/sizer.h>
-#include <wx/panel.h>
+#include <wx/dialog.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Class FileBrowserTreePanelWx
+/// Class TextFilePreviewDialogWx
 ///////////////////////////////////////////////////////////////////////////////
-class FileBrowserTreePanelWx : public wxPanel
+class TextFilePreviewDialogWx : public wxDialog
 {
 	private:
 
 	protected:
-		wxToolBar* m_toolBar2;
-		wxToolBarToolBase* m_homeTool;
-		wxToolBarToolBase* m_closeTool;
-		wxDataViewTreeCtrl* m_dataViewTreeCtrl1;
-		wxCheckBox* m_hiddenFilesCheckbox;
-		wxChoice* m_fileTypeChoice;
+		wxToolBar* m_toolBar1;
+		wxCheckBox* m_wrapCheckBox;
+		wxTextCtrl* m_textCtrl2;
 
 	public:
 
-		FileBrowserTreePanelWx( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 337,584 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+		TextFilePreviewDialogWx( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 983,610 ), long style = wxDEFAULT_DIALOG_STYLE );
 
-		~FileBrowserTreePanelWx();
+		~TextFilePreviewDialogWx();
 
 };
 
