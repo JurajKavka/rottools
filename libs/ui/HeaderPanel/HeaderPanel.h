@@ -14,7 +14,7 @@ class HeaderPanel final : public wxPanel {
     struct ToolButton {
         using CreateButton = FlatButtonsBase* (*)(wxWindow*, const wxString&, std::function<void()>);
 
-        CreateButton create;
+        CreateButton create = nullptr;
         wxString label;
         std::function<void()> onClickHandler;
 
