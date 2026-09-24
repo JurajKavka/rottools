@@ -8,6 +8,8 @@
 #include "FileBrowserTreePanelWx.h"
 #include "HelperFunctions.h"
 
+class wxContextMenuEvent;
+
 class FileBrowserTreePanel : public FileBrowserTreePanelWx {
    public:
     static constexpr char kFilterAllFiles[] = "*";
@@ -69,7 +71,6 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     FileOpenedCallback m_onFileOpened;
     DirectoryChangedCallback m_onDirectoryChanged;
     ActionRequestedCallback m_onHomeRequested;
-    ActionRequestedCallback m_onCloseRequested;
 
     void UpdateTree(const std::vector<FileEntry>& entries);
     /// Finds the top-level row with the given text; invalid item if none match
@@ -84,6 +85,6 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void ApplySelectedFileType();
     void HandleItemActivated(wxDataViewEvent& event);
     void HandleItemContextMenu(wxDataViewEvent& event);
-    void HandleHomeButtonClick(wxCommandEvent& event);
-    void HandleCloseButtonClick(wxCommandEvent& event);
+    void HandleHeaderContextMenu(wxContextMenuEvent& event);
+    void ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path);
 };

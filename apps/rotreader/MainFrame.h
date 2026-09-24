@@ -102,6 +102,7 @@ class MainFrame : public MainFrameWx {
     void HandleUpdateCopyEnglishReviewPromptMenuItem(wxUpdateUIEvent& event);
     void HandleAboutMenuItemClick(wxCommandEvent& event);
     void HandleHtmlSourcePanelClose();
+    void HandleMarkdownEditorPanelClose();
     void HideFileBrowser();
     void ShowFileBrowser();
     void ApplySourcePanelVisibility(wxWindow* focusedWindowBeforeChange = nullptr);

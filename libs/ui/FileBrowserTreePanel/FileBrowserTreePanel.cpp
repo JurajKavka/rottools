@@ -5,10 +5,15 @@
 #include <wx/dataobj.h>
 #include <wx/imaglist.h>
 #include <wx/menu.h>
+#include <wx/sizer.h>
+#include <wx/toolbar.h>
 
 #include <algorithm>
 #include <cstddef>
 #include <utility>
+
+#include "FlatHomeButton.h"
+#include "HeaderPanel.h"
 
 FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks,
                                            std::vector<FileTypeFilter> fileTypeFilter)
@@ -16,15 +21,28 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
       m_fileTypeFilters(std::move(fileTypeFilter)),
       m_onFileOpened(std::move(callbacks.onFileOpened)),
       m_onDirectoryChanged(std::move(callbacks.onDirectoryChanged)),
-      m_onHomeRequested(std::move(callbacks.onHomeRequested)),
-      m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
+      m_onHomeRequested(std::move(callbacks.onHomeRequested)) {
+    // The checked-in generated base still contains the old toolbar. Hide it
+    // until wxFormBuilder regenerates the base from the updated project.
+    wxSizerItem* firstItem = GetSizer()->GetItem(static_cast<std::size_t>(0));
+    if (auto* oldToolbar = dynamic_cast<wxToolBar*>(firstItem ? firstItem->GetWindow() : nullptr)) {
+        oldToolbar->Hide();
+    }
+
+    std::vector<HeaderPanel::ToolButton> toolButtons{
+        HeaderPanel::ToolButton::Make<FlatHomeButton>(_("Home"), m_onHomeRequested),
+    };
+    HeaderPanel* header =
+        new HeaderPanel(this, std::move(toolButtons), {_("Close File Browser"), std::move(callbacks.onCloseRequested)});
+    GetSizer()->Insert(0, header, 0, wxEXPAND);
+    header->Bind(wxEVT_CONTEXT_MENU, &FileBrowserTreePanel::HandleHeaderContextMenu, this);
+    Layout();
+
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
     m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
     m_fileTypeChoice->Bind(wxEVT_CHOICE, &FileBrowserTreePanel::HandleFileTypeChoice, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &FileBrowserTreePanel::HandleItemContextMenu, this);
-    m_homeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleHomeButtonClick, this);
-    m_closeButton->Bind(wxEVT_BUTTON, &FileBrowserTreePanel::HandleCloseButtonClick, this);
 
     if (m_fileTypeFilters.empty()) {
         // No file type choices means no extension filter and no dropdown.
@@ -268,35 +286,37 @@ void FileBrowserTreePanel::CopyPath(const wxFileName& path) {
 void FileBrowserTreePanel::HandleItemContextMenu(wxDataViewEvent& event) {
     const wxDataViewItem item = event.GetItem();
     const wxFileName path = ResolveItemPath(item);
-    if (!path.IsOk()) {
-        return;
+    if (path.IsOk()) {
+        m_dataViewTreeCtrl1->Select(item);
     }
 
-    m_dataViewTreeCtrl1->Select(item);
+    ShowBrowserContextMenu(m_dataViewTreeCtrl1, path);
+}
 
+void FileBrowserTreePanel::HandleHeaderContextMenu(wxContextMenuEvent& event) {
+    ShowBrowserContextMenu(this, {});
+}
+
+void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path) {
     wxMenu menu;
+    int openId = wxID_NONE;
+    int copyPathId = wxID_NONE;
     // Custom IDs avoid macOS applying responder-chain validation for stock
     // commands such as wxID_COPY and disabling the item.
-    const int openId = menu.Append(wxID_ANY, "Open")->GetId();
-    const int copyPathId = menu.Append(wxID_ANY, "Copy Path")->GetId();
+    if (path.IsOk()) {
+        openId = menu.Append(wxID_ANY, _("Open"))->GetId();
+        copyPathId = menu.Append(wxID_ANY, _("Copy Path"))->GetId();
+        menu.AppendSeparator();
+    }
+    const int homeId = menu.Append(wxID_ANY, _("Home"))->GetId();
 
-    const int selection = m_dataViewTreeCtrl1->GetPopupMenuSelectionFromUser(menu);
-    if (selection == openId) {
+    const int selection = owner->GetPopupMenuSelectionFromUser(menu);
+    if (path.IsOk() && selection == openId) {
         OpenPath(path);
-    } else if (selection == copyPathId) {
+    } else if (path.IsOk() && selection == copyPathId) {
         CopyPath(path);
-    }
-}
-
-void FileBrowserTreePanel::HandleHomeButtonClick(wxCommandEvent& event) {
-    if (m_onHomeRequested) {
+    } else if (selection == homeId && m_onHomeRequested) {
         m_onHomeRequested();
-    }
-}
-
-void FileBrowserTreePanel::HandleCloseButtonClick(wxCommandEvent& event) {
-    if (m_onCloseRequested) {
-        m_onCloseRequested();
     }
 }
 

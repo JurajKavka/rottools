@@ -1,5 +1,7 @@
 # Reusable wxWidgets UI components.
 add_subdirectory(FileDropTarget)
+add_subdirectory(FlatButtons)
+add_subdirectory(HeaderPanel)
 add_subdirectory(WebViewPanel)
 add_subdirectory(HtmlSourcePanel)
 add_subdirectory(FileBrowserTreePanel)

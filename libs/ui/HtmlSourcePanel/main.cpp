@@ -1,20 +1,29 @@
+#include <wx/log.h>
 #include <wx/wx.h>
+
+#include <functional>
 
 #include "HtmlSourcePanel.h"
 
 class HtmlSourcePanelApp : public wxApp {
    public:
     bool OnInit() override;
+
+   private:
+    void HandleCloseButtonClick();
 };
 
 wxIMPLEMENT_APP(HtmlSourcePanelApp);
 
 bool HtmlSourcePanelApp::OnInit() {
+    wxLog::SetActiveTarget(new wxLogStderr());
     // 1. Create a Top-Level Window (Frame) to hold your panel
     wxFrame* mainFrame = new wxFrame(nullptr, wxID_ANY, "Test: HTML Source", wxDefaultPosition, wxSize(700, 500));
+    SetTopWindow(mainFrame);
 
     // 2. Instantiate your custom panel, passing the mainFrame as its parent
-    HtmlSourcePanel* sourcePanel = new HtmlSourcePanel(mainFrame);
+    HtmlSourcePanel* sourcePanel =
+        new HtmlSourcePanel(mainFrame, std::bind_front(&HtmlSourcePanelApp::HandleCloseButtonClick, this));
 
     wxBoxSizer* frameSizer = new wxBoxSizer(wxVERTICAL);
     frameSizer->Add(sourcePanel, 1, wxEXPAND | wxALL, 0);
@@ -39,4 +48,9 @@ bool HtmlSourcePanelApp::OnInit() {
         "</table>\n");
 
     return true;
+}
+
+void HtmlSourcePanelApp::HandleCloseButtonClick() {
+    wxLogMessage("HTML source close button clicked");
+    GetTopWindow()->Close();
 }
