@@ -11,23 +11,8 @@
 
 FileBrowserTreePanelWx::FileBrowserTreePanelWx( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
 {
-	this->SetForegroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOWTEXT ) );
-
 	wxBoxSizer* bSizer1;
 	bSizer1 = new wxBoxSizer( wxVERTICAL );
-
-	m_toolBar2 = new wxToolBar( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL );
-	m_toolBar2->SetToolBitmapSize( wxSize( 16,16 ) );
-	m_toolBar2->SetForegroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
-	m_toolBar2->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
-
-	m_homeTool = m_toolBar2->AddTool( wxID_HOME_TOOL, _("Home"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_GO_HOME), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
-
-	m_closeTool = m_toolBar2->AddTool( wxID_CLOSE_TOOL, _("Close"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
-
-	m_toolBar2->Realize();
-
-	bSizer1->Add( m_toolBar2, 0, wxEXPAND, 0 );
 
 	m_dataViewTreeCtrl1 = new wxDataViewTreeCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER|wxDV_ROW_LINES );
 	bSizer1->Add( m_dataViewTreeCtrl1, 1, wxEXPAND, 2 );

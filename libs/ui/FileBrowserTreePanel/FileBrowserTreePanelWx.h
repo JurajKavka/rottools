@@ -10,16 +10,12 @@
 #include <wx/artprov.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/intl.h>
-#include <wx/string.h>
-#include <wx/bitmap.h>
-#include <wx/image.h>
-#include <wx/icon.h>
+#include <wx/dataview.h>
 #include <wx/gdicmn.h>
-#include <wx/toolbar.h>
 #include <wx/font.h>
 #include <wx/colour.h>
 #include <wx/settings.h>
-#include <wx/dataview.h>
+#include <wx/string.h>
 #include <wx/checkbox.h>
 #include <wx/choice.h>
 #include <wx/sizer.h>
@@ -35,15 +31,6 @@ class FileBrowserTreePanelWx : public wxPanel
 	private:
 
 	protected:
-		enum
-		{
-			wxID_HOME_TOOL = 6000,
-			wxID_CLOSE_TOOL,
-		};
-
-		wxToolBar* m_toolBar2;
-		wxToolBarToolBase* m_homeTool;
-		wxToolBarToolBase* m_closeTool;
 		wxDataViewTreeCtrl* m_dataViewTreeCtrl1;
 		wxCheckBox* m_hiddenFilesCheckbox;
 		wxChoice* m_fileTypeChoice;
