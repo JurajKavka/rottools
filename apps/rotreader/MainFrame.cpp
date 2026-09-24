@@ -161,7 +161,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          .confirmSaveBeforeDiscard = std::bind_front(&MainFrame::HandleConfirmSaveBeforeDiscard, this),
          .confirmOverwriteExternalChanges = std::bind_front(&MainFrame::HandleConfirmOverwriteExternalChanges, this),
          .error = std::bind_front(&MainFrame::HandleMarkdownEditorError, this),
-         .selectSaveFile = std::bind_front(&MainFrame::HandleSelectSaveFile, this)});
+         .selectSaveFile = std::bind_front(&MainFrame::HandleSelectSaveFile, this),
+         .onCloseRequested = std::bind_front(&MainFrame::HandleMarkdownEditorPanelClose, this)});
     m_markdownEditorPanel->SetEditorFont(rottools::LoadEditorFont(m_markdownEditorPanel->GetEditorFont()));
     m_viewMenu->Check(wxID_WORDWRAP, m_markdownEditorPanel->IsWordWrapEnabled());
     m_rightSplitter->SetMinimumPaneSize(100);
@@ -502,6 +503,13 @@ void MainFrame::HandleHtmlSourcePanelClose() {
     wxWindow* focusedWindow = wxWindow::FindFocus();
     m_htmlSourcePanel->Hide();
     m_viewMenu->Check(wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM, false);
+    ApplySourcePanelVisibility(focusedWindow);
+}
+
+void MainFrame::HandleMarkdownEditorPanelClose() {
+    wxWindow* focusedWindow = wxWindow::FindFocus();
+    m_markdownEditorPanel->Hide();
+    m_viewMenu->Check(wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM, false);
     ApplySourcePanelVisibility(focusedWindow);
 }
 

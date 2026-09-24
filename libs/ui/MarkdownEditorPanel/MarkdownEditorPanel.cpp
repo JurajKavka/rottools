@@ -1,11 +1,13 @@
 #include "MarkdownEditorPanel.h"
 
 #include <wx/intl.h>
+#include <wx/sizer.h>
 
 #include <functional>
 #include <utility>
 
 #include "FsWatcher.h"
+#include "HeaderPanel.h"
 
 namespace {
 MarkdownEditorPanel::StatusMessage MakeStatusMessage(ScintillaTextEditorPanel::Status status,
@@ -110,7 +112,11 @@ MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, Callbacks callbacks)
            .onError = std::bind_front(&HandleError, std::move(callbacks.error)),
            .documentWatchRequested = std::bind_front(&MarkdownEditorPanel::HandleDocumentWatchRequested, this),
            .selectOpenFile = std::move(callbacks.selectOpenFile),
-           .selectSaveFile = std::move(callbacks.selectSaveFile)}) {}
+           .selectSaveFile = std::move(callbacks.selectSaveFile)}) {
+    auto* header = new HeaderPanel(this, {}, {_("Close Markdown Editor"), std::move(callbacks.onCloseRequested)});
+    GetSizer()->Insert(0, header, 0, wxEXPAND);
+    Layout();
+}
 
 MarkdownEditorPanel::~MarkdownEditorPanel() = default;
 

@@ -69,6 +69,9 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
 
         /** Presents the host's native Save As dialog; an empty result means Cancel. */
         SelectSaveFileCallback selectSaveFile;
+
+        /** Requests that the host hide the Markdown editor panel. */
+        std::function<void()> onCloseRequested;
     };
 
     explicit MarkdownEditorPanel(wxWindow* parent, Callbacks callbacks = {});

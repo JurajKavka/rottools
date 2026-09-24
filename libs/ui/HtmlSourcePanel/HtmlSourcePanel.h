@@ -18,8 +18,5 @@ class HtmlSourcePanel : public HtmlSourcePanelWx {
     [[nodiscard]] bool CanCopy() const;
 
    private:
-    OnCloseCallback m_onCloseCallback;
-
     void HandleMarginClick(wxStyledTextEvent& event);
-    void HandleCloseButtonClick(wxCommandEvent& event);
 };

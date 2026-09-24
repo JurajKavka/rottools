@@ -6,5 +6,5 @@ target_include_directories(rottools_ui_markdowneditor PUBLIC ${CMAKE_CURRENT_SOU
 target_compile_features(rottools_ui_markdowneditor PUBLIC cxx_std_20)
 target_link_libraries(rottools_ui_markdowneditor
     PUBLIC rottools::ui_scintillatexteditor
-    PRIVATE rottools::fswatcher
+    PRIVATE rottools::fswatcher rottools::ui_headerpanel
 )

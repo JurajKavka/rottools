@@ -1,7 +1,21 @@
 #include "HtmlSourcePanel.h"
 
-HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback)
-    : HtmlSourcePanelWx(parent), m_onCloseCallback(std::move(onCloseCallback)) {
+#include <wx/sizer.h>
+
+#include <cstddef>
+#include <utility>
+
+#include "HeaderPanel.h"
+
+HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback) : HtmlSourcePanelWx(parent) {
+    // The generated base still has its original top row and close button.
+    // Hide that row until the wxFormBuilder project is updated by its owner.
+    m_closeButton->Hide();
+    GetSizer()->GetItem(static_cast<std::size_t>(0))->Show(false);
+    auto* header = new HeaderPanel(this, {}, {_("Close HTML Source"), std::move(onCloseCallback)});
+    GetSizer()->Insert(0, header, 0, wxEXPAND);
+    Layout();
+
     m_styledTextCtrl->SetLexer(wxSTC_LEX_HTML);
 
     // Monospace font for every style; StyleClearAll propagates the default
@@ -30,7 +44,6 @@ HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallba
     m_styledTextCtrl->SetReadOnly(true);
 
     m_styledTextCtrl->Bind(wxEVT_STC_MARGINCLICK, &HtmlSourcePanel::HandleMarginClick, this);
-    m_closeButton->Bind(wxEVT_BUTTON, &HtmlSourcePanel::HandleCloseButtonClick, this);
 }
 
 void HtmlSourcePanel::ShowHtml(const wxString& html) {
@@ -53,11 +66,5 @@ void HtmlSourcePanel::HandleMarginClick(wxStyledTextEvent& event) {
     int line = m_styledTextCtrl->LineFromPosition(event.GetPosition());
     if (m_styledTextCtrl->GetFoldLevel(line) & wxSTC_FOLDLEVELHEADERFLAG) {
         m_styledTextCtrl->ToggleFold(line);
-    }
-}
-
-void HtmlSourcePanel::HandleCloseButtonClick(wxCommandEvent& event) {
-    if (m_onCloseCallback) {
-        m_onCloseCallback();
     }
 }
