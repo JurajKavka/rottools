@@ -5,7 +5,7 @@
         rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
-        run-filetree run-htmlsource run-texteditor run-scintillatexteditor \
+        run-filetree run-flatbuttons run-headerpanel run-htmlsource run-texteditor run-scintillatexteditor \
         run-textfilepreviewdialog \
         run-dirscan run-md2html run-helpers \
         build-texteditor build-scintillatexteditor build-textfilepreviewdialog \
@@ -99,6 +99,14 @@ web-icons:             ## Regenerate the rottools suite icons into www/public
 	./scripts/generate-icons.sh rottools --name "ROT Tools" --web-out www/public
 
 ##@ Components — build & run a shared library in isolation
+run-headerpanel: _demos ## HeaderPanel (rottools::ui_headerpanel)
+	cmake --build build --target rottools_ui_headerpanel_app
+	./build/libs/ui/HeaderPanel/rottools_ui_headerpanel_app
+
+run-flatbuttons: _demos ## FlatButtons (rottools::ui_flatbuttons)
+	cmake --build build --target rottools_ui_flatbuttons_app
+	./build/libs/ui/FlatButtons/rottools_ui_flatbuttons_app
+
 run-filetree: _demos   ## FileBrowserTreePanel   (rottools::ui_filetree)
 	cmake --build build --target rottools_ui_filetree_app
 	./build/libs/ui/FileBrowserTreePanel/rottools_ui_filetree_app

@@ -112,10 +112,32 @@ shared-library target not covered by a Make target. Relevant examples are:
 - Build one shared component in isolation: `cmake --build build --target rottools_ui_webview`
 - Build the per-library standalone smoke-test apps: `cmake -B build -DROTTOOLS_BUILD_LIB_APPS=ON`
 
-The root Makefile also wraps shared-component smoke apps (`run-filetree`, `run-htmlsource`,
-`run-markdownpreview`, `run-texteditor`, `run-scintillatexteditor`, `run-textfilepreviewdialog`,
-`run-dirscan`, `run-md2html`, and `run-helpers`) plus build-only component targets. Prefer those
-named targets over reconstructing their configure/build/run sequences.
+The root Makefile also wraps shared-component smoke apps (`run-flatbuttons`, `run-headerpanel`,
+`run-filetree`, `run-htmlsource`, `run-markdownpreview`, `run-texteditor`, `run-scintillatexteditor`,
+`run-textfilepreviewdialog`, `run-dirscan`, `run-md2html`, and `run-helpers`) plus build-only
+component targets. Prefer those named targets over reconstructing their configure/build/run
+sequences.
+
+## Adding a component under `libs/`
+
+- Put the component's hand-written sources, public headers, `CMakeLists.txt`, and `main.cpp` in its
+  own directory under the appropriate `libs/` area. Register that directory with
+  `add_subdirectory()` in its parent `CMakeLists.txt`.
+- Define a library target with a `rottools::<name>` alias, expose the public include directory,
+  require C++20, and link its dependencies through CMake. Keep the component usable without
+  linking either desktop application.
+- Every new component must have a `main.cpp` with a meaningful, standalone smoke test. It must
+  provide its own entry point (or `wxApp` for a GUI component), instantiate or call the component,
+  and exercise its main behavior with visible output or interaction. It must compile as a separate
+  executable using the component library and its declared dependencies, without an app target.
+- In the component's `CMakeLists.txt`, add that executable inside
+  `if(ROTTOOLS_BUILD_LIB_APPS)` and link it to the component's `rottools::*` target. Use the
+  `rottools_<name>_app` target convention so the demo can be built independently.
+- Add a root `Makefile` target that configures demos through `_demos`, builds only this executable,
+  and runs it from its path under `build/libs/`. Add the target to `.PHONY` and give its rule an
+  inline `##` description: `make help` lists targets from those descriptions. Check that the
+  component's command appears in `make help` and points to the correct executable. Follow the
+  approval rule above before running configure, build, or demo commands.
 
 ## CI and verification
 
