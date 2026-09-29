@@ -4,6 +4,10 @@
 
 #include "HtmlSourcePanelWx.h"
 
+class wxCommandEvent;
+class wxContextMenuEvent;
+class wxMenuEvent;
+
 class HtmlSourcePanel : public HtmlSourcePanelWx {
    public:
     using OnCloseCallback = std::function<void()>;
@@ -18,5 +22,10 @@ class HtmlSourcePanel : public HtmlSourcePanelWx {
     [[nodiscard]] bool CanCopy() const;
 
    private:
+    OnCloseCallback m_onCloseCallback;
+
+    void HandleEditorMenuOpen(wxMenuEvent& event);
+    void HandleEditorCloseMenu(wxCommandEvent& event);
+    void HandleHeaderContextMenu(wxContextMenuEvent& event);
     void HandleMarginClick(wxStyledTextEvent& event);
 };

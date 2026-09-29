@@ -8,6 +8,9 @@
 #include "ScintillaTextEditorPanel.h"
 
 class FsWatcher;
+class wxCommandEvent;
+class wxContextMenuEvent;
+class wxMenu;
 
 /**
  * Markdown-configured Scintilla editor with UI messages and file watching.
@@ -78,7 +81,11 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
     ~MarkdownEditorPanel() override;
 
    private:
+    void HandleEditorContextMenuOpening(wxMenu& menu);
+    void HandleEditorCloseMenu(wxCommandEvent& event);
+    void HandleHeaderContextMenu(wxContextMenuEvent& event);
     void HandleDocumentWatchRequested(const wxFileName& filePath);
 
+    std::function<void()> m_onCloseRequested;
     std::unique_ptr<FsWatcher> m_documentWatcher;
 };

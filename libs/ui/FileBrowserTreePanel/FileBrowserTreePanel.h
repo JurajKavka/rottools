@@ -71,6 +71,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     FileOpenedCallback m_onFileOpened;
     DirectoryChangedCallback m_onDirectoryChanged;
     ActionRequestedCallback m_onHomeRequested;
+    ActionRequestedCallback m_onCloseRequested;
 
     void UpdateTree(const std::vector<FileEntry>& entries);
     /// Finds the top-level row with the given text; invalid item if none match
@@ -80,7 +81,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void OpenPath(const wxFileName& path);
     void CopyPath(const wxFileName& path);
     void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
-    void HandleHiddenFilesCheckbox(wxCommandEvent& event);
+    void SetShowHiddenFiles(bool showHiddenFiles);
     void HandleFileTypeChoice(wxCommandEvent& event);
     void ApplySelectedFileType();
     void HandleItemActivated(wxDataViewEvent& event);

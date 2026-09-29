@@ -21,7 +21,8 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
       m_fileTypeFilters(std::move(fileTypeFilter)),
       m_onFileOpened(std::move(callbacks.onFileOpened)),
       m_onDirectoryChanged(std::move(callbacks.onDirectoryChanged)),
-      m_onHomeRequested(std::move(callbacks.onHomeRequested)) {
+      m_onHomeRequested(std::move(callbacks.onHomeRequested)),
+      m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
     // The checked-in generated base still contains the old toolbar. Hide it
     // until wxFormBuilder regenerates the base from the updated project.
     wxSizerItem* firstItem = GetSizer()->GetItem(static_cast<std::size_t>(0));
@@ -32,14 +33,12 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
     std::vector<HeaderPanel::ToolButton> toolButtons{
         HeaderPanel::ToolButton::Make<FlatHomeButton>(_("Home"), m_onHomeRequested),
     };
-    HeaderPanel* header =
-        new HeaderPanel(this, std::move(toolButtons), {_("Close File Browser"), std::move(callbacks.onCloseRequested)});
+    HeaderPanel* header = new HeaderPanel(this, std::move(toolButtons), {_("Close File Browser"), m_onCloseRequested});
     GetSizer()->Insert(0, header, 0, wxEXPAND);
     header->Bind(wxEVT_CONTEXT_MENU, &FileBrowserTreePanel::HandleHeaderContextMenu, this);
     Layout();
 
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
-    m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
     m_fileTypeChoice->Bind(wxEVT_CHOICE, &FileBrowserTreePanel::HandleFileTypeChoice, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &FileBrowserTreePanel::HandleItemContextMenu, this);
@@ -56,7 +55,6 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
         m_fileTypeChoice->SetSelection(0);
         ApplySelectedFileType();
     }
-    m_scanOptions.showHiddenFiles = m_hiddenFilesCheckbox->IsChecked();
 
     // 2. Create an Image List (16x16 is the standard size for tree nodes)
     // The 'true' parameter means it supports transparency (alpha channels)
@@ -185,12 +183,9 @@ void FileBrowserTreePanel::HandleDirectoryScanComplete(DirectoryScannerEvent& ev
     }
 }
 
-void FileBrowserTreePanel::HandleHiddenFilesCheckbox(wxCommandEvent& event) {
-    // 1. Update the configuration state with the checkbox value
-    m_scanOptions.showHiddenFiles = event.IsChecked();
+void FileBrowserTreePanel::SetShowHiddenFiles(bool showHiddenFiles) {
+    m_scanOptions.showHiddenFiles = showHiddenFiles;
 
-    // 2. If a valid directory is currently being shown, re-scan it immediately
-    // with the updated configuration layout
     if (m_currentPath.IsOk()) {
         ListDir(m_currentPath);
     }
@@ -299,6 +294,9 @@ void FileBrowserTreePanel::HandleHeaderContextMenu(wxContextMenuEvent& event) {
 
 void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path) {
     wxMenu menu;
+    const int closeId = rottools::ui::PrependCloseMenuItem(menu)->GetId();
+    menu.AppendSeparator();
+
     int openId = wxID_NONE;
     int copyPathId = wxID_NONE;
     // Custom IDs avoid macOS applying responder-chain validation for stock
@@ -309,14 +307,21 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
         menu.AppendSeparator();
     }
     const int homeId = menu.Append(wxID_ANY, _("Home"))->GetId();
+    menu.AppendSeparator();
+    const int showHiddenFilesId = menu.AppendCheckItem(wxID_ANY, _("Show hidden files"))->GetId();
+    menu.Check(showHiddenFilesId, m_scanOptions.showHiddenFiles);
 
     const int selection = owner->GetPopupMenuSelectionFromUser(menu);
-    if (path.IsOk() && selection == openId) {
+    if (selection == closeId && m_onCloseRequested) {
+        m_onCloseRequested();
+    } else if (path.IsOk() && selection == openId) {
         OpenPath(path);
     } else if (path.IsOk() && selection == copyPathId) {
         CopyPath(path);
     } else if (selection == homeId && m_onHomeRequested) {
         m_onHomeRequested();
+    } else if (selection == showHiddenFilesId) {
+        SetShowHiddenFiles(!m_scanOptions.showHiddenFiles);
     }
 }
 

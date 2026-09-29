@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version 4.2.1-0-g80c4cb6)
+// C++ code generated with wxFormBuilder (version 4.2.1-85-gdf26f269)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO *NOT* EDIT THIS FILE!
@@ -25,9 +25,6 @@ FileBrowserTreePanelWx::FileBrowserTreePanelWx( wxWindow* parent, wxWindowID id,
 	fgSizer1->AddGrowableCol( 0 );
 	fgSizer1->SetFlexibleDirection( wxHORIZONTAL );
 	fgSizer1->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
-
-	m_hiddenFilesCheckbox = new wxCheckBox( this, wxID_ANY, _("Hidden files"), wxDefaultPosition, wxDefaultSize, 0 );
-	fgSizer1->Add( m_hiddenFilesCheckbox, 0, wxALL, 0 );
 
 	wxArrayString m_fileTypeChoiceChoices;
 	m_fileTypeChoice = new wxChoice( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, m_fileTypeChoiceChoices, 0 );
