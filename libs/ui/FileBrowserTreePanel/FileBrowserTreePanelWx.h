@@ -16,7 +16,6 @@
 #include <wx/colour.h>
 #include <wx/settings.h>
 #include <wx/string.h>
-#include <wx/choice.h>
 #include <wx/sizer.h>
 #include <wx/panel.h>
 
@@ -31,7 +30,6 @@ class FileBrowserTreePanelWx : public wxPanel
 
 	protected:
 		wxDataViewTreeCtrl* m_dataViewTreeCtrl1;
-		wxChoice* m_fileTypeChoice;
 
 	public:
 

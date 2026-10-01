@@ -6,7 +6,7 @@ target_include_directories(rottools_ui_htmlsource PUBLIC ${CMAKE_CURRENT_SOURCE_
 target_compile_features(rottools_ui_htmlsource PUBLIC cxx_std_20)
 target_link_libraries(rottools_ui_htmlsource
     PUBLIC ${wxWidgets_LIBRARIES}
-    PRIVATE rottools::helpers rottools::ui_headerpanel
+    PRIVATE rottools::helpers
 )
 
 if(ROTTOOLS_BUILD_LIB_APPS)

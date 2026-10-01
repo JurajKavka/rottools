@@ -5,7 +5,6 @@
 #include "HtmlSourcePanelWx.h"
 
 class wxCommandEvent;
-class wxContextMenuEvent;
 class wxMenuEvent;
 
 class HtmlSourcePanel : public HtmlSourcePanelWx {
@@ -14,7 +13,7 @@ class HtmlSourcePanel : public HtmlSourcePanelWx {
 
     /**
      * @param parent Parent window
-     * @param onCloseCallback Called when the user clicks the panel's close button
+     * @param onCloseCallback Called when the user selects Close from the source context menu
      */
     explicit HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback = nullptr);
     void ShowHtml(const wxString& html);
@@ -26,6 +25,5 @@ class HtmlSourcePanel : public HtmlSourcePanelWx {
 
     void HandleEditorMenuOpen(wxMenuEvent& event);
     void HandleEditorCloseMenu(wxCommandEvent& event);
-    void HandleHeaderContextMenu(wxContextMenuEvent& event);
     void HandleMarginClick(wxStyledTextEvent& event);
 };

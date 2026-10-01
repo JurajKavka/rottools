@@ -9,7 +9,6 @@
 
 class FsWatcher;
 class wxCommandEvent;
-class wxContextMenuEvent;
 class wxMenu;
 
 /**
@@ -83,7 +82,6 @@ class MarkdownEditorPanel final : public ScintillaTextEditorPanel {
    private:
     void HandleEditorContextMenuOpening(wxMenu& menu);
     void HandleEditorCloseMenu(wxCommandEvent& event);
-    void HandleHeaderContextMenu(wxContextMenuEvent& event);
     void HandleDocumentWatchRequested(const wxFileName& filePath);
 
     std::function<void()> m_onCloseRequested;

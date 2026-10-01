@@ -2,13 +2,11 @@
 
 #include <wx/intl.h>
 #include <wx/menu.h>
-#include <wx/sizer.h>
 
 #include <functional>
 #include <utility>
 
 #include "FsWatcher.h"
-#include "HeaderPanel.h"
 #include "HelperFunctions.h"
 
 namespace {
@@ -116,22 +114,9 @@ MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, Callbacks callbacks)
            .selectOpenFile = std::move(callbacks.selectOpenFile),
            .selectSaveFile = std::move(callbacks.selectSaveFile),
            .onEditorContextMenuOpening = std::bind_front(&MarkdownEditorPanel::HandleEditorContextMenuOpening, this)}),
-      m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
-    auto* header = new HeaderPanel(this, {}, {_("Close Markdown Editor"), m_onCloseRequested});
-    GetSizer()->Insert(0, header, 0, wxEXPAND);
-    header->Bind(wxEVT_CONTEXT_MENU, &MarkdownEditorPanel::HandleHeaderContextMenu, this);
-    Layout();
-}
+      m_onCloseRequested(std::move(callbacks.onCloseRequested)) {}
 
 MarkdownEditorPanel::~MarkdownEditorPanel() = default;
-
-void MarkdownEditorPanel::HandleHeaderContextMenu(wxContextMenuEvent&) {
-    wxMenu menu;
-    const int closeId = rottools::ui::PrependCloseMenuItem(menu)->GetId();
-    if (GetPopupMenuSelectionFromUser(menu) == closeId && m_onCloseRequested) {
-        m_onCloseRequested();
-    }
-}
 
 void MarkdownEditorPanel::HandleEditorContextMenuOpening(wxMenu& menu) {
     if (menu.GetMenuItemCount() != 0) {

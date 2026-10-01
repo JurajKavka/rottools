@@ -1,20 +1,13 @@
 #include "HtmlSourcePanel.h"
 
 #include <wx/menu.h>
-#include <wx/sizer.h>
 
 #include <utility>
 
-#include "HeaderPanel.h"
 #include "HelperFunctions.h"
 
 HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback)
     : HtmlSourcePanelWx(parent), m_onCloseCallback(std::move(onCloseCallback)) {
-    auto* header = new HeaderPanel(this, {}, {_("Close HTML Source"), m_onCloseCallback});
-    GetSizer()->Insert(0, header, 0, wxEXPAND);
-    header->Bind(wxEVT_CONTEXT_MENU, &HtmlSourcePanel::HandleHeaderContextMenu, this);
-    Layout();
-
     m_styledTextCtrl->SetLexer(wxSTC_LEX_HTML);
 
     // Monospace font for every style; StyleClearAll propagates the default
@@ -75,14 +68,6 @@ void HtmlSourcePanel::HandleEditorMenuOpen(wxMenuEvent& event) {
 
 void HtmlSourcePanel::HandleEditorCloseMenu(wxCommandEvent&) {
     if (m_onCloseCallback) {
-        m_onCloseCallback();
-    }
-}
-
-void HtmlSourcePanel::HandleHeaderContextMenu(wxContextMenuEvent&) {
-    wxMenu menu;
-    const int closeId = rottools::ui::PrependCloseMenuItem(menu)->GetId();
-    if (GetPopupMenuSelectionFromUser(menu) == closeId && m_onCloseCallback) {
         m_onCloseCallback();
     }
 }
