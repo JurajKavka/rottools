@@ -10,6 +10,7 @@
 #include <wx/intl.h>
 #include <wx/msgdlg.h>  // Required for wxMessageBox
 #include <wx/stockitem.h>
+#include <wx/textdlg.h>
 #include <wx/utils.h>
 
 #include <algorithm>
@@ -142,7 +143,12 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
         {.onFileOpened = std::bind_front(&MainFrame::HandleOpenFile, this),
          .onDirectoryChanged = std::bind_front(&MainFrame::HandleDirectoryChanged, this),
          .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
-         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)},
+         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this),
+         .selectNewFolderName = std::bind_front(&MainFrame::HandleSelectBrowserFolderName, this),
+         .onCreateFolderError = std::bind_front(&MainFrame::HandleBrowserCreateFolderError, this),
+         .confirmDelete = std::bind_front(&MainFrame::HandleConfirmBrowserDelete, this),
+         .onPathDeleted = std::bind_front(&MainFrame::HandleBrowserPathDeleted, this),
+         .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this)},
         {{_("Markdown"), {"md", "markdown"}}, {_("All files"), {FileBrowserTreePanel::kFilterAllFiles}}});
 
     m_rightSplitter =
@@ -715,6 +721,55 @@ void MainFrame::HandleFileBrowserHomeRequested() {
 
 void MainFrame::HandleFileBrowserCloseRequested() {
     HideFileBrowser();
+}
+
+std::optional<wxString> MainFrame::HandleSelectBrowserFolderName(const std::optional<wxString>& previousName) {
+    wxTextEntryDialog dialog(this, _("Name for the new folder:"), _("New Folder"),
+                             previousName.value_or(_("New Folder")));
+    if (dialog.ShowModal() != wxID_OK) {
+        return std::nullopt;
+    }
+    return dialog.GetValue();
+}
+
+void MainFrame::HandleBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error) {
+    const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+    const wxString message = wxString::Format(_("Could not create folder \"%s\": %s"), error.name.c_str(),
+                                              detail.c_str());
+    wxMessageBox(message, _("New Folder"), wxOK | wxICON_ERROR, this);
+}
+
+bool MainFrame::HandleConfirmBrowserDelete(const FileBrowserTreePanel::DeletePrompt& prompt) {
+    const wxString name = prompt.isDirectory ? GetLastDirectoryName(prompt.path) : prompt.path.GetFullName();
+    wxString message =
+        prompt.isDirectory
+            ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"), name.c_str())
+            : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
+    if (IsCurrentDocumentAffectedByDelete(prompt) && m_markdownEditorPanel->HasUnsavedChanges()) {
+        message += _("\n\nUnsaved changes in the open document will be lost.");
+    }
+    wxMessageDialog dialog(this, message, _("Delete"), wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+    dialog.SetOKCancelLabels(_("Delete"), wxGetStockLabel(wxID_CANCEL));
+    return dialog.ShowModal() == wxID_OK;
+}
+
+bool MainFrame::IsCurrentDocumentAffectedByDelete(const FileBrowserTreePanel::DeletePrompt& deleted) const {
+    return IsSameFilePath(m_currentDocument, deleted.path) ||
+           (deleted.isDirectory && IsFileWithinDirectory(m_currentDocument, deleted.path));
+}
+
+void MainFrame::HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted) {
+    if (IsCurrentDocumentAffectedByDelete(deleted)) {
+        m_markdownEditorPanel->DiscardDocument();
+    }
+}
+
+void MainFrame::HandleBrowserDeleteError(const FileBrowserTreePanel::DeleteError& error) {
+    const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
+    const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+    const wxString message = wxString::Format(_("Could not completely delete \"%s\": %s"), name.c_str(),
+                                              detail.c_str());
+    wxMessageBox(message, _("Delete"), wxOK | wxICON_ERROR, this);
 }
 
 void MainFrame::HandleBookmarksMenuOpen(wxMenuEvent& event) {

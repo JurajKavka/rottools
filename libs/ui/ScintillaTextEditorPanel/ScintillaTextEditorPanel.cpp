@@ -78,12 +78,16 @@ bool ScintillaTextEditorPanel::NewDocument() {
         return false;
     }
 
+    DiscardDocument();
+    return true;
+}
+
+void ScintillaTextEditorPanel::DiscardDocument() {
     m_currentFile = wxFileName();
     m_loadedText.clear();
     LoadText(wxString{});
     RequestDocumentWatch();
     NotifyDocumentChanged(ChangeReason::NewDocument, wxString{});
-    return true;
 }
 
 bool ScintillaTextEditorPanel::ShowOpenDialog() {

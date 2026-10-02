@@ -216,6 +216,8 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
 
     /** Start an empty untitled document after confirming any pending discard. */
     [[nodiscard]] bool NewDocument();
+    /** Clear the current document without prompting after its discard was explicitly confirmed. */
+    void DiscardDocument();
     [[nodiscard]] bool ShowOpenDialog();
     [[nodiscard]] bool OpenFile(const wxFileName& filePath);
     [[nodiscard]] bool Save();
