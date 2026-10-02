@@ -1,21 +1,13 @@
 #include "HtmlSourcePanel.h"
 
-#include <wx/sizer.h>
+#include <wx/menu.h>
 
-#include <cstddef>
 #include <utility>
 
-#include "HeaderPanel.h"
+#include "HelperFunctions.h"
 
-HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback) : HtmlSourcePanelWx(parent) {
-    // The generated base still has its original top row and close button.
-    // Hide that row until the wxFormBuilder project is updated by its owner.
-    m_closeButton->Hide();
-    GetSizer()->GetItem(static_cast<std::size_t>(0))->Show(false);
-    auto* header = new HeaderPanel(this, {}, {_("Close HTML Source"), std::move(onCloseCallback)});
-    GetSizer()->Insert(0, header, 0, wxEXPAND);
-    Layout();
-
+HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback)
+    : HtmlSourcePanelWx(parent), m_onCloseCallback(std::move(onCloseCallback)) {
     m_styledTextCtrl->SetLexer(wxSTC_LEX_HTML);
 
     // Monospace font for every style; StyleClearAll propagates the default
@@ -44,6 +36,7 @@ HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallba
     m_styledTextCtrl->SetReadOnly(true);
 
     m_styledTextCtrl->Bind(wxEVT_STC_MARGINCLICK, &HtmlSourcePanel::HandleMarginClick, this);
+    m_styledTextCtrl->Bind(wxEVT_MENU_OPEN, &HtmlSourcePanel::HandleEditorMenuOpen, this);
 }
 
 void HtmlSourcePanel::ShowHtml(const wxString& html) {
@@ -60,6 +53,23 @@ void HtmlSourcePanel::Copy() {
 
 bool HtmlSourcePanel::CanCopy() const {
     return m_styledTextCtrl->GetSelectionStart() != m_styledTextCtrl->GetSelectionEnd();
+}
+
+void HtmlSourcePanel::HandleEditorMenuOpen(wxMenuEvent& event) {
+    if (wxMenu* menu = event.GetMenu()) {
+        if (menu->GetMenuItemCount() != 0) {
+            menu->PrependSeparator();
+        }
+        wxMenuItem* closeItem = rottools::ui::PrependCloseMenuItem(*menu);
+        menu->Bind(wxEVT_MENU, &HtmlSourcePanel::HandleEditorCloseMenu, this, closeItem->GetId());
+    }
+    event.Skip();
+}
+
+void HtmlSourcePanel::HandleEditorCloseMenu(wxCommandEvent&) {
+    if (m_onCloseCallback) {
+        m_onCloseCallback();
+    }
 }
 
 void HtmlSourcePanel::HandleMarginClick(wxStyledTextEvent& event) {
