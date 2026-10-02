@@ -7,7 +7,6 @@ target_compile_features(rottools_ui_filetree PUBLIC cxx_std_20)
 # Both PUBLIC: FileBrowserTreePanel.h includes "DirectoryScanner.h" and "HelperFunctions.h".
 target_link_libraries(rottools_ui_filetree
     PUBLIC rottools::dirscan rottools::helpers ${wxWidgets_LIBRARIES}
-    PRIVATE rottools::ui_headerpanel
 )
 
 if(ROTTOOLS_BUILD_LIB_APPS)

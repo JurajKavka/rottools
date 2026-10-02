@@ -1,5 +1,8 @@
 #include "HelperFunctions.h"
 
+#include <wx/artprov.h>
+#include <wx/intl.h>
+#include <wx/menu.h>
 #include <wx/window.h>
 
 #include <algorithm>
@@ -138,3 +141,16 @@ bool IsWindowOrDescendant(const wxWindow* window, wxWindow* candidate) {
 bool ContainsFocus(const wxWindow* window) {
     return IsWindowOrDescendant(window, wxWindow::FindFocus());
 }
+
+namespace rottools::ui {
+
+wxMenuItem* PrependCloseMenuItem(wxMenu& menu) {
+    wxMenuItem* closeItem = menu.Prepend(wxID_ANY, _("Close"));
+    const wxBitmap closeIcon = wxArtProvider::GetBitmap(wxART_CLOSE, wxART_MENU);
+    if (closeIcon.IsOk()) {
+        closeItem->SetBitmap(closeIcon);
+    }
+    return closeItem;
+}
+
+}  // namespace rottools::ui

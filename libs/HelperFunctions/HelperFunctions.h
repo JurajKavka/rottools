@@ -9,6 +9,8 @@
 #include <string>
 #include <utility>
 
+class wxMenu;
+class wxMenuItem;
 class wxWindow;
 
 /**
@@ -129,6 +131,13 @@ bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents);
  * @return true when window or one of its descendants has focus
  */
 [[nodiscard]] bool ContainsFocus(const wxWindow* window);
+
+namespace rottools::ui {
+
+/** Add a localized Close item with a wxWidgets menu icon when available. */
+wxMenuItem* PrependCloseMenuItem(wxMenu& menu);
+
+}  // namespace rottools::ui
 
 // 1. Keep this for simple, single wxString prints: printLog(myWxString);
 void printLog(const wxString& msg);

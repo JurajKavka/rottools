@@ -5,15 +5,10 @@
 #include <wx/dataobj.h>
 #include <wx/imaglist.h>
 #include <wx/menu.h>
-#include <wx/sizer.h>
-#include <wx/toolbar.h>
 
 #include <algorithm>
 #include <cstddef>
 #include <utility>
-
-#include "FlatHomeButton.h"
-#include "HeaderPanel.h"
 
 FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks,
                                            std::vector<FileTypeFilter> fileTypeFilter)
@@ -21,42 +16,14 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
       m_fileTypeFilters(std::move(fileTypeFilter)),
       m_onFileOpened(std::move(callbacks.onFileOpened)),
       m_onDirectoryChanged(std::move(callbacks.onDirectoryChanged)),
-      m_onHomeRequested(std::move(callbacks.onHomeRequested)) {
-    // The checked-in generated base still contains the old toolbar. Hide it
-    // until wxFormBuilder regenerates the base from the updated project.
-    wxSizerItem* firstItem = GetSizer()->GetItem(static_cast<std::size_t>(0));
-    if (auto* oldToolbar = dynamic_cast<wxToolBar*>(firstItem ? firstItem->GetWindow() : nullptr)) {
-        oldToolbar->Hide();
-    }
-
-    std::vector<HeaderPanel::ToolButton> toolButtons{
-        HeaderPanel::ToolButton::Make<FlatHomeButton>(_("Home"), m_onHomeRequested),
-    };
-    HeaderPanel* header =
-        new HeaderPanel(this, std::move(toolButtons), {_("Close File Browser"), std::move(callbacks.onCloseRequested)});
-    GetSizer()->Insert(0, header, 0, wxEXPAND);
-    header->Bind(wxEVT_CONTEXT_MENU, &FileBrowserTreePanel::HandleHeaderContextMenu, this);
-    Layout();
-
+      m_onHomeRequested(std::move(callbacks.onHomeRequested)),
+      m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
-    m_hiddenFilesCheckbox->Bind(wxEVT_CHECKBOX, &FileBrowserTreePanel::HandleHiddenFilesCheckbox, this);
-    m_fileTypeChoice->Bind(wxEVT_CHOICE, &FileBrowserTreePanel::HandleFileTypeChoice, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &FileBrowserTreePanel::HandleItemContextMenu, this);
 
-    if (m_fileTypeFilters.empty()) {
-        // No file type choices means no extension filter and no dropdown.
-        m_fileTypeChoice->Hide();
-        Layout();
-    } else {
-        // Keep the supplied order and use its first choice for the initial scan.
-        for (const FileTypeFilter& filter : m_fileTypeFilters) {
-            m_fileTypeChoice->Append(filter.label);
-        }
-        m_fileTypeChoice->SetSelection(0);
-        ApplySelectedFileType();
-    }
-    m_scanOptions.showHiddenFiles = m_hiddenFilesCheckbox->IsChecked();
+    // Use the first supplied file type for the initial scan.
+    ApplySelectedFileType();
 
     // 2. Create an Image List (16x16 is the standard size for tree nodes)
     // The 'true' parameter means it supports transparency (alpha channels)
@@ -185,12 +152,21 @@ void FileBrowserTreePanel::HandleDirectoryScanComplete(DirectoryScannerEvent& ev
     }
 }
 
-void FileBrowserTreePanel::HandleHiddenFilesCheckbox(wxCommandEvent& event) {
-    // 1. Update the configuration state with the checkbox value
-    m_scanOptions.showHiddenFiles = event.IsChecked();
+void FileBrowserTreePanel::SetShowHiddenFiles(bool showHiddenFiles) {
+    m_scanOptions.showHiddenFiles = showHiddenFiles;
 
-    // 2. If a valid directory is currently being shown, re-scan it immediately
-    // with the updated configuration layout
+    if (m_currentPath.IsOk()) {
+        ListDir(m_currentPath);
+    }
+}
+
+void FileBrowserTreePanel::SetFileTypeSelection(int selection) {
+    if (selection < 0 || static_cast<std::size_t>(selection) >= m_fileTypeFilters.size()) {
+        return;
+    }
+
+    m_fileTypeSelection = selection;
+    ApplySelectedFileType();
     if (m_currentPath.IsOk()) {
         ListDir(m_currentPath);
     }
@@ -199,12 +175,11 @@ void FileBrowserTreePanel::HandleHiddenFilesCheckbox(wxCommandEvent& event) {
 void FileBrowserTreePanel::ApplySelectedFileType() {
     m_scanOptions.extensions.clear();
 
-    const int selection = m_fileTypeChoice->GetSelection();
-    if (selection == wxNOT_FOUND) {
+    if (m_fileTypeFilters.empty()) {
         return;
     }
 
-    const auto& extensions = m_fileTypeFilters[static_cast<std::size_t>(selection)].extensions;
+    const auto& extensions = m_fileTypeFilters[static_cast<std::size_t>(m_fileTypeSelection)].extensions;
     if (std::ranges::find(extensions, kFilterAllFiles) != extensions.end()) {
         return;
     }
@@ -214,13 +189,6 @@ void FileBrowserTreePanel::ApplySelectedFileType() {
             // DirectoryScanner compares against path::extension(), which includes the dot.
             m_scanOptions.extensions.push_back(extension.front() == '.' ? extension : "." + extension);
         }
-    }
-}
-
-void FileBrowserTreePanel::HandleFileTypeChoice(wxCommandEvent& event) {
-    ApplySelectedFileType();
-    if (m_currentPath.IsOk()) {
-        ListDir(m_currentPath);
     }
 }
 
@@ -293,12 +261,11 @@ void FileBrowserTreePanel::HandleItemContextMenu(wxDataViewEvent& event) {
     ShowBrowserContextMenu(m_dataViewTreeCtrl1, path);
 }
 
-void FileBrowserTreePanel::HandleHeaderContextMenu(wxContextMenuEvent& event) {
-    ShowBrowserContextMenu(this, {});
-}
-
 void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path) {
     wxMenu menu;
+    const int closeId = rottools::ui::PrependCloseMenuItem(menu)->GetId();
+    menu.AppendSeparator();
+
     int openId = wxID_NONE;
     int copyPathId = wxID_NONE;
     // Custom IDs avoid macOS applying responder-chain validation for stock
@@ -309,14 +276,37 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
         menu.AppendSeparator();
     }
     const int homeId = menu.Append(wxID_ANY, _("Home"))->GetId();
+    menu.AppendSeparator();
+
+    std::vector<int> fileTypeIds;
+    if (!m_fileTypeFilters.empty()) {
+        auto* fileTypeMenu = new wxMenu;
+        for (std::size_t index = 0; index < m_fileTypeFilters.size(); ++index) {
+            wxMenuItem* item = fileTypeMenu->AppendRadioItem(wxID_ANY, m_fileTypeFilters[index].label);
+            fileTypeIds.push_back(item->GetId());
+            if (static_cast<int>(index) == m_fileTypeSelection) {
+                item->Check(true);
+            }
+        }
+        menu.AppendSubMenu(fileTypeMenu, _("File type"));
+    }
+
+    const int showHiddenFilesId = menu.AppendCheckItem(wxID_ANY, _("Show hidden files"))->GetId();
+    menu.Check(showHiddenFilesId, m_scanOptions.showHiddenFiles);
 
     const int selection = owner->GetPopupMenuSelectionFromUser(menu);
-    if (path.IsOk() && selection == openId) {
+    if (selection == closeId && m_onCloseRequested) {
+        m_onCloseRequested();
+    } else if (path.IsOk() && selection == openId) {
         OpenPath(path);
     } else if (path.IsOk() && selection == copyPathId) {
         CopyPath(path);
     } else if (selection == homeId && m_onHomeRequested) {
         m_onHomeRequested();
+    } else if (selection == showHiddenFilesId) {
+        SetShowHiddenFiles(!m_scanOptions.showHiddenFiles);
+    } else if (const auto fileType = std::ranges::find(fileTypeIds, selection); fileType != fileTypeIds.end()) {
+        SetFileTypeSelection(static_cast<int>(fileType - fileTypeIds.begin()));
     }
 }
 

@@ -8,8 +8,6 @@
 #include "FileBrowserTreePanelWx.h"
 #include "HelperFunctions.h"
 
-class wxContextMenuEvent;
-
 class FileBrowserTreePanel : public FileBrowserTreePanelWx {
    public:
     static constexpr char kFilterAllFiles[] = "*";
@@ -31,10 +29,10 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     };
 
     /**
-     * @param fileTypeFilter File type choices in display order. Each choice has a
+     * @param fileTypeFilter File type choices in context menu order. Each choice has a
      *        label and case-insensitive extensions (with or without a leading
      *        dot). The first choice is selected initially. An empty collection
-     *        hides the file type dropdown and shows all ordinary files. Use
+     *        omits the File type submenu and shows all ordinary files. Use
      *        kFilterAllFiles for an explicit unfiltered choice.
      */
     explicit FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks = {},
@@ -60,6 +58,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     DirectoryScanner m_directoryScanner;
     ScanOptions m_scanOptions;
     std::vector<FileTypeFilter> m_fileTypeFilters;
+    int m_fileTypeSelection = 0;
     wxFileName m_currentPath;
     wxString m_savedSelectionText;
     /// Text of the row at the top of the viewport, saved so a KeepPosition
@@ -71,6 +70,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     FileOpenedCallback m_onFileOpened;
     DirectoryChangedCallback m_onDirectoryChanged;
     ActionRequestedCallback m_onHomeRequested;
+    ActionRequestedCallback m_onCloseRequested;
 
     void UpdateTree(const std::vector<FileEntry>& entries);
     /// Finds the top-level row with the given text; invalid item if none match
@@ -80,11 +80,10 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void OpenPath(const wxFileName& path);
     void CopyPath(const wxFileName& path);
     void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
-    void HandleHiddenFilesCheckbox(wxCommandEvent& event);
-    void HandleFileTypeChoice(wxCommandEvent& event);
+    void SetShowHiddenFiles(bool showHiddenFiles);
+    void SetFileTypeSelection(int selection);
     void ApplySelectedFileType();
     void HandleItemActivated(wxDataViewEvent& event);
     void HandleItemContextMenu(wxDataViewEvent& event);
-    void HandleHeaderContextMenu(wxContextMenuEvent& event);
     void ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path);
 };

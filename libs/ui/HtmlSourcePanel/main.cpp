@@ -10,7 +10,7 @@ class HtmlSourcePanelApp : public wxApp {
     bool OnInit() override;
 
    private:
-    void HandleCloseButtonClick();
+    void HandleCloseRequested();
 };
 
 wxIMPLEMENT_APP(HtmlSourcePanelApp);
@@ -23,7 +23,7 @@ bool HtmlSourcePanelApp::OnInit() {
 
     // 2. Instantiate your custom panel, passing the mainFrame as its parent
     HtmlSourcePanel* sourcePanel =
-        new HtmlSourcePanel(mainFrame, std::bind_front(&HtmlSourcePanelApp::HandleCloseButtonClick, this));
+        new HtmlSourcePanel(mainFrame, std::bind_front(&HtmlSourcePanelApp::HandleCloseRequested, this));
 
     wxBoxSizer* frameSizer = new wxBoxSizer(wxVERTICAL);
     frameSizer->Add(sourcePanel, 1, wxEXPAND | wxALL, 0);
@@ -50,7 +50,7 @@ bool HtmlSourcePanelApp::OnInit() {
     return true;
 }
 
-void HtmlSourcePanelApp::HandleCloseButtonClick() {
-    wxLogMessage("HTML source close button clicked");
+void HtmlSourcePanelApp::HandleCloseRequested() {
+    wxLogMessage("HTML source close requested");
     GetTopWindow()->Close();
 }
