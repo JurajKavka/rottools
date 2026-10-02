@@ -4,6 +4,11 @@
 
 This project is written in C++20.
 
+## C++ style
+
+Always use curly braces around `if`, `else if`, and `else` bodies, even for a single statement.
+Put the body on its own line; do not write one-line `if` statements.
+
 ## Repository map
 
 - `apps/rotreader/` and `apps/rotpad/` contain the desktop applications. Each app owns its

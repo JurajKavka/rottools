@@ -44,6 +44,36 @@ bool IsSameFilePath(const wxFileName& left, const wxFileName& right) {
     return left.IsOk() && right.IsOk() && left.SameAs(right);
 }
 
+bool IsFileWithinDirectory(const wxFileName& file, const wxFileName& directory) {
+    if (!file.IsOk() || !directory.IsOk()) {
+        return false;
+    }
+
+    wxFileName parent = wxFileName::DirName(file.GetPath());
+    while (true) {
+        if (IsSameFilePath(parent, directory)) {
+            return true;
+        }
+        if (parent.GetDirCount() == 0) {
+            return false;
+        }
+        parent.RemoveLastDir();
+    }
+}
+
+std::filesystem::path ToFilesystemPath(const wxString& value) {
+    if (value.IsEmpty()) {
+        return {};
+    }
+
+#ifdef _WIN32
+    return std::filesystem::path(value.ToStdWstring());
+#else
+    const wxScopedCharBuffer utf8 = value.utf8_str();
+    return std::filesystem::path(utf8.data());
+#endif
+}
+
 bool IsMarkdownFile(const wxFileName& filePath) {
     const wxString extension = filePath.GetExt().Lower();
     return extension == "md" || extension == "markdown";

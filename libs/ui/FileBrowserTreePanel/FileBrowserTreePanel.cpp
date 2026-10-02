@@ -8,19 +8,19 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <filesystem>
+#include <iterator>
 #include <utility>
+
+#include "FileManagerBackend.h"
 
 FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks,
                                            std::vector<FileTypeFilter> fileTypeFilter)
-    : FileBrowserTreePanelWx(parent),
-      m_fileTypeFilters(std::move(fileTypeFilter)),
-      m_onFileOpened(std::move(callbacks.onFileOpened)),
-      m_onDirectoryChanged(std::move(callbacks.onDirectoryChanged)),
-      m_onHomeRequested(std::move(callbacks.onHomeRequested)),
-      m_onCloseRequested(std::move(callbacks.onCloseRequested)) {
+    : FileBrowserTreePanelWx(parent), m_fileTypeFilters(std::move(fileTypeFilter)), m_callbacks(std::move(callbacks)) {
     Bind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &FileBrowserTreePanel::HandleItemContextMenu, this);
+    m_dataViewTreeCtrl1->Bind(wxEVT_CHAR_HOOK, &FileBrowserTreePanel::HandleTreeKeyDown, this);
 
     // Use the first supplied file type for the initial scan.
     ApplySelectedFileType();
@@ -70,16 +70,18 @@ void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
         m_dataViewTreeCtrl1->AppendItem(root, entry.name, entry.isDirectory ? 0 : 1);
     }
 
-    if (!m_savedSelectionText.IsEmpty()) {
-        wxDataViewItem selection = FindChildByText(m_savedSelectionText);
+    wxDataViewItemArray selections;
+    for (const wxString& text : m_savedSelectionTexts) {
+        wxDataViewItem selection = FindChildByText(text);
         if (selection.IsOk()) {
-            m_dataViewTreeCtrl1->Select(selection);
-            // Pulling the selection into view would defeat KeepPosition: the
-            // user may have scrolled away from it deliberately.
-            if (m_scrollBehavior == ScrollBehavior::ResetToTop) {
-                m_dataViewTreeCtrl1->EnsureVisible(selection);
-            }
+            selections.Add(selection);
         }
+    }
+    m_dataViewTreeCtrl1->SetSelections(selections);
+    // Pulling a selection into view would defeat KeepPosition: the user may
+    // have scrolled away from it deliberately.
+    if (m_scrollBehavior == ScrollBehavior::ResetToTop && !selections.IsEmpty()) {
+        m_dataViewTreeCtrl1->EnsureVisible(selections[0]);
     }
 
     if (m_scrollBehavior == ScrollBehavior::KeepPosition && !m_savedTopItemText.IsEmpty()) {
@@ -102,15 +104,19 @@ void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
 void FileBrowserTreePanel::ListDir(const wxFileName& fileName, ScrollBehavior scrollBehavior) {
     m_scrollBehavior = scrollBehavior;
 
-    wxDataViewItem currentSelection = m_dataViewTreeCtrl1->GetSelection();
-    if (currentSelection.IsOk()) {
-        m_savedSelectionText = m_dataViewTreeCtrl1->GetItemText(currentSelection);
-    } else {
-        m_savedSelectionText.clear();
+    // Item names identify selections only within their current directory.
+    const wxFileName requestedDirectory = wxFileName::DirName(fileName.GetFullPath());
+    const bool sameDirectory = m_currentPath.IsOk() && m_currentPath.SameAs(requestedDirectory);
+    m_savedSelectionTexts.clear();
+    if (sameDirectory) {
+        wxDataViewItemArray selections;
+        m_dataViewTreeCtrl1->GetSelections(selections);
+        std::transform(selections.begin(), selections.end(), std::back_inserter(m_savedSelectionTexts),
+                       [this](const wxDataViewItem& selection) { return m_dataViewTreeCtrl1->GetItemText(selection); });
     }
 
     m_savedTopItemText.clear();
-    if (scrollBehavior == ScrollBehavior::KeepPosition) {
+    if (sameDirectory && scrollBehavior == ScrollBehavior::KeepPosition) {
         wxDataViewItem topItem = m_dataViewTreeCtrl1->GetTopItem();
         if (topItem.IsOk()) {
             m_savedTopItemText = m_dataViewTreeCtrl1->GetItemText(topItem);
@@ -119,7 +125,7 @@ void FileBrowserTreePanel::ListDir(const wxFileName& fileName, ScrollBehavior sc
 
     // Force the path to interpret its entire string structure as a directory.
     // It is probably not needed when working with `wxFileName` API ...
-    m_currentPath = wxFileName::DirName(fileName.GetFullPath());
+    m_currentPath = requestedDirectory;
 
     m_directoryScanner.StartScan(fileName, m_scanOptions, this);
 }
@@ -135,7 +141,7 @@ void FileBrowserTreePanel::ShowFile(const wxFileName& fileName) {
     absoluteFile.MakeAbsolute();
 
     m_scrollBehavior = ScrollBehavior::ResetToTop;
-    m_savedSelectionText = absoluteFile.GetFullName();
+    m_savedSelectionTexts = {absoluteFile.GetFullName()};
     m_savedTopItemText.clear();
     m_currentPath = wxFileName::DirName(absoluteFile.GetPath());
     m_directoryScanner.StartScan(m_currentPath, m_scanOptions, this);
@@ -147,8 +153,8 @@ wxFileName FileBrowserTreePanel::GetCurrentDirectory() const {
 
 void FileBrowserTreePanel::HandleDirectoryScanComplete(DirectoryScannerEvent& event) {
     UpdateTree(event.files);
-    if (m_onDirectoryChanged) {
-        m_onDirectoryChanged(event.currentDirectory);
+    if (m_callbacks.onDirectoryChanged) {
+        m_callbacks.onDirectoryChanged(event.currentDirectory);
     }
 }
 
@@ -234,8 +240,8 @@ void FileBrowserTreePanel::OpenPath(const wxFileName& path) {
     // DirExists() checks the directory portion of a wxFileName, which also
     // exists for an ordinary file. Test the complete file path first.
     if (path.FileExists()) {
-        if (m_onFileOpened) {
-            m_onFileOpened(path);
+        if (m_callbacks.onFileOpened) {
+            m_callbacks.onFileOpened(path);
         }
     } else if (path.DirExists()) {
         ListDir(path);
@@ -251,30 +257,136 @@ void FileBrowserTreePanel::CopyPath(const wxFileName& path) {
     wxTheClipboard->SetData(new wxTextDataObject(path.GetFullPath()));
 }
 
+void FileBrowserTreePanel::CreateFolder() {
+    if (!m_callbacks.selectNewFolderName) {
+        return;
+    }
+
+    const wxFileName parent = m_currentPath;
+    std::optional<wxString> previousName;
+    while (true) {
+        const std::optional<wxString> name = m_callbacks.selectNewFolderName(previousName);
+        if (!name) {
+            return;
+        }
+        previousName = name;
+        const auto result =
+            FileManagerBackend::CreateNewDirectory(ToFilesystemPath(parent.GetFullPath()), ToFilesystemPath(*name));
+        if (result.Succeeded()) {
+            if (IsShowingDir(parent)) {
+                ReloadCurrentDir();
+            }
+            return;
+        }
+
+        if (!m_callbacks.onCreateFolderError) {
+            return;
+        }
+        m_callbacks.onCreateFolderError({*name, result.error});
+    }
+}
+
+std::vector<FileBrowserTreePanel::DeletePrompt> FileBrowserTreePanel::GetSelectedDeletePaths() const {
+    wxDataViewItemArray selections;
+    m_dataViewTreeCtrl1->GetSelections(selections);
+
+    std::vector<DeletePrompt> paths;
+    paths.reserve(selections.size());
+    for (const wxDataViewItem& item : selections) {
+        if (m_dataViewTreeCtrl1->GetItemText(item) == "..") {
+            continue;
+        }
+
+        const wxFileName path = ResolveItemPath(item);
+        if (path.IsOk()) {
+            paths.push_back({path, !path.FileExists() && path.DirExists()});
+        }
+    }
+    return paths;
+}
+
+void FileBrowserTreePanel::DeletePaths(const std::vector<DeletePrompt>& paths) {
+    if (paths.empty() || !m_callbacks.confirmDelete || !m_callbacks.confirmDelete(paths)) {
+        return;
+    }
+
+    std::vector<std::filesystem::path> sources;
+    sources.reserve(paths.size());
+    std::transform(paths.begin(), paths.end(), std::back_inserter(sources),
+                   [](const DeletePrompt& path) { return ToFilesystemPath(path.path.GetFullPath()); });
+
+    const auto results = FileManagerBackend::DeleteMany(sources);
+    std::vector<DeleteError> errors;
+    for (std::size_t index = 0; index < results.size(); ++index) {
+        if (results[index].Succeeded()) {
+            if (m_callbacks.onPathDeleted) {
+                m_callbacks.onPathDeleted(paths[index]);
+            }
+        } else {
+            errors.push_back({paths[index].path, paths[index].isDirectory, results[index].error});
+        }
+    }
+    if (!errors.empty() && m_callbacks.onDeleteError) {
+        m_callbacks.onDeleteError(errors);
+    }
+    ReloadCurrentDir();
+}
+
 void FileBrowserTreePanel::HandleItemContextMenu(wxDataViewEvent& event) {
     const wxDataViewItem item = event.GetItem();
     const wxFileName path = ResolveItemPath(item);
-    if (path.IsOk()) {
+    if (path.IsOk() && (m_dataViewTreeCtrl1->GetItemText(item) == ".." || !m_dataViewTreeCtrl1->IsSelected(item))) {
+        m_dataViewTreeCtrl1->UnselectAll();
         m_dataViewTreeCtrl1->Select(item);
     }
 
-    ShowBrowserContextMenu(m_dataViewTreeCtrl1, path);
+    ShowBrowserContextMenu(m_dataViewTreeCtrl1, path,
+                           path.IsOk() ? GetSelectedDeletePaths() : std::vector<DeletePrompt>{});
 }
 
-void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path) {
+void FileBrowserTreePanel::HandleTreeKeyDown(wxKeyEvent& event) {
+    const int key = event.GetKeyCode();
+    bool deleteKey = key == WXK_DELETE;
+#ifdef __WXOSX__
+    deleteKey = deleteKey || (key == WXK_BACK && event.CmdDown());
+#endif
+    if (deleteKey && m_callbacks.confirmDelete) {
+        const auto paths = GetSelectedDeletePaths();
+        if (!paths.empty()) {
+            DeletePaths(paths);
+            return;
+        }
+    }
+    event.Skip();
+}
+
+void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path,
+                                                  const std::vector<DeletePrompt>& deletePaths) {
     wxMenu menu;
     const int closeId = rottools::ui::PrependCloseMenuItem(menu)->GetId();
     menu.AppendSeparator();
 
     int openId = wxID_NONE;
     int copyPathId = wxID_NONE;
+    int deleteId = wxID_NONE;
     // Custom IDs avoid macOS applying responder-chain validation for stock
     // commands such as wxID_COPY and disabling the item.
     if (path.IsOk()) {
-        openId = menu.Append(wxID_ANY, _("Open"))->GetId();
-        copyPathId = menu.Append(wxID_ANY, _("Copy Path"))->GetId();
+        if (m_dataViewTreeCtrl1->GetSelectedItemsCount() == 1) {
+            openId = menu.Append(wxID_ANY, _("Open"))->GetId();
+            copyPathId = menu.Append(wxID_ANY, _("Copy Path"))->GetId();
+        }
+        if (m_callbacks.confirmDelete && !deletePaths.empty()) {
+            const wxString label =
+                deletePaths.size() == 1 ? _("Delete") : wxString::Format(_("Delete %zu Items"), deletePaths.size());
+            deleteId = menu.Append(wxID_ANY, label)->GetId();
+        }
         menu.AppendSeparator();
     }
+    const int newFolderId = menu.Append(wxID_ANY, _("New Folder"))->GetId();
+    menu.Enable(newFolderId, m_callbacks.selectNewFolderName && m_currentPath.IsOk() && m_currentPath.DirExists());
+    menu.AppendSeparator();
+
     const int homeId = menu.Append(wxID_ANY, _("Home"))->GetId();
     menu.AppendSeparator();
 
@@ -295,14 +407,18 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
     menu.Check(showHiddenFilesId, m_scanOptions.showHiddenFiles);
 
     const int selection = owner->GetPopupMenuSelectionFromUser(menu);
-    if (selection == closeId && m_onCloseRequested) {
-        m_onCloseRequested();
+    if (selection == closeId && m_callbacks.onCloseRequested) {
+        m_callbacks.onCloseRequested();
     } else if (path.IsOk() && selection == openId) {
         OpenPath(path);
     } else if (path.IsOk() && selection == copyPathId) {
         CopyPath(path);
-    } else if (selection == homeId && m_onHomeRequested) {
-        m_onHomeRequested();
+    } else if (deleteId != wxID_NONE && selection == deleteId) {
+        DeletePaths(deletePaths);
+    } else if (selection == newFolderId) {
+        CreateFolder();
+    } else if (selection == homeId && m_callbacks.onHomeRequested) {
+        m_callbacks.onHomeRequested();
     } else if (selection == showHiddenFilesId) {
         SetShowHiddenFiles(!m_scanOptions.showHiddenFiles);
     } else if (const auto fileType = std::ranges::find(fileTypeIds, selection); fileType != fileTypeIds.end()) {

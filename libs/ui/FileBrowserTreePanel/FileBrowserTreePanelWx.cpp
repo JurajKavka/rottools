@@ -14,7 +14,7 @@ FileBrowserTreePanelWx::FileBrowserTreePanelWx( wxWindow* parent, wxWindowID id,
 	wxBoxSizer* bSizer1;
 	bSizer1 = new wxBoxSizer( wxVERTICAL );
 
-	m_dataViewTreeCtrl1 = new wxDataViewTreeCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER|wxDV_ROW_LINES );
+	m_dataViewTreeCtrl1 = new wxDataViewTreeCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_MULTIPLE|wxDV_NO_HEADER|wxDV_ROW_LINES );
 	bSizer1->Add( m_dataViewTreeCtrl1, 1, wxEXPAND, 2 );
 
 

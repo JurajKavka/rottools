@@ -4,6 +4,7 @@
 #include <wx/string.h>
 
 #include <cstddef>
+#include <filesystem>
 #include <format>
 #include <iostream>
 #include <string>
@@ -70,6 +71,12 @@ std::string trimToStdString(const wxString& str);
  * @return true when both paths are valid and compare equal
  */
 [[nodiscard]] bool IsSameFilePath(const wxFileName& left, const wxFileName& right);
+
+/** Return true when a file's path is below the given directory, including its direct children. */
+[[nodiscard]] bool IsFileWithinDirectory(const wxFileName& file, const wxFileName& directory);
+
+/** Convert wxString path text to a native filesystem path without losing Unicode. */
+[[nodiscard]] std::filesystem::path ToFilesystemPath(const wxString& value);
 
 /** Returns true for .md and .markdown files, ignoring extension case. */
 [[nodiscard]] bool IsMarkdownFile(const wxFileName& filePath);
