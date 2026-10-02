@@ -6,6 +6,7 @@
 #include <wx/stockitem.h>
 #include <wx/textdlg.h>
 
+#include <algorithm>
 #include <functional>
 #ifndef __WXOSX__
 #include "AppIcon.h"
@@ -210,13 +211,20 @@ void MainFrame::HandleBrowserCreateFolderError(const FileBrowserTreePanel::Creat
     wxMessageBox(message, _("New Folder"), wxOK | wxICON_ERROR, this);
 }
 
-bool MainFrame::HandleConfirmBrowserDelete(const FileBrowserTreePanel::DeletePrompt& prompt) {
-    const wxString name = prompt.isDirectory ? GetLastDirectoryName(prompt.path) : prompt.path.GetFullName();
-    wxString message =
-        prompt.isDirectory
-            ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"), name.c_str())
-            : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
-    if (IsCurrentDocumentAffectedByDelete(prompt) && m_textEditorPanel->HasUnsavedChanges()) {
+bool MainFrame::HandleConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
+    wxString message;
+    if (paths.size() == 1) {
+        const auto& path = paths.front();
+        const wxString name = path.isDirectory ? GetLastDirectoryName(path.path) : path.path.GetFullName();
+        message = path.isDirectory
+                      ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"), name.c_str())
+                      : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
+    } else {
+        message = wxString::Format(_("Permanently delete %zu selected items and all folder contents?"), paths.size());
+    }
+    const bool affectsCurrentDocument =
+        std::ranges::any_of(paths, [this](const auto& path) { return IsCurrentDocumentAffectedByDelete(path); });
+    if (affectsCurrentDocument && m_textEditorPanel->HasUnsavedChanges()) {
         message += _("\n\nUnsaved changes in the open document will be lost.");
     }
     wxMessageDialog dialog(this, message, _("Delete"), wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
@@ -237,11 +245,21 @@ void MainFrame::HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePromp
     }
 }
 
-void MainFrame::HandleBrowserDeleteError(const FileBrowserTreePanel::DeleteError& error) {
-    const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
-    const wxString detail = wxString::FromUTF8(error.error.message().c_str());
-    const wxString message = wxString::Format(_("Could not completely delete \"%s\": %s"), name.c_str(),
-                                              detail.c_str());
+void MainFrame::HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors) {
+    wxString message;
+    if (errors.size() == 1) {
+        const auto& error = errors.front();
+        const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
+        const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+        message = wxString::Format(_("Could not completely delete \"%s\": %s"), name.c_str(), detail.c_str());
+    } else {
+        message = wxString::Format(_("Could not completely delete %zu items:"), errors.size());
+        for (const auto& error : errors) {
+            const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
+            const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+            message += wxString::Format("\n%s: %s", name.c_str(), detail.c_str());
+        }
+    }
     wxMessageBox(message, _("Delete"), wxOK | wxICON_ERROR, this);
 }
 

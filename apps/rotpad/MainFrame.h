@@ -4,6 +4,7 @@
 #include <wx/splitter.h>
 
 #include <optional>
+#include <vector>
 
 #include "FileBrowserTreePanel.h"
 #include "MainFrameWx.h"
@@ -36,9 +37,9 @@ class MainFrame final : public MainFrameWx {
     void HandleFileBrowserCloseRequested();
     std::optional<wxString> HandleSelectBrowserFolderName(const std::optional<wxString>& previousName);
     void HandleBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error);
-    bool HandleConfirmBrowserDelete(const FileBrowserTreePanel::DeletePrompt& prompt);
+    bool HandleConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths);
     void HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted);
-    void HandleBrowserDeleteError(const FileBrowserTreePanel::DeleteError& error);
+    void HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors);
     [[nodiscard]] bool IsCurrentDocumentAffectedByDelete(const FileBrowserTreePanel::DeletePrompt& deleted) const;
     void HideFileBrowser();
     void HandleWordWrapMenuItemClick(wxCommandEvent& event);

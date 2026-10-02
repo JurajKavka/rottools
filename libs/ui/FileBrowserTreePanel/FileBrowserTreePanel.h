@@ -29,7 +29,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
         wxFileName path;
         bool isDirectory = false;
     };
-    using ConfirmDeleteCallback = std::function<bool(const DeletePrompt&)>;
+    using ConfirmDeleteCallback = std::function<bool(const std::vector<DeletePrompt>&)>;
     using PathDeletedCallback = std::function<void(const DeletePrompt&)>;
 
     struct CreateFolderError {
@@ -43,7 +43,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
         bool isDirectory = false;
         std::error_code error;
     };
-    using DeleteErrorCallback = std::function<void(const DeleteError&)>;
+    using DeleteErrorCallback = std::function<void(const std::vector<DeleteError>&)>;
 
     struct Callbacks {
         FileOpenedCallback onFileOpened;
@@ -56,9 +56,9 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
         CreateFolderErrorCallback onCreateFolderError;
         /** Returning false, or omitting this callback, cancels permanent deletion. */
         ConfirmDeleteCallback confirmDelete;
-        /** Called after the selected file or directory was completely deleted. */
+        /** Called for each file or directory that was completely deleted. */
         PathDeletedCallback onPathDeleted;
-        /** Reports an incomplete deletion so the host can present the error. */
+        /** Reports all failed deletions together so the host can present one error. */
         DeleteErrorCallback onDeleteError;
     };
 
@@ -94,7 +94,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     std::vector<FileTypeFilter> m_fileTypeFilters;
     int m_fileTypeSelection = 0;
     wxFileName m_currentPath;
-    wxString m_savedSelectionText;
+    std::vector<wxString> m_savedSelectionTexts;
     /// Text of the row at the top of the viewport, saved so a KeepPosition
     /// re-list can scroll back to it (item handles do not survive the rebuild)
     wxString m_savedTopItemText;
@@ -111,12 +111,14 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void OpenPath(const wxFileName& path);
     void CopyPath(const wxFileName& path);
     void CreateFolder();
-    void DeletePath(const wxFileName& path);
+    [[nodiscard]] std::vector<DeletePrompt> GetSelectedDeletePaths() const;
+    void DeletePaths(const std::vector<DeletePrompt>& paths);
     void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
     void SetShowHiddenFiles(bool showHiddenFiles);
     void SetFileTypeSelection(int selection);
     void ApplySelectedFileType();
     void HandleItemActivated(wxDataViewEvent& event);
     void HandleItemContextMenu(wxDataViewEvent& event);
-    void ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path, bool canDelete);
+    void HandleTreeKeyDown(wxKeyEvent& event);
+    void ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path, const std::vector<DeletePrompt>& deletePaths);
 };
