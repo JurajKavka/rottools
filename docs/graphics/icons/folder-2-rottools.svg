@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1200"
+   height="1500"
+   viewBox="0 0 1200 1500"
+   version="1.1"
+   id="rottools-single-ui-icon-template"
+   sodipodi0:docname="Rottools-Single-UI-Icon-Template-Fixed.svg"
+   sodipodi:docname="folder-2-rottools.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:sodipodi0="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd">
+  <sodipodi:namedview
+     id="namedview26"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.53097935"
+     inkscape:cx="613.01819"
+     inkscape:cy="637.50125"
+     inkscape:window-width="1920"
+     inkscape:window-height="968"
+     inkscape:window-x="0"
+     inkscape:window-y="30"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layerIcon" />
+  <sodipodi0:namedview
+     id="namedview"
+     pagecolor="#efeff2"
+     bordercolor="#666666"
+     borderopacity="0.3"
+     inkscape:pageopacity="0"
+     inkscape:document-units="px"
+     showgrid="false" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient53"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#1babff;stop-opacity:1;"
+         offset="0"
+         id="stop53" />
+      <stop
+         style="stop-color:#1a45ff;stop-opacity:0.72647703;"
+         offset="1"
+         id="stop54" />
+    </linearGradient>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath52">
+      <path
+         id="path52"
+         style="stroke-width:0.1;stroke-linecap:square;paint-order:markers fill stroke;stop-color:#000000"
+         d="m -880.82767,-187.29769 h 1640.84 v 73.28155 h -1640.84 z" />
+    </clipPath>
+    <style
+       id="style1"><![CDATA[
+      .title { font:700 44px sans-serif; fill:#222; }
+      .subtitle { font:400 20px sans-serif; fill:#666; }
+      .section { font:700 28px sans-serif; fill:#222; }
+      .label { font:400 16px sans-serif; fill:#555; }
+      .small { font:400 14px sans-serif; fill:#666; }
+      .grid { stroke:#d8d8dd; stroke-width:1; }
+      .safe { fill:none; stroke:#7678ff; stroke-width:2; stroke-dasharray:8 6; }
+      .center { stroke:#59a3ff; stroke-width:2; stroke-dasharray:8 6; }
+      .board { fill:#fafafa; stroke:#999aa1; stroke-width:1.5; }
+      .divider { stroke:#c4c4ca; stroke-width:1.5; }
+      .iconStroke { fill:none; stroke:#45474d; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    ]]></style>
+    <pattern
+       id="gridPattern"
+       width="14"
+       height="14"
+       patternUnits="userSpaceOnUse">
+      <path
+         d="M14 0H0V14"
+         fill="none"
+         class="grid"
+         id="path1" />
+    </pattern>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient53"
+       id="linearGradient54"
+       x1="3.0072844"
+       y1="16.401268"
+       x2="25.834533"
+       y2="16.401268"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.92387056,0,0,0.93354339,1.1127265,0.54879351)" />
+  </defs>
+  <rect
+     x="18"
+     y="0"
+     width="1200"
+     height="1500"
+     fill="#efeff2"
+     id="rect1"
+     style="stroke:#ff0000" />
+  <!-- 01 Header -->
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="01 - Header"
+     id="layerHeader">
+    <text
+       x="600"
+       y="78"
+       text-anchor="middle"
+       class="title"
+       id="text1">Rottools UI Icon Template</text>
+    <text
+       x="600"
+       y="116"
+       text-anchor="middle"
+       class="subtitle"
+       id="text2">Single 24×24 in-app icon — folder showcase</text>
+  </g>
+  <!-- 02 Guides -->
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="02 - Guides"
+     id="layerGuides">
+    <text
+       x="600"
+       y="175"
+       text-anchor="middle"
+       class="section"
+       id="text3">Master icon — edit the folder below</text>
+    <!-- Enlarged 24×24 board: 1 source px = 14 screen px -->
+    <rect
+       x="432"
+       y="220"
+       width="336"
+       height="336"
+       class="board"
+       id="rect3" />
+    <rect
+       x="432"
+       y="220"
+       width="336"
+       height="336"
+       fill="url(#gridPattern)"
+       id="rect4" />
+    <!-- 20×20 safe area: 2 px margin each side = 28 display px -->
+    <rect
+       x="460"
+       y="248"
+       width="280"
+       height="280"
+       class="safe"
+       id="rect5" />
+    <!-- center guides -->
+    <line
+       x1="600"
+       y1="206"
+       x2="600"
+       y2="570"
+       class="center"
+       id="line5" />
+    <line
+       x1="418"
+       y1="388"
+       x2="782"
+       y2="388"
+       class="center"
+       id="line6" />
+    <text
+       x="790"
+       y="245"
+       class="label"
+       id="text6">24×24 canvas</text>
+    <text
+       x="790"
+       y="276"
+       class="label"
+       id="text7">1 px grid</text>
+    <text
+       x="790"
+       y="307"
+       class="label"
+       id="text8">20×20 safe area</text>
+    <text
+       x="790"
+       y="338"
+       class="label"
+       id="text9">2 px rounded stroke</text>
+  </g>
+  <!-- 03 ICON: actual editable object, NOT in defs -->
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="03 - Icon (EDIT HERE)"
+     id="layerIcon">
+    <!--
+      IMPORTANT:
+      This nested SVG is the master editor. It uses native 24×24 coordinates,
+      but is displayed at 336×336 on the page.
+    -->
+    <svg
+       id="iconExport"
+       x="432"
+       y="220"
+       width="336"
+       height="336"
+       viewBox="0 0 24 24"
+       overflow="visible"
+       version="1.1"
+       inkscape:label="iconExport">
+      <g
+         id="iconGlyph"
+         transform="matrix(0.95204821,-0.12088252,0.14339353,0.80258841,-1.2739203,3.5409986)"
+         inkscape:label="iconGlyph">
+        <!-- EDIT THIS PATH in Inkscape with the Node tool -->
+        <rect
+           style="fill:#308eff;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:0.285714;stroke-dasharray:none;stroke-opacity:0.778612"
+           id="rect52"
+           width="18.853777"
+           height="16.798101"
+           x="4.1835556"
+           y="1.105291"
+           transform="rotate(8.565265)"
+           inkscape:label="rect52"
+           rx="0.29471985"
+           ry="0.32439718" />
+        <rect
+           style="opacity:0.99115;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:0.29932;stroke-dasharray:none;stroke-opacity:0.555347"
+           id="rect53"
+           width="14.194113"
+           height="10.157567"
+           x="6.6899271"
+           y="5.5313635"
+           transform="rotate(8.5652656)"
+           inkscape:label="rect53" />
+        <rect
+           style="opacity:0.99115;fill:url(#linearGradient54);fill-rule:nonzero;stroke:#ffffff;stroke-width:0.256005;stroke-dasharray:none;stroke-opacity:0.555347"
+           id="rect51"
+           width="20.834747"
+           height="10.311082"
+           x="4.0184059"
+           y="10.704549"
+           transform="matrix(0.98855271,-0.1508759,-0.1489359,0.98884685,0,0)"
+           inkscape:label="rect51"
+           ry="0.32439718"
+           rx="0.29700693" />
+      </g>
+    </svg>
+  </g>
+  <!-- 04 Live previews -->
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="04 - Live Previews"
+     id="layerPreviews">
+    <line
+       x1="72"
+       y1="650"
+       x2="1128"
+       y2="650"
+       class="divider"
+       id="line9" />
+    <text
+       x="600"
+       y="700"
+       text-anchor="middle"
+       class="section"
+       id="text10">Live size previews</text>
+    <!-- Each preview reuses the single editable iconGlyph -->
+    <g
+       id="preview48">
+      <rect
+         x="160"
+         y="760"
+         width="96"
+         height="96"
+         rx="8"
+         fill="#fff"
+         stroke="#c8c8ce"
+         id="rect10" />
+      <svg
+         x="184"
+         y="784"
+         width="48"
+         height="48"
+         viewBox="0 0 24 24"
+         version="1.1"
+         id="svg10">
+        <use
+           href="#iconGlyph"
+           id="use10"
+           transform="translate(-1.0288538,0.62776555)" />
+      </svg>
+      <text
+         x="208"
+         y="888"
+         text-anchor="middle"
+         class="label"
+         id="text11">48 px</text>
+    </g>
+    <g
+       id="preview32">
+      <rect
+         x="320"
+         y="776"
+         width="80"
+         height="80"
+         rx="8"
+         fill="#fff"
+         stroke="#c8c8ce"
+         id="rect11" />
+      <svg
+         x="344"
+         y="800"
+         width="32"
+         height="32"
+         viewBox="0 0 24 24"
+         version="1.1"
+         id="svg11">
+        <use
+           href="#iconGlyph"
+           id="use11"
+           transform="translate(-1.0288538,0.62776555)" />
+      </svg>
+      <text
+         x="360"
+         y="888"
+         text-anchor="middle"
+         class="label"
+         id="text12">32 px</text>
+    </g>
+    <g
+       id="preview24">
+      <rect
+         x="456"
+         y="784"
+         width="72"
+         height="72"
+         rx="8"
+         fill="#fff"
+         stroke="#c8c8ce"
+         id="rect12" />
+      <svg
+         x="480"
+         y="808"
+         width="24"
+         height="24"
+         viewBox="0 0 24 24"
+         version="1.1"
+         id="svg12">
+        <use
+           href="#iconGlyph"
+           id="use12"
+           transform="translate(-1.0288538,0.62776555)" />
+      </svg>
+      <text
+         x="492"
+         y="888"
+         text-anchor="middle"
+         class="label"
+         id="text13">24 px</text>
+    </g>
+    <g
+       id="preview20">
+      <rect
+         x="584"
+         y="786"
+         width="68"
+         height="68"
+         rx="8"
+         fill="#fff"
+         stroke="#c8c8ce"
+         id="rect13" />
+      <svg
+         x="608"
+         y="810"
+         width="20"
+         height="20"
+         viewBox="0 0 24 24"
+         version="1.1"
+         id="svg13">
+        <use
+           href="#iconGlyph"
+           id="use13"
+           transform="translate(-1.0288538,0.62776555)" />
+      </svg>
+      <text
+         x="618"
+         y="888"
+         text-anchor="middle"
+         class="label"
+         id="text14">20 px</text>
+    </g>
+    <g
+       id="preview16">
+      <rect
+         x="708"
+         y="788"
+         width="64"
+         height="64"
+         rx="8"
+         fill="#fff"
+         stroke="#c8c8ce"
+         id="rect14" />
+      <svg
+         x="732"
+         y="812"
+         width="16"
+         height="16"
+         viewBox="0 0 24 24"
+         version="1.1"
+         id="svg14">
+        <use
+           href="#iconGlyph"
+           id="use14"
+           transform="translate(-1.0288538,0.62776555)" />
+      </svg>
+      <text
+         x="740"
+         y="888"
+         text-anchor="middle"
+         class="label"
+         id="text15">16 px</text>
+    </g>
+    <!-- light / dark context -->
+    <text
+       x="910"
+       y="755"
+       text-anchor="middle"
+       class="label"
+       id="text16">Light</text>
+    <rect
+       x="850"
+       y="776"
+       width="120"
+       height="96"
+       rx="14"
+       fill="#fff"
+       stroke="#c8c8ce"
+       id="rect16" />
+    <svg
+       x="886"
+       y="800"
+       width="48"
+       height="48"
+       viewBox="0 0 24 24"
+       version="1.1"
+       id="svg16">
+      <use
+         href="#iconGlyph"
+         id="use16"
+         transform="translate(-1.0288538,0.62776555)" />
+    </svg>
+    <text
+       x="1050"
+       y="755"
+       text-anchor="middle"
+       class="label"
+       id="text17">Dark</text>
+    <rect
+       x="990"
+       y="776"
+       width="120"
+       height="96"
+       rx="14"
+       fill="#303238"
+       stroke="#22242a"
+       id="rect17" />
+    <!-- Same geometry, explicit white stroke for contrast -->
+    <svg
+       x="1026"
+       y="800"
+       width="48"
+       height="48"
+       viewBox="0 0 24 24"
+       version="1.1"
+       id="svg17">
+      <use
+         href="#iconGlyph"
+         style="stroke:#ffffff"
+         id="use17"
+         transform="translate(-1.0288538,0.62776555)" />
+    </svg>
+  </g>
+  <!-- 05 Instructions -->
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="05 - Instructions"
+     id="layerInstructions">
+    <line
+       x1="72"
+       y1="980"
+       x2="1128"
+       y2="980"
+       class="divider"
+       id="line17" />
+    <text
+       x="130"
+       y="1040"
+       class="section"
+       id="text18">How to edit</text>
+    <text
+       x="130"
+       y="1090"
+       class="label"
+       id="text19">1. Open Object → Objects.</text>
+    <text
+       x="130"
+       y="1124"
+       class="label"
+       id="text20">2. Expand “03 - Icon (EDIT HERE)” → “iconExport” → “iconGlyph”.</text>
+    <text
+       x="130"
+       y="1158"
+       class="label"
+       id="text21">3. Select “folderPath”, then press N for the Node tool.</text>
+    <text
+       x="130"
+       y="1192"
+       class="label"
+       id="text22">4. Edit the folder path on the large 24×24 grid.</text>
+    <text
+       x="130"
+       y="1226"
+       class="label"
+       id="text23">5. All previews below update automatically because they reference iconGlyph.</text>
+    <text
+       x="130"
+       y="1260"
+       class="label"
+       id="text24">6. Keep the path inside the dashed safe area unless optical balance requires otherwise.</text>
+    <text
+       x="130"
+       y="1328"
+       class="small"
+       id="text25">Master geometry is in native 24×24 coordinates. The large board is only a magnified view.</text>
+    <text
+       x="130"
+       y="1356"
+       class="small"
+       id="text26">Do not move iconGlyph into &lt;defs&gt;. It is intentionally a normal editable object.</text>
+  </g>
+</svg>

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+  xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd"
+  width="1180"
+  height="1480"
+  viewBox="0 0 1180 1480"
+  version="1.1"
+  id="rottools-single-ui-icon-template-fixed-v3"
+  sodipodi:docname="Rottools-Single-UI-Icon-Template-Fixed-v3.svg"
+  inkscape:version="1.3">
+
+  <sodipodi:namedview
+    id="namedview"
+    pagecolor="#efeff2"
+    bordercolor="#666666"
+    borderopacity="0.25"
+    inkscape:pageopacity="0"
+    inkscape:document-units="px"
+    showgrid="false" />
+
+  <defs>
+    <style><![CDATA[
+      .title { font: 700 44px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #222; }
+      .subtitle { font: 400 22px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #666; }
+      .section { font: 700 28px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #222; }
+      .label { font: 400 16px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #444; }
+      .small { font: 400 14px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #666; }
+      .artboard { fill: #f9f9fa; stroke: #8d8d95; stroke-width: 1.5; }
+      .gridLine { stroke: #d7d7dc; stroke-width: 1; }
+      .safe { fill: none; stroke: #7578ff; stroke-width: 2; stroke-dasharray: 8 6; }
+      .center { stroke: #58a2ff; stroke-width: 2; stroke-dasharray: 8 6; }
+      .callout { stroke: #6b6eff; stroke-width: 2; fill: none; }
+      .calloutDot { fill: #6b6eff; }
+      .divider { stroke: #bcbcc3; stroke-width: 1.5; }
+      .chipLight { fill: #ffffff; stroke: #c8c8cf; stroke-width: 1.5; }
+      .chipDark { fill: #2f3138; stroke: #1f2126; stroke-width: 1.5; }
+      .iconStroke { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+    ]]></style>
+
+    <g id="grid24">
+      <rect x="0" y="0" width="336" height="336" class="artboard"/>
+      <g>
+        <line x1="14" y1="0" x2="14" y2="336" class="gridLine"/>
+        <line x1="28" y1="0" x2="28" y2="336" class="gridLine"/>
+        <line x1="42" y1="0" x2="42" y2="336" class="gridLine"/>
+        <line x1="56" y1="0" x2="56" y2="336" class="gridLine"/>
+        <line x1="70" y1="0" x2="70" y2="336" class="gridLine"/>
+        <line x1="84" y1="0" x2="84" y2="336" class="gridLine"/>
+        <line x1="98" y1="0" x2="98" y2="336" class="gridLine"/>
+        <line x1="112" y1="0" x2="112" y2="336" class="gridLine"/>
+        <line x1="126" y1="0" x2="126" y2="336" class="gridLine"/>
+        <line x1="140" y1="0" x2="140" y2="336" class="gridLine"/>
+        <line x1="154" y1="0" x2="154" y2="336" class="gridLine"/>
+        <line x1="168" y1="0" x2="168" y2="336" class="gridLine"/>
+        <line x1="182" y1="0" x2="182" y2="336" class="gridLine"/>
+        <line x1="196" y1="0" x2="196" y2="336" class="gridLine"/>
+        <line x1="210" y1="0" x2="210" y2="336" class="gridLine"/>
+        <line x1="224" y1="0" x2="224" y2="336" class="gridLine"/>
+        <line x1="238" y1="0" x2="238" y2="336" class="gridLine"/>
+        <line x1="252" y1="0" x2="252" y2="336" class="gridLine"/>
+        <line x1="266" y1="0" x2="266" y2="336" class="gridLine"/>
+        <line x1="280" y1="0" x2="280" y2="336" class="gridLine"/>
+        <line x1="294" y1="0" x2="294" y2="336" class="gridLine"/>
+        <line x1="308" y1="0" x2="308" y2="336" class="gridLine"/>
+        <line x1="322" y1="0" x2="322" y2="336" class="gridLine"/>
+
+        <line x1="0" y1="14" x2="336" y2="14" class="gridLine"/>
+        <line x1="0" y1="28" x2="336" y2="28" class="gridLine"/>
+        <line x1="0" y1="42" x2="336" y2="42" class="gridLine"/>
+        <line x1="0" y1="56" x2="336" y2="56" class="gridLine"/>
+        <line x1="0" y1="70" x2="336" y2="70" class="gridLine"/>
+        <line x1="0" y1="84" x2="336" y2="84" class="gridLine"/>
+        <line x1="0" y1="98" x2="336" y2="98" class="gridLine"/>
+        <line x1="0" y1="112" x2="336" y2="112" class="gridLine"/>
+        <line x1="0" y1="126" x2="336" y2="126" class="gridLine"/>
+        <line x1="0" y1="140" x2="336" y2="140" class="gridLine"/>
+        <line x1="0" y1="154" x2="336" y2="154" class="gridLine"/>
+        <line x1="0" y1="168" x2="336" y2="168" class="gridLine"/>
+        <line x1="0" y1="182" x2="336" y2="182" class="gridLine"/>
+        <line x1="0" y1="196" x2="336" y2="196" class="gridLine"/>
+        <line x1="0" y1="210" x2="336" y2="210" class="gridLine"/>
+        <line x1="0" y1="224" x2="336" y2="224" class="gridLine"/>
+        <line x1="0" y1="238" x2="336" y2="238" class="gridLine"/>
+        <line x1="0" y1="252" x2="336" y2="252" class="gridLine"/>
+        <line x1="0" y1="266" x2="336" y2="266" class="gridLine"/>
+        <line x1="0" y1="280" x2="336" y2="280" class="gridLine"/>
+        <line x1="0" y1="294" x2="336" y2="294" class="gridLine"/>
+        <line x1="0" y1="308" x2="336" y2="308" class="gridLine"/>
+        <line x1="0" y1="322" x2="336" y2="322" class="gridLine"/>
+      </g>
+      <rect x="28" y="28" width="280" height="280" class="safe"/>
+      <line x1="168" y1="-12" x2="168" y2="348" class="center"/>
+      <line x1="-12" y1="168" x2="348" y2="168" class="center"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="1480" fill="#efeff2"/>
+
+  <g inkscape:label="01 - Header" inkscape:groupmode="layer" id="layerHeader">
+    <text x="590" y="82" text-anchor="middle" class="title">Rottools Single UI Icon Template</text>
+    <text x="590" y="122" text-anchor="middle" class="subtitle">One icon only. Edit the large folder icon, then export the object “iconExport”.</text>
+  </g>
+
+  <g inkscape:label="02 - Guides" inkscape:groupmode="layer" id="layerGuides">
+    <text x="590" y="176" text-anchor="middle" class="section">Folder Icon Showcase</text>
+    <g transform="translate(422 212)">
+      <use href="#grid24"/>
+    </g>
+
+    <line x1="268" y1="252" x2="416" y2="252" class="callout"/>
+    <circle cx="416" cy="252" r="5" class="calloutDot"/>
+    <text x="120" y="258" class="label">24×24 canvas</text>
+
+    <line x1="284" y1="348" x2="416" y2="348" class="callout"/>
+    <circle cx="416" cy="348" r="5" class="calloutDot"/>
+    <text x="120" y="354" class="label">1 px grid</text>
+
+    <line x1="264" y1="468" x2="446" y2="468" class="callout"/>
+    <circle cx="446" cy="468" r="5" class="calloutDot"/>
+    <text x="120" y="460" class="label">Safe area</text>
+    <text x="120" y="484" class="label">(20×20 px)</text>
+
+    <line x1="280" y1="594" x2="474" y2="594" class="callout"/>
+    <circle cx="474" cy="594" r="5" class="calloutDot"/>
+    <text x="120" y="586" class="label">2 px rounded stroke</text>
+    <text x="120" y="610" class="label">Edit with Node tool</text>
+
+    <line x1="764" y1="252" x2="912" y2="252" class="callout"/>
+    <circle cx="764" cy="252" r="5" class="calloutDot"/>
+    <text x="936" y="258" class="label">Select object: iconExport</text>
+
+    <line x1="764" y1="348" x2="912" y2="348" class="callout"/>
+    <circle cx="764" cy="348" r="5" class="calloutDot"/>
+    <text x="936" y="354" class="label">Export area stays 24×24</text>
+
+    <line x1="764" y1="468" x2="912" y2="468" class="callout"/>
+    <circle cx="764" cy="468" r="5" class="calloutDot"/>
+    <text x="936" y="460" class="label">Invisible exportBounds</text>
+    <text x="936" y="484" class="label">defines the square canvas</text>
+
+    <line x1="764" y1="594" x2="912" y2="594" class="callout"/>
+    <circle cx="764" cy="594" r="5" class="calloutDot"/>
+    <text x="936" y="586" class="label">Do not delete exportBounds</text>
+  </g>
+
+  <g inkscape:label="03 - Icon (EDIT HERE)" inkscape:groupmode="layer" id="layerIcon" style="color:#46484d;">
+    <!-- Select iconExport when exporting. The invisible exportBounds keeps the object exactly 24x24. -->
+    <g id="iconExport" transform="translate(422 212) scale(14)">
+      <rect id="exportBounds" x="0" y="0" width="24" height="24" style="fill:#000000;fill-opacity:0;stroke:none"/>
+      <g id="iconGlyph">
+        <path id="folderPath" class="iconStroke" d="M4.5 8.5V18c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2v-6.5c0-1.1-.9-2-2-2H11L9.2 7.5H6.5c-1.1 0-2 .9-2 2z"/>
+      </g>
+    </g>
+  </g>
+
+  <g inkscape:label="04 - Live size previews" inkscape:groupmode="layer" id="layerPreviews">
+    <line x1="70" y1="702" x2="430" y2="702" class="divider"/>
+    <line x1="750" y1="702" x2="1110" y2="702" class="divider"/>
+    <text x="590" y="712" text-anchor="middle" class="section">Live size previews</text>
+
+    <svg x="140" y="770" width="160" height="160" viewBox="0 0 24 24" style="color:#46484d;">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="220" y="958" text-anchor="middle" class="label">48 px</text>
+
+    <svg x="330" y="802" width="128" height="128" viewBox="0 0 24 24" style="color:#46484d;">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="394" y="958" text-anchor="middle" class="label">32 px</text>
+
+    <svg x="486" y="826" width="96" height="96" viewBox="0 0 24 24" style="color:#46484d;">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="534" y="958" text-anchor="middle" class="label">24 px</text>
+
+    <svg x="614" y="842" width="80" height="80" viewBox="0 0 24 24" style="color:#46484d;">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="654" y="958" text-anchor="middle" class="label">20 px</text>
+
+    <svg x="724" y="858" width="64" height="64" viewBox="0 0 24 24" style="color:#46484d;">
+      <use href="#iconGlyph"/>
+    </svg>
+    <text x="756" y="958" text-anchor="middle" class="label">16 px</text>
+
+    <text x="906" y="756" text-anchor="middle" class="label">Light UI</text>
+    <text x="1044" y="756" text-anchor="middle" class="label">Dark UI</text>
+    <rect x="850" y="784" width="112" height="112" rx="16" ry="16" class="chipLight"/>
+    <svg x="876" y="810" width="60" height="60" viewBox="0 0 24 24" style="color:#46484d;">
+      <use href="#iconGlyph"/>
+    </svg>
+    <rect x="988" y="784" width="112" height="112" rx="16" ry="16" class="chipDark"/>
+    <svg x="1014" y="810" width="60" height="60" viewBox="0 0 24 24" style="color:#ffffff;">
+      <use href="#iconGlyph"/>
+    </svg>
+  </g>
+
+  <g inkscape:label="05 - Export notes" inkscape:groupmode="layer" id="layerNotes">
+    <line x1="70" y1="1040" x2="1110" y2="1040" class="divider"/>
+    <text x="120" y="1100" class="section">How to export</text>
+    <text x="120" y="1140" class="label">1. Open Object → Objects and select “iconExport”.</text>
+    <text x="120" y="1168" class="label">2. File → Export, choose Selection.</text>
+    <text x="120" y="1196" class="label">3. Set width = 24 and height = 24, or export 16 / 20 / 24 / 32 / 48 as needed.</text>
+    <text x="120" y="1224" class="label">4. If the size stops being square, you probably deleted “exportBounds”. Undo or restore it.</text>
+
+    <text x="120" y="1288" class="small">Editable object path: layerIcon → iconExport → iconGlyph → folderPath</text>
+    <text x="120" y="1312" class="small">Important: keep exportBounds at x=0, y=0, width=24, height=24.</text>
+  </g>
+</svg>
