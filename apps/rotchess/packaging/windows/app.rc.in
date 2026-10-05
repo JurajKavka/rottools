@@ -1,0 +1,4 @@
+// Windows resource script configured by rottools_package_app().
+IDI_APPICON ICON "@ROTTOOLS_APP_ICO@"
+
+#include "wx/msw/wx.rc"

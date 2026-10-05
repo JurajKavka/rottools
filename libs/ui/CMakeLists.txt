@@ -1,12 +1,28 @@
-# Reusable wxWidgets UI components.
-add_subdirectory(FileDropTarget)
-add_subdirectory(FlatButtons)
-add_subdirectory(HeaderPanel)
-add_subdirectory(WebViewPanel)
-add_subdirectory(HtmlSourcePanel)
-add_subdirectory(FileBrowserTreePanel)
-add_subdirectory(MarkdownPreviewPanel)
-add_subdirectory(ScintillaTextEditorPanel)
-add_subdirectory(MarkdownEditorPanel)
-add_subdirectory(TextEditorPanel)
-add_subdirectory(TextFilePreviewDialog)
+# Reusable wxWidgets UI components. Isolated app builds configure only the
+# components they consume; the demo option exposes the complete component set.
+if(ROTTOOLS_BUILD_ROTREADER OR ROTTOOLS_BUILD_LIB_APPS)
+    add_subdirectory(FileDropTarget)
+    add_subdirectory(WebViewPanel)
+    add_subdirectory(HtmlSourcePanel)
+    add_subdirectory(MarkdownPreviewPanel)
+    add_subdirectory(ScintillaTextEditorPanel)
+    add_subdirectory(MarkdownEditorPanel)
+    add_subdirectory(TextFilePreviewDialog)
+endif()
+
+if(ROTTOOLS_BUILD_ROTREADER OR ROTTOOLS_BUILD_ROTPAD OR ROTTOOLS_BUILD_LIB_APPS)
+    add_subdirectory(FileBrowserTreePanel)
+endif()
+
+if(ROTTOOLS_BUILD_ROTPAD OR ROTTOOLS_BUILD_LIB_APPS)
+    add_subdirectory(TextEditorPanel)
+endif()
+
+if(ROTTOOLS_BUILD_ROTCHESS OR ROTTOOLS_BUILD_LIB_APPS)
+    add_subdirectory(ChessBoardPanel)
+endif()
+
+if(ROTTOOLS_BUILD_LIB_APPS)
+    add_subdirectory(FlatButtons)
+    add_subdirectory(HeaderPanel)
+endif()

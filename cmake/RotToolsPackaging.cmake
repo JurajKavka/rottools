@@ -1,6 +1,6 @@
 # rottools_package_app(TARGET <t> DISPLAY_NAME <n> EXE_NAME <e> BUNDLE_ID <id>
 #                       VERSION <v> VENDOR <vendor> DESCRIPTION <d>
-#                       ICON_DIR <path> [DESKTOP_CATEGORIES <c>])
+#                       ICON_DIR <path> [DESKTOP_CATEGORIES <c>] [USES_WEBVIEW])
 #
 # One entry point that wires a tool's icons + install rules + CPack packaging per OS:
 #   macOS   -> .app bundle (Info.plist + AppIcon.icns) packed into a .dmg (DragNDrop)
@@ -28,8 +28,9 @@ include_guard(GLOBAL)
 include(RotToolsIcons)
 
 function(rottools_package_app)
+    set(options USES_WEBVIEW)
     set(oneValueArgs TARGET DISPLAY_NAME EXE_NAME BUNDLE_ID VERSION VENDOR DESCRIPTION ICON_DIR DESKTOP_CATEGORIES)
-    cmake_parse_arguments(APP "" "${oneValueArgs}" "" ${ARGN})
+    cmake_parse_arguments(APP "${options}" "${oneValueArgs}" "" ${ARGN})
 
     if(NOT APP_DESKTOP_CATEGORIES)
         set(APP_DESKTOP_CATEGORIES "Utility;")
@@ -62,6 +63,7 @@ function(rottools_package_app)
     endforeach()
     if(_window_icon_pngs)
         rottools_embed_window_icon(TARGET ${APP_TARGET} PNGS ${_window_icon_pngs})
+        target_compile_definitions(${APP_TARGET} PRIVATE ROTTOOLS_HAS_EMBEDDED_APP_ICON=1)
     else()
         message(WARNING
             "No square icon PNGs under ${APP_ICON_DIR}/linux — ${APP_TARGET} will have no "
@@ -227,13 +229,18 @@ function(rottools_package_app)
     else()
         set(CPACK_GENERATOR                "TGZ;DEB"      CACHE INTERNAL "")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${APP_VENDOR}" CACHE INTERNAL "")
-        # GTK, WebKitGTK (the wxWebView engine) and wxWidgets itself are depended
-        # on, not bundled. Let dpkg-shlibdeps read the linked binary and derive
-        # the list: hand-maintaining it means guessing exact package names, which
-        # drift across releases (Ubuntu 24.04's 64-bit time_t "t64" renames, for
-        # one). The hardcoded list stays as the fallback if shlibdeps is absent.
+        # GTK, optional WebKitGTK, and wxWidgets itself are depended on, not
+        # bundled. Let dpkg-shlibdeps read the linked binary and derive the list:
+        # hand-maintaining it means guessing exact package names, which drift
+        # across releases. The hardcoded list stays as a fallback if shlibdeps
+        # is absent, and core-only tools do not inherit a WebKit dependency.
         set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON CACHE INTERNAL "")
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libwebkit2gtk-4.1-0, libgtk-3-0" CACHE INTERNAL "")
+        if(APP_USES_WEBVIEW)
+            set(_linux_fallback_dependencies "libwebkit2gtk-4.1-0, libgtk-3-0")
+        else()
+            set(_linux_fallback_dependencies "libgtk-3-0")
+        endif()
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${_linux_fallback_dependencies}" CACHE INTERNAL "")
         set(CPACK_DEBIAN_PACKAGE_SECTION "utils"         CACHE INTERNAL "")
     endif()
 endfunction()

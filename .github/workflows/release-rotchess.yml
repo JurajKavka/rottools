@@ -1,0 +1,47 @@
+# Independent release for the rotchess tool. Triggered by an app-prefixed tag
+# (e.g. rotchess-v0.1.0), independently of the other tools and their versions.
+name: Release rotchess
+
+on:
+  push:
+    tags: ['rotchess-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build.yml
+    with:
+      app: rotchess
+      upload-artifacts: true
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: rotchess-*
+          merge-multiple: true
+
+      - name: Derive version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#rotchess-}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "rotchess-rottools-${{ steps.ver.outputs.version }}"
+          files: dist/*
+          generate_release_notes: true
+
+  website:
+    needs: release
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml

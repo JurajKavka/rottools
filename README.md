@@ -10,6 +10,7 @@ and its own macOS / Linux / Windows builds, and is released independently.
 |--------------|-------------------------------------------------------------------|
 | **rotreader** | A native Markdown reader/editor (drag & drop, live reload, source panels). Renders locally via native WebView. UI name: **ROT reader**. |
 | **rotpad**    | A small native plain-text editor inspired by classic Notepad. UI name: **ROT pad**. |
+| **rotchess**  | A compact native chess board for two local players. UI name: **ROT Chess**. |
 
 ## Known bugs
 
@@ -44,11 +45,16 @@ rottools/
   libs/                  # SHARED, reusable libraries (rottools::* targets)
     HelperFunctions/         rottools::helpers
     backend/
+      ChessGame/            rottools::chessgame
       MarkdownToHtmlAsync/   rottools::md2html
       DirectoryScanner/      rottools::dirscan
+      FileManagerBackend/    rottools::filemanager
     ui/
+      FlatButtons/           rottools::ui_flatbuttons
+      HeaderPanel/           rottools::ui_headerpanel
       WebViewPanel/          rottools::ui_webview
       HtmlSourcePanel/       rottools::ui_htmlsource
+      TextFilePreviewDialog/ rottools::ui_textfilepreviewdialog
       TextEditorPanel/       rottools::ui_texteditor
       ScintillaTextEditorPanel/ rottools::ui_scintillatexteditor
       MarkdownEditorPanel/   rottools::ui_markdowneditor
@@ -57,6 +63,7 @@ rottools/
   apps/
     rotreader/           # Markdown reader: sources, VERSION, packaging inputs
     rotpad/              # plain-text editor: sources, VERSION, packaging inputs
+    rotchess/            # compact local chess game: native board UI + packaging
       Makefile           # app-specific build/run/package workflow
       assets/            # generated icons eventually live under assets/icons/
   docs/graphics/         # icon masters (Inkscape) + README.md: how to change an icon
@@ -82,6 +89,10 @@ app-prefixed targets use an isolated build directory and operate on one app:
 | `make rotpad-dev`        | Incrementally build and run rotpad        |
 | `make rotpad-build`      | Configure and build only rotpad           |
 | `make rotpad-package`    | Build and package only rotpad             |
+| `make rotchess-all`      | Clean, build, and run only rotchess       |
+| `make rotchess-dev`      | Incrementally build and run rotchess      |
+| `make rotchess-build`    | Configure and build only rotchess         |
+| `make rotchess-package`  | Build and package only rotchess           |
 
 Use `make <tool>-all` for a from-scratch local run and `make <tool>-dev` for the
 normal edit/build/run cycle. Both run the app in the foreground after building.
@@ -100,10 +111,12 @@ Build/run a single shared component in isolation (`make help` lists them all):
 | `make run-filetree`  | FileBrowserTreePanel | `cmake -B build -DROTTOOLS_BUILD_LIB_APPS=ON`<br>`cmake --build build --target rottools_ui_filetree_app`<br>`./build/libs/ui/FileBrowserTreePanel/rottools_ui_filetree_app` |
 | `make build-webview` | WebViewPanel (lib only) | `cmake --build build --target rottools_ui_webview` |
 
-The other demos follow the same pattern: `run-htmlsource`, `run-texteditor`,
-`run-scintillatexteditor`, `run-dirscan`, `run-md2html`,
-`run-helpers` (and `build-filedrop`). Build-only editor smoke targets are also
-available as `build-texteditor` and `build-scintillatexteditor`.
+The other demos follow the same pattern: `run-flatbuttons`, `run-headerpanel`,
+`run-htmlsource`, `run-markdownpreview`, `run-texteditor`,
+`run-scintillatexteditor`, `run-textfilepreviewdialog`, `run-dirscan`,
+`run-filemanager`, `run-md2html`, and `run-helpers`. Build-only smoke targets
+include `build-texteditor`, `build-scintillatexteditor`, and
+`build-textfilepreviewdialog` (plus `build-filedrop` for the library).
 
 ### Website
 
