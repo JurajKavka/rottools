@@ -1,5 +1,6 @@
 #include "FileBrowserTreePanel.h"
 
+#include <wx/accel.h>
 #include <wx/artprov.h>
 #include <wx/clipbrd.h>
 #include <wx/dataobj.h>
@@ -346,9 +347,12 @@ void FileBrowserTreePanel::HandleItemContextMenu(wxDataViewEvent& event) {
 
 void FileBrowserTreePanel::HandleTreeKeyDown(wxKeyEvent& event) {
     const int key = event.GetKeyCode();
-    bool deleteKey = key == WXK_DELETE;
 #ifdef __WXOSX__
-    deleteKey = deleteKey || (key == WXK_BACK && event.CmdDown());
+    // The Mac Delete key reports Backspace; forward-delete keyboards report Delete.
+    const bool deleteKey =
+        (key == WXK_BACK || key == WXK_DELETE) && event.CmdDown() && event.AltDown() && !event.ShiftDown();
+#else
+    const bool deleteKey = key == WXK_DELETE && event.ShiftDown() && !event.CmdDown() && !event.AltDown();
 #endif
     if (deleteKey && m_callbacks.confirmDelete) {
         const auto paths = GetSelectedDeletePaths();
@@ -379,7 +383,13 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
         if (m_callbacks.confirmDelete && !deletePaths.empty()) {
             const wxString label =
                 deletePaths.size() == 1 ? _("Delete") : wxString::Format(_("Delete %zu Items"), deletePaths.size());
-            deleteId = menu.Append(wxID_ANY, label)->GetId();
+            wxMenuItem* deleteItem = menu.Append(wxID_ANY, label);
+            deleteId = deleteItem->GetId();
+#ifdef __WXOSX__
+            deleteItem->SetAccel(new wxAcceleratorEntry(wxACCEL_ALT | wxACCEL_CMD, WXK_BACK, deleteId));
+#else
+            deleteItem->SetAccel(new wxAcceleratorEntry(wxACCEL_SHIFT, WXK_DELETE, deleteId));
+#endif
         }
         menu.AppendSeparator();
     }
