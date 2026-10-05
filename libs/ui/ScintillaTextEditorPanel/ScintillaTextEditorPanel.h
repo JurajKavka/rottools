@@ -14,6 +14,8 @@
 class wxStyledTextCtrl;
 class wxStyledTextEvent;
 class wxSysColourChangedEvent;
+class wxMenu;
+class wxMenuEvent;
 
 class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
    public:
@@ -118,6 +120,7 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     using ConfirmSaveBeforeDiscardCallback = std::function<SavePromptDecision(const SavePrompt&)>;
     using ConfirmOverwriteExternalChangesCallback = std::function<OverwritePromptDecision(const OverwritePrompt&)>;
     using OnDocumentWatchRequestedCallback = std::function<void(const wxFileName&)>;
+    using OnEditorContextMenuOpeningCallback = std::function<void(wxMenu&)>;
     using SelectOpenFileCallback = std::function<std::optional<wxFileName>()>;
     using SelectSaveFileCallback = std::function<std::optional<wxFileName>(const wxFileName&)>;
 
@@ -179,6 +182,9 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
          * cancels the operation.
          */
         SelectSaveFileCallback selectSaveFile;
+
+        /** Lets a consumer add commands to Scintilla's standard editing menu. */
+        OnEditorContextMenuOpeningCallback onEditorContextMenuOpening;
     };
 
    private:
@@ -201,6 +207,7 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     void UpdateEolModeForText(const wxString& text);
     void UpdateLineNumberMarginWidth();
     void HandleEditorMetricsChanged(wxStyledTextEvent& event);
+    void HandleEditorMenuOpen(wxMenuEvent& event);
     void HandleSystemColourChanged(wxSysColourChangedEvent& event);
 
    public:
@@ -209,6 +216,8 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
 
     /** Start an empty untitled document after confirming any pending discard. */
     [[nodiscard]] bool NewDocument();
+    /** Clear the current document without prompting after its discard was explicitly confirmed. */
+    void DiscardDocument();
     [[nodiscard]] bool ShowOpenDialog();
     [[nodiscard]] bool OpenFile(const wxFileName& filePath);
     [[nodiscard]] bool Save();

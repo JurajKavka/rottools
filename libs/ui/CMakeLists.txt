@@ -7,6 +7,7 @@ if(ROTTOOLS_BUILD_ROTREADER OR ROTTOOLS_BUILD_LIB_APPS)
     add_subdirectory(MarkdownPreviewPanel)
     add_subdirectory(ScintillaTextEditorPanel)
     add_subdirectory(MarkdownEditorPanel)
+    add_subdirectory(TextFilePreviewDialog)
 endif()
 
 if(ROTTOOLS_BUILD_ROTREADER OR ROTTOOLS_BUILD_ROTPAD OR ROTTOOLS_BUILD_LIB_APPS)
@@ -19,4 +20,9 @@ endif()
 
 if(ROTTOOLS_BUILD_ROTCHESS OR ROTTOOLS_BUILD_LIB_APPS)
     add_subdirectory(ChessBoardPanel)
+endif()
+
+if(ROTTOOLS_BUILD_LIB_APPS)
+    add_subdirectory(FlatButtons)
+    add_subdirectory(HeaderPanel)
 endif()

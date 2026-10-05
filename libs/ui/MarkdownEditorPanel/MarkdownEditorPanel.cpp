@@ -1,11 +1,13 @@
 #include "MarkdownEditorPanel.h"
 
 #include <wx/intl.h>
+#include <wx/menu.h>
 
 #include <functional>
 #include <utility>
 
 #include "FsWatcher.h"
+#include "HelperFunctions.h"
 
 namespace {
 MarkdownEditorPanel::StatusMessage MakeStatusMessage(ScintillaTextEditorPanel::Status status,
@@ -110,9 +112,25 @@ MarkdownEditorPanel::MarkdownEditorPanel(wxWindow* parent, Callbacks callbacks)
            .onError = std::bind_front(&HandleError, std::move(callbacks.error)),
            .documentWatchRequested = std::bind_front(&MarkdownEditorPanel::HandleDocumentWatchRequested, this),
            .selectOpenFile = std::move(callbacks.selectOpenFile),
-           .selectSaveFile = std::move(callbacks.selectSaveFile)}) {}
+           .selectSaveFile = std::move(callbacks.selectSaveFile),
+           .onEditorContextMenuOpening = std::bind_front(&MarkdownEditorPanel::HandleEditorContextMenuOpening, this)}),
+      m_onCloseRequested(std::move(callbacks.onCloseRequested)) {}
 
 MarkdownEditorPanel::~MarkdownEditorPanel() = default;
+
+void MarkdownEditorPanel::HandleEditorContextMenuOpening(wxMenu& menu) {
+    if (menu.GetMenuItemCount() != 0) {
+        menu.PrependSeparator();
+    }
+    wxMenuItem* closeItem = rottools::ui::PrependCloseMenuItem(menu);
+    menu.Bind(wxEVT_MENU, &MarkdownEditorPanel::HandleEditorCloseMenu, this, closeItem->GetId());
+}
+
+void MarkdownEditorPanel::HandleEditorCloseMenu(wxCommandEvent&) {
+    if (m_onCloseRequested) {
+        m_onCloseRequested();
+    }
+}
 
 void MarkdownEditorPanel::HandleDocumentWatchRequested(const wxFileName& filePath) {
     m_documentWatcher.reset();

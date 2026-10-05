@@ -7,9 +7,11 @@
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
         rotchess rotchess-all rotchess-dev rotchess-build rotchess-rebuild \
         rotchess-run rotchess-run-fg rotchess-package rotchess-icons rotchess-clean \
-        run-filetree run-htmlsource run-texteditor run-scintillatexteditor \
-        run-dirscan run-md2html run-helpers \
-        build-texteditor build-scintillatexteditor \
+        run-filetree run-flatbuttons run-headerpanel run-htmlsource run-markdownpreview \
+        run-texteditor run-scintillatexteditor \
+        run-textfilepreviewdialog \
+        run-dirscan run-md2html run-helpers run-filemanager \
+        build-texteditor build-scintillatexteditor build-textfilepreviewdialog \
         build-webview build-filedrop \
         format check clean _demos
 
@@ -130,6 +132,14 @@ web-icons:             ## Regenerate the rottools suite icons into www/public
 	./scripts/generate-icons.sh rottools --name "ROT Tools" --web-out www/public
 
 ##@ Components — build & run a shared library in isolation
+run-headerpanel: _demos ## HeaderPanel (rottools::ui_headerpanel)
+	cmake --build build --target rottools_ui_headerpanel_app
+	./build/libs/ui/HeaderPanel/rottools_ui_headerpanel_app
+
+run-flatbuttons: _demos ## FlatButtons (rottools::ui_flatbuttons)
+	cmake --build build --target rottools_ui_flatbuttons_app
+	./build/libs/ui/FlatButtons/rottools_ui_flatbuttons_app
+
 run-filetree: _demos   ## FileBrowserTreePanel   (rottools::ui_filetree)
 	cmake --build build --target rottools_ui_filetree_app
 	./build/libs/ui/FileBrowserTreePanel/rottools_ui_filetree_app
@@ -154,9 +164,19 @@ build-texteditor: _demos ## Build TextEditorPanel smoke app
 run-texteditor: build-texteditor ## Run TextEditorPanel smoke app
 	./build/libs/ui/TextEditorPanel/rottools_ui_texteditor_app
 
+build-textfilepreviewdialog: _demos ## Build TextFilePreviewDialog smoke app
+	cmake --build build --target rottools_ui_textfilepreviewdialog_app
+
+run-textfilepreviewdialog: build-textfilepreviewdialog ## Run TextFilePreviewDialog smoke app
+	./build/libs/ui/TextFilePreviewDialog/rottools_ui_textfilepreviewdialog_app
+
 run-dirscan: _demos    ## DirectoryScanner       (rottools::dirscan)
 	cmake --build build --target rottools_dirscan_app
 	./build/libs/backend/DirectoryScanner/rottools_dirscan_app
+
+run-filemanager: _demos ## FileManagerBackend    (rottools::filemanager)
+	cmake --build build --target rottools_filemanager_app
+	./build/libs/backend/FileManagerBackend/rottools_filemanager_app
 
 run-md2html: _demos    ## MarkdownToHtmlAsync    (rottools::md2html)
 	cmake --build build --target rottools_md2html_app

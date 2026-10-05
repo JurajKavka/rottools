@@ -1,5 +1,11 @@
 #include "HtmlSourcePanel.h"
 
+#include <wx/menu.h>
+
+#include <utility>
+
+#include "HelperFunctions.h"
+
 HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallback)
     : HtmlSourcePanelWx(parent), m_onCloseCallback(std::move(onCloseCallback)) {
     m_styledTextCtrl->SetLexer(wxSTC_LEX_HTML);
@@ -30,7 +36,7 @@ HtmlSourcePanel::HtmlSourcePanel(wxWindow* parent, OnCloseCallback onCloseCallba
     m_styledTextCtrl->SetReadOnly(true);
 
     m_styledTextCtrl->Bind(wxEVT_STC_MARGINCLICK, &HtmlSourcePanel::HandleMarginClick, this);
-    m_closeButton->Bind(wxEVT_BUTTON, &HtmlSourcePanel::HandleCloseButtonClick, this);
+    m_styledTextCtrl->Bind(wxEVT_MENU_OPEN, &HtmlSourcePanel::HandleEditorMenuOpen, this);
 }
 
 void HtmlSourcePanel::ShowHtml(const wxString& html) {
@@ -49,15 +55,26 @@ bool HtmlSourcePanel::CanCopy() const {
     return m_styledTextCtrl->GetSelectionStart() != m_styledTextCtrl->GetSelectionEnd();
 }
 
+void HtmlSourcePanel::HandleEditorMenuOpen(wxMenuEvent& event) {
+    if (wxMenu* menu = event.GetMenu()) {
+        if (menu->GetMenuItemCount() != 0) {
+            menu->PrependSeparator();
+        }
+        wxMenuItem* closeItem = rottools::ui::PrependCloseMenuItem(*menu);
+        menu->Bind(wxEVT_MENU, &HtmlSourcePanel::HandleEditorCloseMenu, this, closeItem->GetId());
+    }
+    event.Skip();
+}
+
+void HtmlSourcePanel::HandleEditorCloseMenu(wxCommandEvent&) {
+    if (m_onCloseCallback) {
+        m_onCloseCallback();
+    }
+}
+
 void HtmlSourcePanel::HandleMarginClick(wxStyledTextEvent& event) {
     int line = m_styledTextCtrl->LineFromPosition(event.GetPosition());
     if (m_styledTextCtrl->GetFoldLevel(line) & wxSTC_FOLDLEVELHEADERFLAG) {
         m_styledTextCtrl->ToggleFold(line);
-    }
-}
-
-void HtmlSourcePanel::HandleCloseButtonClick(wxCommandEvent& event) {
-    if (m_onCloseCallback) {
-        m_onCloseCallback();
     }
 }

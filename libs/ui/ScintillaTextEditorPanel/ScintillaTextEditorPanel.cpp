@@ -1,5 +1,6 @@
 #include "ScintillaTextEditorPanel.h"
 
+#include <wx/menu.h>
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stc/stc.h>
@@ -61,6 +62,9 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
         m_textEditor->Bind(wxEVT_STC_ZOOM, &ScintillaTextEditorPanel::HandleEditorMetricsChanged, this);
         UpdateLineNumberMarginWidth();
     }
+    if (m_callbacks.onEditorContextMenuOpening) {
+        m_textEditor->Bind(wxEVT_MENU_OPEN, &ScintillaTextEditorPanel::HandleEditorMenuOpen, this);
+    }
     Bind(wxEVT_SYS_COLOUR_CHANGED, &ScintillaTextEditorPanel::HandleSystemColourChanged, this);
 
     m_textEditor->EmptyUndoBuffer();
@@ -74,12 +78,16 @@ bool ScintillaTextEditorPanel::NewDocument() {
         return false;
     }
 
+    DiscardDocument();
+    return true;
+}
+
+void ScintillaTextEditorPanel::DiscardDocument() {
     m_currentFile = wxFileName();
     m_loadedText.clear();
     LoadText(wxString{});
     RequestDocumentWatch();
     NotifyDocumentChanged(ChangeReason::NewDocument, wxString{});
-    return true;
 }
 
 bool ScintillaTextEditorPanel::ShowOpenDialog() {
@@ -585,6 +593,13 @@ void ScintillaTextEditorPanel::UpdateLineNumberMarginWidth() {
 
 void ScintillaTextEditorPanel::HandleEditorMetricsChanged(wxStyledTextEvent& event) {
     UpdateLineNumberMarginWidth();
+    event.Skip();
+}
+
+void ScintillaTextEditorPanel::HandleEditorMenuOpen(wxMenuEvent& event) {
+    if (wxMenu* menu = event.GetMenu()) {
+        m_callbacks.onEditorContextMenuOpening(*menu);
+    }
     event.Skip();
 }
 

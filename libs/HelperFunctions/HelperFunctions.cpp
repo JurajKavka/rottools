@@ -1,11 +1,18 @@
 #include "HelperFunctions.h"
 
+#include <wx/artprov.h>
+#include <wx/intl.h>
+#include <wx/menu.h>
 #include <wx/window.h>
 
+#include <algorithm>
+#include <array>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <mutex>
 #include <sstream>
+#include <utility>
 
 namespace detail {
 void WriteLogLine(std::ostream& stream, const std::string& line) {
@@ -35,6 +42,41 @@ wxString GetLastDirectoryName(const wxFileName& directory) {
 
 bool IsSameFilePath(const wxFileName& left, const wxFileName& right) {
     return left.IsOk() && right.IsOk() && left.SameAs(right);
+}
+
+bool IsFileWithinDirectory(const wxFileName& file, const wxFileName& directory) {
+    if (!file.IsOk() || !directory.IsOk()) {
+        return false;
+    }
+
+    wxFileName parent = wxFileName::DirName(file.GetPath());
+    while (true) {
+        if (IsSameFilePath(parent, directory)) {
+            return true;
+        }
+        if (parent.GetDirCount() == 0) {
+            return false;
+        }
+        parent.RemoveLastDir();
+    }
+}
+
+std::filesystem::path ToFilesystemPath(const wxString& value) {
+    if (value.IsEmpty()) {
+        return {};
+    }
+
+#ifdef _WIN32
+    return std::filesystem::path(value.ToStdWstring());
+#else
+    const wxScopedCharBuffer utf8 = value.utf8_str();
+    return std::filesystem::path(utf8.data());
+#endif
+}
+
+bool IsMarkdownFile(const wxFileName& filePath) {
+    const wxString extension = filePath.GetExt().Lower();
+    return extension == "md" || extension == "markdown";
 }
 
 void printCppVersion() {
@@ -74,6 +116,43 @@ bool ReadFileUtf8(const wxFileName& filePath, wxString& contents) {
     return true;
 }
 
+TextFileReadResult ReadTextFileUtf8(const wxFileName& filePath, wxString& contents, std::size_t maximumBytes) {
+    std::ifstream input(filePath.GetFullPath().fn_str(), std::ios::binary);
+    if (!input) {
+        return TextFileReadResult::IoError;
+    }
+
+    std::array<char, 8192> chunk;
+    std::string bytes;
+    bytes.reserve(std::min(maximumBytes, chunk.size()));
+    while (input) {
+        input.read(chunk.data(), static_cast<std::streamsize>(chunk.size()));
+        const auto count = static_cast<std::size_t>(input.gcount());
+        if (count > maximumBytes - bytes.size()) {
+            return TextFileReadResult::TooLarge;
+        }
+        bytes.append(chunk.data(), count);
+    }
+    if (input.bad() || !input.eof()) {
+        return TextFileReadResult::IoError;
+    }
+    if (bytes.starts_with("\xEF\xBB\xBF")) {
+        bytes.erase(0, 3);
+    }
+    if (bytes.find('\0') != std::string::npos) {
+        return TextFileReadResult::NotUtf8Text;
+    }
+
+    wxString decoded = wxString::FromUTF8(bytes);
+    const wxScopedCharBuffer encoded = decoded.utf8_str();
+    if (encoded.length() != bytes.size() ||
+        (!bytes.empty() && std::memcmp(encoded.data(), bytes.data(), bytes.size()) != 0)) {
+        return TextFileReadResult::NotUtf8Text;
+    }
+    contents = std::move(decoded);
+    return TextFileReadResult::Ok;
+}
+
 bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents) {
     const wxScopedCharBuffer utf8 = contents.utf8_str();
     std::ofstream out(filePath.GetFullPath().fn_str(), std::ios::binary | std::ios::trunc);
@@ -92,3 +171,16 @@ bool IsWindowOrDescendant(const wxWindow* window, wxWindow* candidate) {
 bool ContainsFocus(const wxWindow* window) {
     return IsWindowOrDescendant(window, wxWindow::FindFocus());
 }
+
+namespace rottools::ui {
+
+wxMenuItem* PrependCloseMenuItem(wxMenu& menu) {
+    wxMenuItem* closeItem = menu.Prepend(wxID_ANY, _("Close"));
+    const wxBitmap closeIcon = wxArtProvider::GetBitmap(wxART_CLOSE, wxART_MENU);
+    if (closeIcon.IsOk()) {
+        closeItem->SetBitmap(closeIcon);
+    }
+    return closeItem;
+}
+
+}  // namespace rottools::ui

@@ -48,9 +48,13 @@ rottools/
       ChessGame/            rottools::chessgame
       MarkdownToHtmlAsync/   rottools::md2html
       DirectoryScanner/      rottools::dirscan
+      FileManagerBackend/    rottools::filemanager
     ui/
+      FlatButtons/           rottools::ui_flatbuttons
+      HeaderPanel/           rottools::ui_headerpanel
       WebViewPanel/          rottools::ui_webview
       HtmlSourcePanel/       rottools::ui_htmlsource
+      TextFilePreviewDialog/ rottools::ui_textfilepreviewdialog
       TextEditorPanel/       rottools::ui_texteditor
       ScintillaTextEditorPanel/ rottools::ui_scintillatexteditor
       MarkdownEditorPanel/   rottools::ui_markdowneditor
@@ -63,7 +67,9 @@ rottools/
       Makefile           # app-specific build/run/package workflow
       assets/            # generated icons eventually live under assets/icons/
   docs/graphics/         # icon masters (Inkscape) + README.md: how to change an icon
-  scripts/               # generate-icons.sh and its helper
+  scripts/               # version/release, branch-cleanup, and icon utilities
+  www/                   # Astro static download/marketing website
+  .github/workflows/     # CI, per-tool releases, and GitHub Pages deployment
 ```
 
 ## Build and run (local dev)
@@ -72,16 +78,26 @@ Uses system-provided wxWidgets (e.g. `brew install wxwidgets`) and fetches md4c.
 `make help` prints the full menu. Root targets operate on the complete suite;
 app-prefixed targets use an isolated build directory and operate on one app:
 
-| `make`                  | Does                                      |
-|-------------------------|-------------------------------------------|
-| `make build`            | Configure and build the complete suite    |
-| `make rotreader-dev`    | Configure, build, and run only rotreader  |
-| `make rotpad-dev`       | Configure, build, and run only rotpad     |
-| `make rotpad-build`     | Configure and build only rotpad           |
-| `make rotpad-package`   | Build and package only rotpad             |
-| `make rotchess-dev`     | Configure, build, and run only rotchess   |
-| `make rotchess-build`   | Configure and build only rotchess         |
-| `make rotchess-package` | Build and package only rotchess           |
+| `make`                   | Does                                      |
+|--------------------------|-------------------------------------------|
+| `make build`             | Configure and build the complete suite    |
+| `make rotreader-all`     | Clean, build, and run only rotreader      |
+| `make rotreader-dev`     | Incrementally build and run rotreader     |
+| `make rotreader-build`   | Configure and build only rotreader        |
+| `make rotreader-package` | Build and package only rotreader          |
+| `make rotpad-all`        | Clean, build, and run only rotpad         |
+| `make rotpad-dev`        | Incrementally build and run rotpad        |
+| `make rotpad-build`      | Configure and build only rotpad           |
+| `make rotpad-package`    | Build and package only rotpad             |
+| `make rotchess-all`      | Clean, build, and run only rotchess       |
+| `make rotchess-dev`      | Incrementally build and run rotchess      |
+| `make rotchess-build`    | Configure and build only rotchess         |
+| `make rotchess-package`  | Build and package only rotchess           |
+
+Use `make <tool>-all` for a from-scratch local run and `make <tool>-dev` for the
+normal edit/build/run cycle. Both run the app in the foreground after building.
+Use the matching `<tool>-build` or `<tool>-rebuild` target when the app should
+be compiled without being launched.
 
 Each app also has the same shorter workflow from its own directory, for example
 `make -C apps/rotpad dev`, `make -C apps/rotpad build`, or
@@ -95,10 +111,27 @@ Build/run a single shared component in isolation (`make help` lists them all):
 | `make run-filetree`  | FileBrowserTreePanel | `cmake -B build -DROTTOOLS_BUILD_LIB_APPS=ON`<br>`cmake --build build --target rottools_ui_filetree_app`<br>`./build/libs/ui/FileBrowserTreePanel/rottools_ui_filetree_app` |
 | `make build-webview` | WebViewPanel (lib only) | `cmake --build build --target rottools_ui_webview` |
 
-The other demos follow the same pattern: `run-htmlsource`, `run-texteditor`,
-`run-scintillatexteditor`, `run-dirscan`, `run-md2html`,
-`run-helpers` (and `build-filedrop`). Build-only editor smoke targets are also
-available as `build-texteditor` and `build-scintillatexteditor`.
+The other demos follow the same pattern: `run-flatbuttons`, `run-headerpanel`,
+`run-htmlsource`, `run-markdownpreview`, `run-texteditor`,
+`run-scintillatexteditor`, `run-textfilepreviewdialog`, `run-dirscan`,
+`run-filemanager`, `run-md2html`, and `run-helpers`. Build-only smoke targets
+include `build-texteditor`, `build-scintillatexteditor`, and
+`build-textfilepreviewdialog` (plus `build-filedrop` for the library).
+
+### Website
+
+The download site is a separate Astro project. Start it locally with:
+
+```sh
+cd www
+npm ci
+npm run dev
+```
+
+Before publishing website changes, run `npm run check`, `npm run build`, and
+`npm run preview`; preview serves the production build with its `/rottools`
+GitHub Pages base path. See [www/README.md](www/README.md) for its layout and
+asset URL rules.
 
 ## Icons
 

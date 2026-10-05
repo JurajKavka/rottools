@@ -1,7 +1,9 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "DirectoryScanner.h"
@@ -10,22 +12,65 @@
 
 class FileBrowserTreePanel : public FileBrowserTreePanelWx {
    public:
+    static constexpr char kFilterAllFiles[] = "*";
+
+    struct FileTypeFilter {
+        wxString label;
+        std::vector<std::string> extensions;
+    };
+
     using FileOpenedCallback = std::function<void(const wxFileName&)>;
     using DirectoryChangedCallback = std::function<void(const wxFileName&)>;
     using ActionRequestedCallback = std::function<void()>;
+    using SelectNewFolderNameCallback =
+        std::function<std::optional<wxString>(const std::optional<wxString>& previousName)>;
+
+    struct DeletePrompt {
+        wxFileName path;
+        bool isDirectory = false;
+    };
+    using ConfirmDeleteCallback = std::function<bool(const std::vector<DeletePrompt>&)>;
+    using PathDeletedCallback = std::function<void(const DeletePrompt&)>;
+
+    struct CreateFolderError {
+        wxString name;
+        std::error_code error;
+    };
+    using CreateFolderErrorCallback = std::function<void(const CreateFolderError&)>;
+
+    struct DeleteError {
+        wxFileName path;
+        bool isDirectory = false;
+        std::error_code error;
+    };
+    using DeleteErrorCallback = std::function<void(const std::vector<DeleteError>&)>;
 
     struct Callbacks {
         FileOpenedCallback onFileOpened;
         DirectoryChangedCallback onDirectoryChanged;
         ActionRequestedCallback onHomeRequested;
         ActionRequestedCallback onCloseRequested;
+        /** Returning nullopt cancels creation. previousName is nullopt on the first prompt. */
+        SelectNewFolderNameCallback selectNewFolderName;
+        /** Reports a failed folder creation so the host can present the error. */
+        CreateFolderErrorCallback onCreateFolderError;
+        /** Returning false, or omitting this callback, cancels permanent deletion. */
+        ConfirmDeleteCallback confirmDelete;
+        /** Called for each file or directory that was completely deleted. */
+        PathDeletedCallback onPathDeleted;
+        /** Reports all failed deletions together so the host can present one error. */
+        DeleteErrorCallback onDeleteError;
     };
 
     /**
-     * @param extensions Case-insensitive file extensions to show. An empty
-     *        collection shows all ordinary files.
+     * @param fileTypeFilter File type choices in context menu order. Each choice has a
+     *        label and case-insensitive extensions (with or without a leading
+     *        dot). The first choice is selected initially. An empty collection
+     *        omits the File type submenu and shows all ordinary files. Use
+     *        kFilterAllFiles for an explicit unfiltered choice.
      */
-    explicit FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks = {}, std::vector<std::string> extensions = {});
+    explicit FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks = {},
+                                  std::vector<FileTypeFilter> fileTypeFilter = {});
     ~FileBrowserTreePanel();
 
     /**
@@ -46,18 +91,17 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
    private:
     DirectoryScanner m_directoryScanner;
     ScanOptions m_scanOptions;
+    std::vector<FileTypeFilter> m_fileTypeFilters;
+    int m_fileTypeSelection = 0;
     wxFileName m_currentPath;
-    wxString m_savedSelectionText;
+    std::vector<wxString> m_savedSelectionTexts;
     /// Text of the row at the top of the viewport, saved so a KeepPosition
     /// re-list can scroll back to it (item handles do not survive the rebuild)
     wxString m_savedTopItemText;
     /// Behavior for the scan in flight, applied when its results arrive
     ScrollBehavior m_scrollBehavior = ScrollBehavior::ResetToTop;
 
-    FileOpenedCallback m_onFileOpened;
-    DirectoryChangedCallback m_onDirectoryChanged;
-    ActionRequestedCallback m_onHomeRequested;
-    ActionRequestedCallback m_onCloseRequested;
+    Callbacks m_callbacks;
 
     void UpdateTree(const std::vector<FileEntry>& entries);
     /// Finds the top-level row with the given text; invalid item if none match
@@ -66,10 +110,15 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     [[nodiscard]] wxFileName ResolveItemPath(const wxDataViewItem& item) const;
     void OpenPath(const wxFileName& path);
     void CopyPath(const wxFileName& path);
+    void CreateFolder();
+    [[nodiscard]] std::vector<DeletePrompt> GetSelectedDeletePaths() const;
+    void DeletePaths(const std::vector<DeletePrompt>& paths);
     void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
-    void HandleHiddenFilesCheckbox(wxCommandEvent& event);
+    void SetShowHiddenFiles(bool showHiddenFiles);
+    void SetFileTypeSelection(int selection);
+    void ApplySelectedFileType();
     void HandleItemActivated(wxDataViewEvent& event);
     void HandleItemContextMenu(wxDataViewEvent& event);
-    void HandleHomeButtonClick(wxCommandEvent& event);
-    void HandleCloseButtonClick(wxCommandEvent& event);
+    void HandleTreeKeyDown(wxKeyEvent& event);
+    void ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path, const std::vector<DeletePrompt>& deletePaths);
 };

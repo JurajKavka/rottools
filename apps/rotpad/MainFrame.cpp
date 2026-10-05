@@ -4,7 +4,9 @@
 #include <wx/fontdlg.h>
 #include <wx/msgdlg.h>
 #include <wx/stockitem.h>
+#include <wx/textdlg.h>
 
+#include <algorithm>
 #include <functional>
 #ifndef __WXOSX__
 #include "AppIcon.h"
@@ -59,12 +61,20 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_editMenu->FindItem(wxID_PASTE)->SetItemLabel(wxGetStockLabel(wxID_PASTE, stockLabelFlags));
 
     // The browser and editor are siblings in one splitter, matching rotreader's
-    // top-level layout. FileBrowserTreePanel shows every ordinary file by default.
+    // top-level layout. Start with the file types from the Open dialog.
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_fileBrowserPanel = new FileBrowserTreePanel(
-        m_mainSplitter, {.onFileOpened = std::bind_front(&MainFrame::HandleOpenTextFile, this),
-                         .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
-                         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this)});
+        m_mainSplitter,
+        {.onFileOpened = std::bind_front(&MainFrame::HandleOpenTextFile, this),
+         .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
+         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this),
+         .selectNewFolderName = std::bind_front(&MainFrame::HandleSelectBrowserFolderName, this),
+         .onCreateFolderError = std::bind_front(&MainFrame::HandleBrowserCreateFolderError, this),
+         .confirmDelete = std::bind_front(&MainFrame::HandleConfirmBrowserDelete, this),
+         .onPathDeleted = std::bind_front(&MainFrame::HandleBrowserPathDeleted, this),
+         .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this)},
+        {{_("Supported text files"), {"txt", "json", "csv", "md", "sql"}},
+         {_("All files"), {FileBrowserTreePanel::kFilterAllFiles}}});
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
     m_textEditorPanel->SetEditorFont(rottools::LoadEditorFont(m_textEditorPanel->GetEditorFont()));
     m_textEditorPanel->SetWordWrap(true);
@@ -183,6 +193,74 @@ void MainFrame::HandleFileBrowserHomeRequested() {
 
 void MainFrame::HandleFileBrowserCloseRequested() {
     HideFileBrowser();
+}
+
+std::optional<wxString> MainFrame::HandleSelectBrowserFolderName(const std::optional<wxString>& previousName) {
+    wxTextEntryDialog dialog(this, _("Name for the new folder:"), _("New Folder"),
+                             previousName.value_or(_("New Folder")));
+    if (dialog.ShowModal() != wxID_OK) {
+        return std::nullopt;
+    }
+    return dialog.GetValue();
+}
+
+void MainFrame::HandleBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error) {
+    const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+    const wxString message = wxString::Format(_("Could not create folder \"%s\": %s"), error.name.c_str(),
+                                              detail.c_str());
+    wxMessageBox(message, _("New Folder"), wxOK | wxICON_ERROR, this);
+}
+
+bool MainFrame::HandleConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
+    wxString message;
+    if (paths.size() == 1) {
+        const auto& path = paths.front();
+        const wxString name = path.isDirectory ? GetLastDirectoryName(path.path) : path.path.GetFullName();
+        message = path.isDirectory
+                      ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"), name.c_str())
+                      : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
+    } else {
+        message = wxString::Format(_("Permanently delete %zu selected items and all folder contents?"), paths.size());
+    }
+    const bool affectsCurrentDocument =
+        std::ranges::any_of(paths, [this](const auto& path) { return IsCurrentDocumentAffectedByDelete(path); });
+    if (affectsCurrentDocument && m_textEditorPanel->HasUnsavedChanges()) {
+        message += _("\n\nUnsaved changes in the open document will be lost.");
+    }
+    wxMessageDialog dialog(this, message, _("Delete"), wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+    dialog.SetOKCancelLabels(_("Delete"), wxGetStockLabel(wxID_CANCEL));
+    return dialog.ShowModal() == wxID_OK;
+}
+
+bool MainFrame::IsCurrentDocumentAffectedByDelete(const FileBrowserTreePanel::DeletePrompt& deleted) const {
+    return IsSameFilePath(m_currentFile, deleted.path) ||
+           (deleted.isDirectory && IsFileWithinDirectory(m_currentFile, deleted.path));
+}
+
+void MainFrame::HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted) {
+    if (IsCurrentDocumentAffectedByDelete(deleted)) {
+        m_currentFile = wxFileName();
+        m_textEditorPanel->LoadText(wxString{});
+        statusBar->SetStatusText(wxString{});
+    }
+}
+
+void MainFrame::HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors) {
+    wxString message;
+    if (errors.size() == 1) {
+        const auto& error = errors.front();
+        const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
+        const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+        message = wxString::Format(_("Could not completely delete \"%s\": %s"), name.c_str(), detail.c_str());
+    } else {
+        message = wxString::Format(_("Could not completely delete %zu items:"), errors.size());
+        for (const auto& error : errors) {
+            const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
+            const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+            message += wxString::Format("\n%s: %s", name.c_str(), detail.c_str());
+        }
+    }
+    wxMessageBox(message, _("Delete"), wxOK | wxICON_ERROR, this);
 }
 
 void MainFrame::HideFileBrowser() {

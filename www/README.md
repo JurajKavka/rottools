@@ -1,8 +1,8 @@
 # www — the ROT tools website
 
 Static [Astro](https://astro.build) site. `astro build` writes plain HTML, CSS
-and JS to `dist/`, which the release pipeline rsyncs to the download server. No
-Node process runs in production.
+and JS to `dist/`, which the Pages workflow uploads to GitHub Pages. No Node
+process runs in production.
 
 ## Commands
 
@@ -10,7 +10,7 @@ Run these from `www/`:
 
 | Command           | Does                                          |
 |-------------------|-----------------------------------------------|
-| `npm install`     | Install dependencies (first time only)        |
+| `npm ci`          | Install exact locked dependencies             |
 | `npm run dev`     | Dev server with live reload, `localhost:4321`  |
 | `npm start`       | Same, and opens the browser for you            |
 | `npm run build`   | Production build into `dist/`                  |
@@ -58,9 +58,13 @@ If its palettes change, re-copy the values.
 
 ## Adding a tool, or bumping a version
 
-Everything user-facing lives in [src/data/tools.ts](src/data/tools.ts). Add an
-entry to the `tools` array, or change a `version`, and the page follows. Nothing
-else needs touching.
+Tool marketing metadata and download definitions live in
+[src/data/tools.ts](src/data/tools.ts). Add an app's `VERSION` import and a new
+entry to the `tools` array when adding a tool. Versions themselves are imported
+from `apps/<tool>/VERSION`; never duplicate or change a version in the website.
+Use the repository's `make bump-version TOOL=<tool> VERSION=<X.Y.Z>` workflow.
+After the release branch is merged and its release tag is published, the tool's
+release workflow rebuilds the site with the merged version.
 
 Download file names are built to match CPack's `CPACK_PACKAGE_FILE_NAME` from
 [../cmake/RotToolsPackaging.cmake](../cmake/RotToolsPackaging.cmake), plus any
