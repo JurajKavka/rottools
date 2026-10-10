@@ -38,7 +38,7 @@ vcpkg runner or baseline containing the updated port.
 ```
 rottools/
   CMakeLists.txt         # umbrella build (selects tools via ROTTOOLS_BUILD_<TOOL>)
-  CMakePresets.json      # `dev` (system deps) + `ci-macos/linux/windows` (vcpkg)
+  CMakePresets.json      # `dev` (system deps) + CI presets (apt or vcpkg)
   vcpkg.json             # cross-platform dependency manifest (wxwidgets, md4c)
   cmake/                 # shared modules: version + CPack packaging
   libs/                  # SHARED, reusable libraries (rottools::* targets)
@@ -67,7 +67,9 @@ rottools/
 
 ## Build and run (local dev)
 
-Uses system-provided wxWidgets (e.g. `brew install wxwidgets`) and fetches md4c.
+Linux builds support wxGTK 3.2 or newer; macOS and Windows require wxWidgets
+3.3.3 or newer. All builds need `core`, `base`, `stc`, and `webview`.
+Local builds use a system installation of wxWidgets and fetch md4c.
 `make help` prints the full menu. Root targets operate on the complete suite;
 app-prefixed targets use an isolated build directory and operate on one app:
 

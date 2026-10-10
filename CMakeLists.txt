@@ -41,8 +41,12 @@ option(ROTTOOLS_BUILD_ROTPAD    "Build the rotpad tool" ON)
 option(ROTTOOLS_BUILD_LIB_APPS  "Build per-library standalone smoke-test apps" OFF)
 
 # --- wxWidgets: found once for the whole tree --------------------------------
-# The classic FindwxWidgets path works with Homebrew, apt, and the vcpkg port.
-find_package(wxWidgets COMPONENTS core base stc webview REQUIRED)
+# Ubuntu provides wxGTK 3.2; macOS and Windows use 3.3.3 or newer.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(wxWidgets 3.2 COMPONENTS core base stc webview REQUIRED)
+else()
+    find_package(wxWidgets 3.3.3 COMPONENTS core base stc webview REQUIRED)
+endif()
 include(${wxWidgets_USE_FILE})
 
 # --- Windows: WebView2 loader search path ------------------------------------

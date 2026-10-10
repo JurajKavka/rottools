@@ -46,40 +46,57 @@ class FileBrowserTreePanelFrame : public wxFrame {
         wxMessageBox(message, _("New Folder"), wxOK | wxICON_ERROR, this);
     }
 
-    bool HandleConfirmDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
+    bool HandleConfirmDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths,
+                             FileBrowserTreePanel::DeleteMode mode) {
+        const bool trash = mode == FileBrowserTreePanel::DeleteMode::Trash;
+        const wxString trashName = FileBrowserTreePanel::GetTrashName();
         wxString message;
         if (paths.size() == 1) {
             const auto& path = paths.front();
             const wxString name = path.isDirectory ? GetLastDirectoryName(path.path) : path.path.GetFullName();
-            message =
-                path.isDirectory
-                    ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"), name.c_str())
-                    : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
+            if (trash) {
+                message = wxString::Format(_("Move \"%s\" to %s?"), name.c_str(), trashName.c_str());
+            } else {
+                message = path.isDirectory
+                              ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"),
+                                                 name.c_str())
+                              : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
+            }
         } else {
-            message =
-                wxString::Format(_("Permanently delete %zu selected items and all folder contents?"), paths.size());
+            message = trash ? wxString::Format(_("Move %zu selected items to %s?"), paths.size(), trashName.c_str())
+                            : wxString::Format(_("Permanently delete %zu selected items and all folder contents?"),
+                                               paths.size());
         }
-        wxMessageDialog dialog(this, message, _("Delete"), wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
-        dialog.SetOKCancelLabels(_("Delete"), wxGetStockLabel(wxID_CANCEL));
+        const wxString action = trash ? wxString::Format(_("Move to %s"), trashName.c_str()) : _("Delete Permanently");
+        wxMessageDialog dialog(this, message, action, wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+        dialog.SetOKCancelLabels(action, wxGetStockLabel(wxID_CANCEL));
         return dialog.ShowModal() == wxID_OK;
     }
 
-    void HandleDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors) {
+    void HandleDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,
+                           FileBrowserTreePanel::DeleteMode mode) {
+        const bool trash = mode == FileBrowserTreePanel::DeleteMode::Trash;
+        const wxString trashName = FileBrowserTreePanel::GetTrashName();
         wxString message;
         if (errors.size() == 1) {
             const auto& error = errors.front();
             const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
             const wxString detail = wxString::FromUTF8(error.error.message().c_str());
-            message = wxString::Format(_("Could not completely delete \"%s\": %s"), name.c_str(), detail.c_str());
+            message = trash ? wxString::Format(_("Could not move \"%s\" to %s: %s"), name.c_str(),
+                                               trashName.c_str(), detail.c_str())
+                            : wxString::Format(_("Could not completely delete \"%s\": %s"), name.c_str(),
+                                               detail.c_str());
         } else {
-            message = wxString::Format(_("Could not completely delete %zu items:"), errors.size());
+            message = trash ? wxString::Format(_("Could not move %zu items to %s:"), errors.size(), trashName.c_str())
+                            : wxString::Format(_("Could not completely delete %zu items:"), errors.size());
             for (const auto& error : errors) {
                 const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
                 const wxString detail = wxString::FromUTF8(error.error.message().c_str());
                 message += wxString::Format("\n%s: %s", name.c_str(), detail.c_str());
             }
         }
-        wxMessageBox(message, _("Delete"), wxOK | wxICON_ERROR, this);
+        const wxString title = trash ? wxString::Format(_("Move to %s"), trashName.c_str()) : _("Delete");
+        wxMessageBox(message, title, wxOK | wxICON_ERROR, this);
     }
 };
 

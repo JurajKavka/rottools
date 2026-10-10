@@ -3,6 +3,7 @@
 #include <wx/artprov.h>
 #include <wx/clipbrd.h>
 #include <wx/dataobj.h>
+#include <wx/filefn.h>
 #include <wx/imaglist.h>
 #include <wx/menu.h>
 
@@ -13,6 +14,41 @@
 #include <utility>
 
 #include "FileManagerBackend.h"
+
+#if defined(__WXGTK__) && !defined(wxHAS_MOVE_TO_TRASH)
+#include <gio/gio.h>
+#endif
+
+namespace {
+std::error_code MovePathToTrash(const wxFileName& path) {
+#ifdef wxHAS_MOVE_TO_TRASH
+    return wxMoveToTrash(path.GetFullPath()) ? std::error_code{} : std::make_error_code(std::errc::io_error);
+#elif defined(__WXGTK__)
+    const std::filesystem::path nativePath = ToFilesystemPath(path.GetFullPath());
+    GFile* file = g_file_new_for_path(nativePath.c_str());
+    GError* nativeError = nullptr;
+    const bool moved = g_file_trash(file, nullptr, &nativeError);
+    g_object_unref(file);
+    if (moved) {
+        return {};
+    }
+
+    std::error_code error = std::make_error_code(std::errc::io_error);
+    if (g_error_matches(nativeError, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+        error = std::make_error_code(std::errc::operation_not_supported);
+    } else if (g_error_matches(nativeError, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED)) {
+        error = std::make_error_code(std::errc::permission_denied);
+    } else if (g_error_matches(nativeError, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+        error = std::make_error_code(std::errc::no_such_file_or_directory);
+    }
+    g_clear_error(&nativeError);
+    return error;
+#else
+    (void)path;
+    return std::make_error_code(std::errc::operation_not_supported);
+#endif
+}
+}  // namespace
 
 FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks,
                                            std::vector<FileTypeFilter> fileTypeFilter)
@@ -43,6 +79,14 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
 
 FileBrowserTreePanel::~FileBrowserTreePanel() {
     Unbind(wxEVT_DIRECTORY_SCAN_COMPLETE, &FileBrowserTreePanel::HandleDirectoryScanComplete, this);
+}
+
+wxString FileBrowserTreePanel::GetTrashName() {
+#ifdef __WXMSW__
+    return _("Recycle Bin");
+#else
+    return _("Trash");
+#endif
 }
 
 wxDataViewItem FileBrowserTreePanel::FindChildByText(const wxString& text) const {
@@ -305,29 +349,38 @@ std::vector<FileBrowserTreePanel::DeletePrompt> FileBrowserTreePanel::GetSelecte
     return paths;
 }
 
-void FileBrowserTreePanel::DeletePaths(const std::vector<DeletePrompt>& paths) {
-    if (paths.empty() || !m_callbacks.confirmDelete || !m_callbacks.confirmDelete(paths)) {
+void FileBrowserTreePanel::DeletePaths(const std::vector<DeletePrompt>& paths, DeleteMode mode) {
+    if (paths.empty() || !m_callbacks.confirmDelete || !m_callbacks.confirmDelete(paths, mode)) {
         return;
     }
 
-    std::vector<std::filesystem::path> sources;
-    sources.reserve(paths.size());
-    std::transform(paths.begin(), paths.end(), std::back_inserter(sources),
-                   [](const DeletePrompt& path) { return ToFilesystemPath(path.path.GetFullPath()); });
+    std::vector<FileManagerBackend::Result> permanentResults;
+    if (mode == DeleteMode::Permanent) {
+        std::vector<std::filesystem::path> sources;
+        sources.reserve(paths.size());
+        std::transform(paths.begin(), paths.end(), std::back_inserter(sources),
+                       [](const DeletePrompt& path) { return ToFilesystemPath(path.path.GetFullPath()); });
+        permanentResults = FileManagerBackend::DeleteMany(sources);
+    }
 
-    const auto results = FileManagerBackend::DeleteMany(sources);
     std::vector<DeleteError> errors;
-    for (std::size_t index = 0; index < results.size(); ++index) {
-        if (results[index].Succeeded()) {
+    for (std::size_t index = 0; index < paths.size(); ++index) {
+        std::error_code error;
+        if (mode == DeleteMode::Trash) {
+            error = MovePathToTrash(paths[index].path);
+        } else {
+            error = permanentResults[index].error;
+        }
+        if (!error) {
             if (m_callbacks.onPathDeleted) {
                 m_callbacks.onPathDeleted(paths[index]);
             }
         } else {
-            errors.push_back({paths[index].path, paths[index].isDirectory, results[index].error});
+            errors.push_back({paths[index].path, paths[index].isDirectory, error});
         }
     }
     if (!errors.empty() && m_callbacks.onDeleteError) {
-        m_callbacks.onDeleteError(errors);
+        m_callbacks.onDeleteError(errors, mode);
     }
     ReloadCurrentDir();
 }
@@ -346,14 +399,22 @@ void FileBrowserTreePanel::HandleItemContextMenu(wxDataViewEvent& event) {
 
 void FileBrowserTreePanel::HandleTreeKeyDown(wxKeyEvent& event) {
     const int key = event.GetKeyCode();
-    bool deleteKey = key == WXK_DELETE;
+    std::optional<DeleteMode> mode;
 #ifdef __WXOSX__
-    deleteKey = deleteKey || (key == WXK_BACK && event.CmdDown());
+    // Finder: Command+Delete moves to Trash; Option+Command+Delete removes immediately.
+    if (key == WXK_BACK && event.CmdDown() && !event.ShiftDown() && !event.ControlDown()) {
+        mode = event.AltDown() ? DeleteMode::Permanent : DeleteMode::Trash;
+    }
+#else
+    // Windows and Linux file managers: Delete uses Trash, Shift+Delete bypasses it.
+    if (key == WXK_DELETE && !event.CmdDown() && !event.AltDown()) {
+        mode = event.ShiftDown() ? DeleteMode::Permanent : DeleteMode::Trash;
+    }
 #endif
-    if (deleteKey && m_callbacks.confirmDelete) {
+    if (mode && m_callbacks.confirmDelete) {
         const auto paths = GetSelectedDeletePaths();
         if (!paths.empty()) {
-            DeletePaths(paths);
+            DeletePaths(paths, *mode);
             return;
         }
     }
@@ -368,7 +429,7 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
 
     int openId = wxID_NONE;
     int copyPathId = wxID_NONE;
-    int deleteId = wxID_NONE;
+    int trashId = wxID_NONE;
     // Custom IDs avoid macOS applying responder-chain validation for stock
     // commands such as wxID_COPY and disabling the item.
     if (path.IsOk()) {
@@ -377,9 +438,12 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
             copyPathId = menu.Append(wxID_ANY, _("Copy Path"))->GetId();
         }
         if (m_callbacks.confirmDelete && !deletePaths.empty()) {
-            const wxString label =
-                deletePaths.size() == 1 ? _("Delete") : wxString::Format(_("Delete %zu Items"), deletePaths.size());
-            deleteId = menu.Append(wxID_ANY, label)->GetId();
+            const wxString trashName = GetTrashName();
+            wxString label = wxString::Format(_("Move to %s"), trashName.c_str());
+            if (deletePaths.size() > 1) {
+                label = wxString::Format(_("Move %zu Items to %s"), deletePaths.size(), trashName.c_str());
+            }
+            trashId = menu.Append(wxID_ANY, label)->GetId();
         }
         menu.AppendSeparator();
     }
@@ -413,8 +477,8 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
         OpenPath(path);
     } else if (path.IsOk() && selection == copyPathId) {
         CopyPath(path);
-    } else if (deleteId != wxID_NONE && selection == deleteId) {
-        DeletePaths(deletePaths);
+    } else if (trashId != wxID_NONE && selection == trashId) {
+        DeletePaths(deletePaths, DeleteMode::Trash);
     } else if (selection == newFolderId) {
         CreateFolder();
     } else if (selection == homeId && m_callbacks.onHomeRequested) {
