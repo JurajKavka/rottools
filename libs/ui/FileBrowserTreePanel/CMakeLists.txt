@@ -10,6 +10,13 @@ target_link_libraries(rottools_ui_filetree
     PRIVATE rottools::filemanager
 )
 
+# wxGTK before 3.3.3 predates wxMoveToTrash(); use GIO only for that build.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND wxWidgets_VERSION_STRING VERSION_LESS 3.3.3)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0)
+    target_link_libraries(rottools_ui_filetree PRIVATE PkgConfig::GIO)
+endif()
+
 if(ROTTOOLS_BUILD_LIB_APPS)
     add_executable(rottools_ui_filetree_app main.cpp)
     target_link_libraries(rottools_ui_filetree_app PRIVATE rottools::ui_filetree ${wxWidgets_LIBRARIES})
