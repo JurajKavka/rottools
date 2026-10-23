@@ -60,7 +60,9 @@ rottools/
       Makefile           # app-specific build/run/package workflow
       assets/            # generated icons eventually live under assets/icons/
   docs/graphics/         # icon masters (Inkscape) + README.md: how to change an icon
-  scripts/               # generate-icons.sh and its helper
+  scripts/               # version/release, branch-cleanup, and icon utilities
+  www/                   # Astro static download/marketing website
+  .github/workflows/     # CI, per-tool releases, and GitHub Pages deployment
 ```
 
 ## Build and run (local dev)
@@ -69,13 +71,22 @@ Uses system-provided wxWidgets (e.g. `brew install wxwidgets`) and fetches md4c.
 `make help` prints the full menu. Root targets operate on the complete suite;
 app-prefixed targets use an isolated build directory and operate on one app:
 
-| `make`                  | Does                                      |
-|-------------------------|-------------------------------------------|
-| `make build`            | Configure and build the complete suite    |
-| `make rotreader-dev`    | Configure, build, and run only rotreader  |
-| `make rotpad-dev`       | Configure, build, and run only rotpad     |
-| `make rotpad-build`     | Configure and build only rotpad           |
-| `make rotpad-package`   | Build and package only rotpad             |
+| `make`                   | Does                                      |
+|--------------------------|-------------------------------------------|
+| `make build`             | Configure and build the complete suite    |
+| `make rotreader-all`     | Clean, build, and run only rotreader      |
+| `make rotreader-dev`     | Incrementally build and run rotreader     |
+| `make rotreader-build`   | Configure and build only rotreader        |
+| `make rotreader-package` | Build and package only rotreader          |
+| `make rotpad-all`        | Clean, build, and run only rotpad         |
+| `make rotpad-dev`        | Incrementally build and run rotpad        |
+| `make rotpad-build`      | Configure and build only rotpad           |
+| `make rotpad-package`    | Build and package only rotpad             |
+
+Use `make <tool>-all` for a from-scratch local run and `make <tool>-dev` for the
+normal edit/build/run cycle. Both run the app in the foreground after building.
+Use the matching `<tool>-build` or `<tool>-rebuild` target when the app should
+be compiled without being launched.
 
 Each app also has the same shorter workflow from its own directory, for example
 `make -C apps/rotpad dev`, `make -C apps/rotpad build`, or
@@ -93,6 +104,21 @@ The other demos follow the same pattern: `run-htmlsource`, `run-texteditor`,
 `run-scintillatexteditor`, `run-dirscan`, `run-md2html`,
 `run-helpers` (and `build-filedrop`). Build-only editor smoke targets are also
 available as `build-texteditor` and `build-scintillatexteditor`.
+
+### Website
+
+The download site is a separate Astro project. Start it locally with:
+
+```sh
+cd www
+npm ci
+npm run dev
+```
+
+Before publishing website changes, run `npm run check`, `npm run build`, and
+`npm run preview`; preview serves the production build with its `/rottools`
+GitHub Pages base path. See [www/README.md](www/README.md) for its layout and
+asset URL rules.
 
 ## Icons
 
@@ -154,6 +180,37 @@ flows into a generated `version.h`, the macOS `Info.plist`, and the CPack packag
 name. Releases are per-tool and tag-driven: push a tag like `rotreader-v0.1.0`
 and the `Release rotreader` GitHub Actions workflow builds all three OSes and
 publishes a GitHub Release. Other tools are untouched.
+
+Prepare a version bump from a clean, up-to-date `main` with:
+
+```sh
+make bump-version TOOL=rotreader VERSION=0.3.0
+```
+
+This creates and checks out `rotreader-0.3.0`, updates only the app's `VERSION`
+file, commits it as `bump 0.3.0`, and pushes the new branch to `origin`.
+
+After the branch is reviewed and merged, publish its release tag with:
+
+```sh
+make release-tag TOOL=rotreader
+```
+
+This checks out and fast-forwards `main`, reads the merged app version, creates
+the annotated tag `rotreader-v0.3.0`, and pushes it to `origin`. The release
+workflow builds and publishes the installers, then redeploys the website using
+the version from the app's `VERSION` file.
+
+After merged work accumulates, clean up its local and remote branches with:
+
+```sh
+make cleanup-branches
+```
+
+The command updates `main` and the remote-tracking refs, lists only branches
+whose tips are contained in `origin/main`, and asks for confirmation before
+deleting them. It preserves `main`, unmerged branches, and tags. For
+non-interactive use, run `scripts/cleanup-merged-branches.zsh --yes` directly.
 
 ## Adding a new tool
 

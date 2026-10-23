@@ -1,6 +1,8 @@
 # Independent release for the rotreader tool. Triggered by an app-prefixed tag
 # (e.g. rotreader-v0.1.0) so each tool releases on its own schedule/version.
-# Builds the three-OS matrix, then publishes a GitHub Release with the installers.
+# Builds the three-OS compatibility matrix plus the dedicated macOS 26 package,
+# publishes a GitHub Release with all installers, then redeploys the website
+# with the version from this tag.
 name: Release rotreader
 
 on:
@@ -17,8 +19,11 @@ jobs:
       app: rotreader
       upload-artifacts: true
 
+  macos26:
+    uses: ./.github/workflows/rotreader-macos26.yml
+
   release:
-    needs: build
+    needs: [build, macos26]
     runs-on: ubuntu-latest
     steps:
       - name: Download all installers
@@ -41,3 +46,11 @@ jobs:
           name: "rotreader-rottools-${{ steps.ver.outputs.version }}"
           files: dist/*
           generate_release_notes: true
+
+  website:
+    needs: release
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml

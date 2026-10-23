@@ -34,7 +34,16 @@
       "displayName": "CI macOS (vcpkg, arm64)",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "arm64-osx-release",
-        "CMAKE_OSX_DEPLOYMENT_TARGET": "14.0"
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "15.0"
+      }
+    },
+    {
+      "name": "ci-macos26",
+      "inherits": "vcpkg-base",
+      "displayName": "CI macOS 26 Liquid Glass (vcpkg, arm64)",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm64-osx26-release",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "26.0"
       }
     },
     {
@@ -60,6 +69,7 @@
   "buildPresets": [
     { "name": "dev",        "configurePreset": "dev" },
     { "name": "ci-macos",   "configurePreset": "ci-macos",   "configuration": "Release" },
+    { "name": "ci-macos26", "configurePreset": "ci-macos26", "configuration": "Release" },
     { "name": "ci-linux",   "configurePreset": "ci-linux",   "configuration": "Release" },
     { "name": "ci-windows", "configurePreset": "ci-windows", "configuration": "Release" }
   ]

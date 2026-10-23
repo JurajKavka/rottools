@@ -3,11 +3,15 @@
 #include <wx/filename.h>
 #include <wx/string.h>
 
+#include <cstddef>
+#include <filesystem>
 #include <format>
 #include <iostream>
 #include <string>
 #include <utility>
 
+class wxMenu;
+class wxMenuItem;
 class wxWindow;
 
 /**
@@ -46,6 +50,38 @@ void printCppVersion();
 std::string trimToStdString(const wxString& str);
 
 /**
+ * @brief Returns the last named directory component of a directory path.
+ *
+ * Root paths have no named directory components, so their full path is
+ * returned instead (for example, "/" or "C:\\").
+ *
+ * @param directory Directory path to inspect
+ * @return Last named directory component, or the full path for a root
+ */
+[[nodiscard]] wxString GetLastDirectoryName(const wxFileName& directory);
+
+/**
+ * @brief Tests whether two valid filesystem paths identify the same location.
+ *
+ * Path comparison follows the platform-specific rules implemented by
+ * wxFileName::SameAs().
+ *
+ * @param left First path to compare
+ * @param right Second path to compare
+ * @return true when both paths are valid and compare equal
+ */
+[[nodiscard]] bool IsSameFilePath(const wxFileName& left, const wxFileName& right);
+
+/** Return true when a file's path is below the given directory, including its direct children. */
+[[nodiscard]] bool IsFileWithinDirectory(const wxFileName& file, const wxFileName& directory);
+
+/** Convert wxString path text to a native filesystem path without losing Unicode. */
+[[nodiscard]] std::filesystem::path ToFilesystemPath(const wxString& value);
+
+/** Returns true for .md and .markdown files, ignoring extension case. */
+[[nodiscard]] bool IsMarkdownFile(const wxFileName& filePath);
+
+/**
  * @brief Reads a whole file as UTF-8 text.
  *
  * @param filePath File to read
@@ -53,6 +89,22 @@ std::string trimToStdString(const wxString& str);
  * @return false when the file could not be opened or read
  */
 bool ReadFileUtf8(const wxFileName& filePath, wxString& contents);
+
+enum class TextFileReadResult {
+    Ok,
+    TooLarge,
+    NotUtf8Text,
+    IoError,
+};
+
+/**
+ * @brief Reads a bounded UTF-8 text file for a quick preview.
+ *
+ * Removes a UTF-8 BOM and rejects NUL bytes or invalid UTF-8. The output is
+ * untouched on failure. The size limit applies to the original file bytes.
+ */
+[[nodiscard]] TextFileReadResult ReadTextFileUtf8(const wxFileName& filePath, wxString& contents,
+                                                  std::size_t maximumBytes);
 
 /**
  * @brief Writes text to a file as UTF-8, replacing anything already there.
@@ -86,6 +138,13 @@ bool WriteFileUtf8(const wxFileName& filePath, const wxString& contents);
  * @return true when window or one of its descendants has focus
  */
 [[nodiscard]] bool ContainsFocus(const wxWindow* window);
+
+namespace rottools::ui {
+
+/** Add a localized Close item with a wxWidgets menu icon when available. */
+wxMenuItem* PrependCloseMenuItem(wxMenu& menu);
+
+}  // namespace rottools::ui
 
 // 1. Keep this for simple, single wxString prints: printLog(myWxString);
 void printLog(const wxString& msg);

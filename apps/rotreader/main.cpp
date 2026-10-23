@@ -31,7 +31,7 @@ bool MyApp::OnInit() {
     m_frame->Show(true);
 
     if (argc > 1) {
-        m_frame->HandleOpenMarkdownFile(wxFileName(argv[1]));
+        m_frame->HandleOpenFile(wxFileName(argv[1]));
     }
 
     return true;
@@ -42,6 +42,6 @@ void MyApp::MacOpenFiles(const wxArrayString& fileNames) {
     if (fileNames.IsEmpty()) {
         return;
     }
-    m_frame->HandleOpenMarkdownFile(wxFileName(fileNames[0]));
+    m_frame->HandleOpenFile(wxFileName(fileNames[0]));
 }
 #endif

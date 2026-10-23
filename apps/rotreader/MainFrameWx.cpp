@@ -22,10 +22,14 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_fileMenu->Append( OpenFileMenuItem );
 
 	wxMenuItem* m_newWindowMenuItem;
-	m_newWindowMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window\tCtrl+N") ) , wxEmptyString, wxITEM_NORMAL );
+	m_newWindowMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window") ) + wxT('\t') + wxT("CTRL+SHIFT+N"), wxEmptyString, wxITEM_NORMAL );
 	m_fileMenu->Append( m_newWindowMenuItem );
 
 	m_fileMenu->AppendSeparator();
+
+	wxMenuItem* m_newFileMenuItem;
+	m_newFileMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW_FILE, wxString( _("New file...") ) + wxT('\t') + wxT("CTRL+N"), wxEmptyString, wxITEM_NORMAL );
+	m_fileMenu->Append( m_newFileMenuItem );
 
 	wxMenuItem* m_saveMenuItem;
 	m_saveMenuItem = new wxMenuItem( m_fileMenu, wxID_SAVE, wxString( _("&Save") ) + wxT('\t') + wxT("CTRL+S"), wxEmptyString, wxITEM_NORMAL );
@@ -76,15 +80,15 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_viewMenu->Append( m_soloWebViewPanelMenuItem );
 
 	wxMenuItem* m_toggleFileBrowserMenuItem;
-	m_toggleFileBrowserMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_CHECK );
+	m_toggleFileBrowserMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("File Browser") ) , wxEmptyString, wxITEM_CHECK );
 	m_viewMenu->Append( m_toggleFileBrowserMenuItem );
 
 	wxMenuItem* m_toggleHtmlSourcePanelMenuItem;
-	m_toggleHtmlSourcePanelMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM, wxString( _("Toggle HTML Source") ) , wxEmptyString, wxITEM_CHECK );
+	m_toggleHtmlSourcePanelMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM, wxString( _("HTML Source") ) , wxEmptyString, wxITEM_CHECK );
 	m_viewMenu->Append( m_toggleHtmlSourcePanelMenuItem );
 
 	wxMenuItem* m_toggleMarkdownEditorPanelMenuItem;
-	m_toggleMarkdownEditorPanelMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM, wxString( _("Toggle Markdown Editor") ) , wxEmptyString, wxITEM_CHECK );
+	m_toggleMarkdownEditorPanelMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM, wxString( _("Markdown Editor") ) , wxEmptyString, wxITEM_CHECK );
 	m_viewMenu->Append( m_toggleMarkdownEditorPanelMenuItem );
 
 	wxMenuItem* m_wordWrap;
@@ -104,6 +108,23 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 
 	MenuBar->Append( m_settingsMenu, _("Settings") );
 
+	m_bookmarksMenu = new wxMenu();
+	MenuBar->Append( m_bookmarksMenu, _("Bookmarks") );
+
+	m_toolMenu = new wxMenu();
+	wxMenuItem* m_copyEnglishReviewPromptMenuItem;
+	m_copyEnglishReviewPromptMenuItem = new wxMenuItem( m_toolMenu, wxID_COPY_ENGLISH_REVIEW_PROMPT_MENU_ITEM, wxString( _("Copy English Review Prompt") ) , _("Copy a prompt for an AI agent to proofread the current document"), wxITEM_NORMAL );
+	m_toolMenu->Append( m_copyEnglishReviewPromptMenuItem );
+
+	MenuBar->Append( m_toolMenu, _("Tools") );
+
+	m_helpMenu = new wxMenu();
+	wxMenuItem* m_aboutMenuItem;
+	m_aboutMenuItem = new wxMenuItem( m_helpMenu, wxID_ABOUT, wxString( _("About ROT Reader") ) , wxEmptyString, wxITEM_NORMAL );
+	m_helpMenu->Append( m_aboutMenuItem );
+
+	MenuBar->Append( m_helpMenu, _("Help") );
+
 	this->SetMenuBar( MenuBar );
 
 	wxBoxSizer* MainFrameSizer;
@@ -114,6 +135,10 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	this->Layout();
 	toolBar = this->CreateToolBar( wxTB_HORIZONTAL, wxID_ANY );
 	m_fileOpenTool = toolBar->AddTool( wxID_ANY, _("Open file"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+
+	m_newFileTool = toolBar->AddTool( wxID_NEW_FILE, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_NEW), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+
+	m_editTool = toolBar->AddTool( wxID_EDIT_TOOL, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_EDIT), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
 
 	m_saveTool = toolBar->AddTool( wxID_ANY, _("Save"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, _("Save"), _("Save the current Markdown file"), NULL );
 

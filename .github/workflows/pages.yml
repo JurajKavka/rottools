@@ -1,4 +1,6 @@
-# Publishes the Astro site at https://jurajkavka.github.io/rottools/
+# Publishes the Astro site at https://jurajkavka.github.io/rottools/. Tool
+# release workflows also call this after their GitHub Release has been
+# published, so the download links never move before the assets exist.
 #
 # One-time setup in the repo: Settings > Pages > Build and deployment >
 # Source: "GitHub Actions". Without that this workflow builds fine and the
@@ -10,10 +12,11 @@
 name: Deploy website
 
 on:
+  workflow_call:
   push:
     branches: [main]
-    # Only the site affects the published output; a C++ change should not
-    # redeploy it.
+    # App VERSION changes deliberately do not trigger this workflow: the
+    # matching release workflow calls it after publishing the new assets.
     paths:
       - 'www/**'
       - '.github/workflows/pages.yml'

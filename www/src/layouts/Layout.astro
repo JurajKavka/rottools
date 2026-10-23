@@ -127,7 +127,7 @@ const ogImage = absoluteAsset('rottools-logo-1024.png', Astro.site);
       nav {
         display: flex;
         align-items: center;
-        gap: 1.25rem;
+        gap: var(--rd-space-2);
       }
 
       nav > a {
@@ -140,25 +140,27 @@ const ogImage = absoluteAsset('rottools-logo-1024.png', Astro.site);
         text-decoration: underline;
       }
 
-      /* Matches the theme toggle beside it box for box: same height, same
-         padding, and a transparent border so the outer width lines up too
-         (the toggle's 1px border counts towards its size under border-box).
-         Only the fill differs, and that is deliberate — the toggle is painted
-         in the theme it switches to. */
+      /* Match the theme toggle beside it as an unfilled square control. */
       .source {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        width: 2rem;
         height: 2rem;
-        padding: 0 var(--rd-space-2);
+        padding: 0;
         border: var(--rd-rule-width) solid transparent;
         border-radius: var(--rd-radius);
+        background: transparent;
+        color: var(--rd-ink-muted);
+        transition: border-color 0.15s ease, opacity 0.15s ease;
       }
 
-      /* No underline on hover — there is no text to underline. The icon still
-         brightens via the inherited nav > a:hover colour. */
+      /* No underline on hover — there is no text to underline. */
       .source:hover {
+        border-color: var(--rd-accent);
+        color: var(--rd-ink);
         text-decoration: none;
+        opacity: 0.9;
       }
 
       /* 1rem, not 1.25: the mark is drawn on a 16x16 grid, so this is its

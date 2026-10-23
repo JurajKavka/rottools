@@ -1,8 +1,8 @@
 # www — the ROT tools website
 
 Static [Astro](https://astro.build) site. `astro build` writes plain HTML, CSS
-and JS to `dist/`, which the release pipeline rsyncs to the download server. No
-Node process runs in production.
+and JS to `dist/`, which the Pages workflow uploads to GitHub Pages. No Node
+process runs in production.
 
 ## Commands
 
@@ -10,7 +10,7 @@ Run these from `www/`:
 
 | Command           | Does                                          |
 |-------------------|-----------------------------------------------|
-| `npm install`     | Install dependencies (first time only)        |
+| `npm ci`          | Install exact locked dependencies             |
 | `npm run dev`     | Dev server with live reload, `localhost:4321`  |
 | `npm start`       | Same, and opens the browser for you            |
 | `npm run build`   | Production build into `dist/`                  |
@@ -28,7 +28,7 @@ www/
     data/tools.ts         # THE place to edit tools, versions, download URLs
     layouts/Layout.astro  # <head>, header, footer, global CSS
     components/
-      ToolCard.astro      # one tool: name, description, download buttons
+      ToolCard.astro      # one tool: name, description, platform download boxes
       MacNote.astro       # the Gatekeeper "damaged" warning
       ThemeToggle.astro   # Rotdown Light <-> Rotdown Dark switch
     pages/index.astro     # landing page
@@ -58,15 +58,20 @@ If its palettes change, re-copy the values.
 
 ## Adding a tool, or bumping a version
 
-Everything user-facing lives in [src/data/tools.ts](src/data/tools.ts). Add an
-entry to the `tools` array, or change a `version`, and the page follows. Nothing
-else needs touching.
+Tool marketing metadata and download definitions live in
+[src/data/tools.ts](src/data/tools.ts). Add an app's `VERSION` import and a new
+entry to the `tools` array when adding a tool. Versions themselves are imported
+from `apps/<tool>/VERSION`; never duplicate or change a version in the website.
+Use the repository's `make bump-version TOOL=<tool> VERSION=<X.Y.Z>` workflow.
+After the release branch is merged and its release tag is published, the tool's
+release workflow rebuilds the site with the merged version.
 
 Download file names are built to match CPack's `CPACK_PACKAGE_FILE_NAME` from
-[../cmake/RotToolsPackaging.cmake](../cmake/RotToolsPackaging.cmake):
+[../cmake/RotToolsPackaging.cmake](../cmake/RotToolsPackaging.cmake), plus any
+deliberately named build variant such as `macos-26`:
 
 ```
-<exe>-<version>-<os>-<arch>.<ext>
+<exe>-<version>-<package>-<arch>.<ext>
 ```
 
 If the packaging naming changes, update `buildFileName()` to match.
@@ -130,12 +135,13 @@ Moving to a domain root later is a one-line change: drop `base` from
 
 ## Verified, not assumed
 
-The download links point at real GitHub Release assets and were checked with
-`curl` — all three return 200. The tag format (`rotreader-v0.1.0`) comes from
+The download links point at real GitHub Release assets and are checked with
+`curl`. The tag format (`rotreader-v0.1.0`) comes from
 `.github/workflows/release-rotreader.yml`; the asset names come from CPack's
 `CPACK_PACKAGE_FILE_NAME`.
 
-`ROTREADER_VERSION` in `src/data/tools.ts` must match a **published** release,
-not necessarily `apps/rotreader/VERSION`. When preparing a release, deploy the
-website change only after the corresponding `rotreader-v<version>` release
-exists, or every download button will 404.
+`src/data/tools.ts` imports each tool's version directly from
+`apps/<tool>/VERSION`. A version-bump merge does not deploy the site by itself:
+the matching release workflow calls the reusable Pages workflow only after the
+GitHub Release and its assets have been published. This keeps the app, package,
+and website versions in sync without exposing download links early.

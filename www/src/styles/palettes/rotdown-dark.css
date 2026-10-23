@@ -27,7 +27,10 @@
   /* The rotreader logo's blue, same hue and saturation, lifted for a dark
      canvas: hsl(240, 100%, 76%) against the logo's own 65%. At 65% it reads
      3.26:1 on #17171a, below the 4.5:1 needed for link text; this is 5.79:1. */
-  --rd-accent: #8585ff;
+  --tool-rotreader-accent: #8585ff;
+  --tool-rotpad-accent: #85bd85;
+
+  --rd-accent: var(--tool-rotreader-accent);
   --rd-accent-hover: #adadff;
   --rd-accent-soft: #191943;
 
@@ -53,7 +56,10 @@
     --rd-ink-muted: #a5a29b;
     --rd-ink-faint: #74716b;
 
-    --rd-accent: #8585ff;
+    --tool-rotreader-accent: #8585ff;
+    --tool-rotpad-accent: #85bd85;
+
+    --rd-accent: var(--tool-rotreader-accent);
     --rd-accent-hover: #adadff;
     --rd-accent-soft: #191943;
 

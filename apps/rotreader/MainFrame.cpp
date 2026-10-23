@@ -1,29 +1,40 @@
 #include "MainFrame.h"
 
+#include <wx/aboutdlg.h>
+#include <wx/artprov.h>
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
 #include <wx/dnd.h>  // Required for wxFileDropTarget
 #include <wx/filedlg.h>
 #include <wx/fontdlg.h>
 #include <wx/intl.h>
 #include <wx/msgdlg.h>  // Required for wxMessageBox
 #include <wx/stockitem.h>
+#include <wx/textdlg.h>
 #include <wx/utils.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <functional>
-#include <string>
 #include <vector>
 
+#include "AgentPrompts.h"
 #include "AppConfigFunctions.h"
 #include "AppIcon.h"
 #include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
+#include "BookmarkStore.h"
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
+#include "TextFilePreviewDialog.h"
+#include "version.h"
 
 namespace {
 constexpr auto kMarkdownFileWildcard = "Markdown files (*.md;*.markdown)|*.md;*.markdown";
+constexpr auto kOpenFileWildcard = "All files (*)|*";
 constexpr auto kApplicationTitle = "ROT Reader";
 constexpr std::size_t kMaximumSearchSeedLength = 150;
+constexpr std::size_t kMaximumReferenceBytes = 2 * 1024 * 1024;
 constexpr int kFindDialogMarginDip = 12;
 
 TextSearchOptions GetTextSearchOptions(const wxFindDialogEvent& event) {
@@ -49,7 +60,16 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     SetIcons(rottools::MakeIconBundle(kAppIconPngs, kAppIconPngCount));
 #endif
 
+    m_bookmarkCurrentDirectoryMenuItem =
+        m_bookmarksMenu->Append(wxWindow::NewControlId(), _("Bookmark Current Directory\tCtrl+Shift+D"));
+    m_bookmarkCurrentDocumentMenuItem =
+        m_bookmarksMenu->Append(wxWindow::NewControlId(), _("Bookmark Current Document\tCtrl+D"));
+    m_bookmarkMenuBaseId = wxWindow::NewControlId(static_cast<int>(BookmarkStore::MaximumBookmarks));
+
+    toolBar->EnableTool(m_editTool->GetId(), false);
+
     Bind(wxEVT_MENU, &MainFrame::HandleNewWindowMenuItemClick, this, wxID_NEW_WINDOW_MENU_ITEM);
+    Bind(wxEVT_MENU, &MainFrame::HandleNewFileMenuItemClick, this, wxID_NEW_FILE);
     Bind(wxEVT_CLOSE_WINDOW, &MainFrame::HandleCloseWindow, this);
     Bind(wxEVT_MENU, &MainFrame::HandleOpenFileMenuItemClick, this, wxID_OPEN);
     Bind(wxEVT_MENU, &MainFrame::HandleSaveMenuItemClick, this, wxID_SAVE);
@@ -81,9 +101,23 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleWordWrapMenuItemClick, this, wxID_WORDWRAP);
     Bind(wxEVT_MENU, &MainFrame::HandleFontMenuItemClick, this, wxID_FONT);
+    Bind(wxEVT_MENU, &MainFrame::HandleCopyEnglishReviewPromptMenuItemClick, this,
+         wxID_COPY_ENGLISH_REVIEW_PROMPT_MENU_ITEM);
+    Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateCopyEnglishReviewPromptMenuItem, this,
+         wxID_COPY_ENGLISH_REVIEW_PROMPT_MENU_ITEM);
+    Bind(wxEVT_MENU, &MainFrame::HandleAboutMenuItemClick, this, wxID_ABOUT);
+    Bind(wxEVT_TOOL, &MainFrame::HandleNewFileMenuItemClick, this, m_newFileTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleOpenFileMenuItemClick, this, m_fileOpenTool->GetId());
+    Bind(wxEVT_TOOL, &MainFrame::HandleEditToolClick, this, m_editTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveAsMenuItemClick, this, m_saveAsTool->GetId());
+    Bind(wxEVT_MENU_OPEN, &MainFrame::HandleBookmarksMenuOpen, this);
+    Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDirectoryBookmark, this,
+         m_bookmarkCurrentDirectoryMenuItem->GetId());
+    Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDocumentBookmark, this,
+         m_bookmarkCurrentDocumentMenuItem->GetId());
+    Bind(wxEVT_MENU, &MainFrame::HandleOpenBookmark, this, m_bookmarkMenuBaseId,
+         m_bookmarkMenuBaseId + static_cast<int>(BookmarkStore::MaximumBookmarks) - 1);
 
     // Let the active wxWidgets port supply its standard labels and accelerators.
     const long stockLabelFlags = wxSTOCK_WITH_MNEMONIC | wxSTOCK_WITH_ACCELERATOR;
@@ -105,8 +139,17 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     // nested splitter holding the rendered preview and the source/editor area
     m_mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_fileBrowserPanel = new FileBrowserTreePanel(
-        m_mainSplitter, std::bind_front(&MainFrame::HandleOpenMarkdownFile, this),
-        std::bind_front(&MainFrame::HandleDirectoryChanged, this), std::vector<std::string>{".md", ".markdown"});
+        m_mainSplitter,
+        {.onFileOpened = std::bind_front(&MainFrame::HandleOpenFile, this),
+         .onDirectoryChanged = std::bind_front(&MainFrame::HandleDirectoryChanged, this),
+         .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
+         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this),
+         .selectNewFolderName = std::bind_front(&MainFrame::HandleSelectBrowserFolderName, this),
+         .onCreateFolderError = std::bind_front(&MainFrame::HandleBrowserCreateFolderError, this),
+         .confirmDelete = std::bind_front(&MainFrame::HandleConfirmBrowserDelete, this),
+         .onPathDeleted = std::bind_front(&MainFrame::HandleBrowserPathDeleted, this),
+         .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this)},
+        {{_("Markdown"), {"md", "markdown"}}, {_("All files"), {FileBrowserTreePanel::kFilterAllFiles}}});
 
     m_rightSplitter =
         new wxSplitterWindow(m_mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
@@ -124,8 +167,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          .confirmSaveBeforeDiscard = std::bind_front(&MainFrame::HandleConfirmSaveBeforeDiscard, this),
          .confirmOverwriteExternalChanges = std::bind_front(&MainFrame::HandleConfirmOverwriteExternalChanges, this),
          .error = std::bind_front(&MainFrame::HandleMarkdownEditorError, this),
-         .selectOpenFile = std::bind_front(&MainFrame::HandleSelectOpenFile, this),
-         .selectSaveFile = std::bind_front(&MainFrame::HandleSelectSaveFile, this)});
+         .selectSaveFile = std::bind_front(&MainFrame::HandleSelectSaveFile, this),
+         .onCloseRequested = std::bind_front(&MainFrame::HandleMarkdownEditorPanelClose, this)});
     m_markdownEditorPanel->SetEditorFont(rottools::LoadEditorFont(m_markdownEditorPanel->GetEditorFont()));
     m_viewMenu->Check(wxID_WORDWRAP, m_markdownEditorPanel->IsWordWrapEnabled());
     m_rightSplitter->SetMinimumPaneSize(100);
@@ -152,13 +195,16 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     initialDirectory.AssignHomeDir();
     m_fileBrowserPanel->ListDir(initialDirectory);
 
+    m_bookmarkStore = std::make_unique<BookmarkStore>(std::bind_front(&MainFrame::HandleBookmarksChanged, this));
+    m_bookmarkStore->Initialize();
+
     // The browser watcher is created lazily by RefreshBrowserWatcher, which
     // runs once the initial ListDir scan completes (via HandleDirectoryChanged).
 
     Layout();
 
     // 4. Register drag and drop targets
-    this->SetDropTarget(new FileDropTarget(std::bind_front(&MainFrame::HandleOpenMarkdownFile, this)));
+    this->SetDropTarget(new FileDropTarget(std::bind_front(&MainFrame::HandleOpenFile, this)));
 }
 
 MainFrame::~MainFrame() {
@@ -173,6 +219,17 @@ void MainFrame::HandleNewWindowMenuItemClick(wxCommandEvent& event) {
     (new MainFrame(nullptr))->Show(true);
 }
 
+void MainFrame::HandleNewFileMenuItemClick(wxCommandEvent& event) {
+    if (!m_markdownEditorPanel->NewDocument()) {
+        return;
+    }
+
+    wxWindow* focusedWindow = wxWindow::FindFocus();
+    m_markdownEditorPanel->Show();
+    ApplySourcePanelVisibility(focusedWindow);
+    m_markdownEditorPanel->FocusEditor();
+}
+
 void MainFrame::HandleCloseWindow(wxCloseEvent& event) {
     if (event.CanVeto() && !m_markdownEditorPanel->ConfirmSaveBeforeDiscard()) {
         event.Veto();
@@ -183,7 +240,17 @@ void MainFrame::HandleCloseWindow(wxCloseEvent& event) {
 }
 
 void MainFrame::HandleOpenFileMenuItemClick(wxCommandEvent& event) {
-    (void)m_markdownEditorPanel->ShowOpenDialog();
+    const std::optional<wxFileName> selectedFile = HandleSelectOpenFile();
+    if (selectedFile) {
+        HandleOpenFile(*selectedFile);
+    }
+}
+
+void MainFrame::HandleEditToolClick(wxCommandEvent& event) {
+    wxWindow* focusedWindow = wxWindow::FindFocus();
+    m_markdownEditorPanel->Show();
+    ApplySourcePanelVisibility(focusedWindow);
+    m_markdownEditorPanel->FocusEditor();
 }
 
 void MainFrame::HandleSaveMenuItemClick(wxCommandEvent& event) {
@@ -388,10 +455,8 @@ void MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& even
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
     if (!event.IsChecked()) {
         HideFileBrowser();
-    } else if (!m_mainSplitter->IsSplit()) {
-        // The right pane is the nested preview/source splitter, not the web
-        // view itself, which is no longer a direct child of m_mainSplitter.
-        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, m_fileBrowserWidth);
+    } else {
+        ShowFileBrowser();
     }
 }
 
@@ -412,6 +477,15 @@ void MainFrame::HideFileBrowser() {
     m_mainSplitter->Unsplit(m_fileBrowserPanel);
     if (browserHadFocus) {
         m_markdownPreviewPanel->FocusContent();
+    }
+}
+
+void MainFrame::ShowFileBrowser() {
+    m_viewMenu->Check(wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, true);
+    if (!m_mainSplitter->IsSplit()) {
+        // The right pane is the nested preview/source splitter, not the web
+        // view itself, which is no longer a direct child of m_mainSplitter.
+        m_mainSplitter->SplitVertically(m_fileBrowserPanel, m_rightSplitter, m_fileBrowserWidth);
     }
 }
 
@@ -438,6 +512,13 @@ void MainFrame::HandleHtmlSourcePanelClose() {
     ApplySourcePanelVisibility(focusedWindow);
 }
 
+void MainFrame::HandleMarkdownEditorPanelClose() {
+    wxWindow* focusedWindow = wxWindow::FindFocus();
+    m_markdownEditorPanel->Hide();
+    m_viewMenu->Check(wxID_TOGGLE_MARKDOWN_EDITOR_PANEL_MENU_ITEM, false);
+    ApplySourcePanelVisibility(focusedWindow);
+}
+
 void MainFrame::HandleWordWrapMenuItemClick(wxCommandEvent& event) {
     m_markdownEditorPanel->SetWordWrap(event.IsChecked());
 }
@@ -460,6 +541,51 @@ void MainFrame::HandleFontMenuItemClick(wxCommandEvent& event) {
     if (editorHadFocus) {
         m_markdownEditorPanel->FocusEditor();
     }
+}
+
+void MainFrame::HandleCopyEnglishReviewPromptMenuItemClick(wxCommandEvent&) {
+    if (!m_currentDocument.IsOk() || !m_currentDocument.FileExists() ||
+        m_markdownEditorPanel->HasUnsavedChanges()) {
+        wxMessageBox(_("The document has not been saved. Save it before copying an English review prompt."),
+                     _("Document Not Saved"), wxOK | wxICON_ERROR, this);
+        return;
+    }
+
+    wxMessageDialog confirmation(
+        this,
+        _("The agent will be instructed to overwrite the file in place. External changes cannot be reversed with "
+          "ROT Reader's Undo command.\n\nCopy the English review prompt to the clipboard?"),
+        _("External Agent Will Overwrite Document"), wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+    confirmation.SetOKCancelLabels(_("Copy Prompt"), wxGetStockLabel(wxID_CANCEL));
+    if (confirmation.ShowModal() != wxID_OK) {
+        return;
+    }
+
+    wxClipboardLocker clipboard;
+    if (!clipboard ||
+        !wxTheClipboard->SetData(new wxTextDataObject(agent_prompts::MakeEnglishReview(m_currentDocument)))) {
+        wxMessageBox(_("Could not copy the English review prompt to the clipboard."), _("Error"),
+                     wxOK | wxICON_ERROR, this);
+        return;
+    }
+
+    statusBar->SetStatusText(_("English review prompt copied. Paste it into Codex or Claude Code."));
+    m_replaceEditorStatusOnPreviewReady = false;
+}
+
+void MainFrame::HandleUpdateCopyEnglishReviewPromptMenuItem(wxUpdateUIEvent& event) {
+    event.Enable(m_currentDocument.IsOk());
+}
+
+void MainFrame::HandleAboutMenuItemClick(wxCommandEvent&) {
+    const wxString wxWidgetsVersion = wxGetLibraryVersionInfo().GetVersionString();
+
+    wxAboutDialogInfo info;
+    info.SetName(kApplicationTitle);
+    info.SetVersion(ROTREADER_VERSION_STRING);
+    info.SetDescription(_("A native Markdown reader and editor") + wxS("\n\n") +
+                        wxString::Format(_("Built with %s"), wxWidgetsVersion));
+    wxAboutBox(info, this);
 }
 
 // Lays the right-hand side out as columns: the always-visible preview, then
@@ -555,21 +681,257 @@ MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavio
             .scrollBehavior = scrollBehavior};
 }
 
-/**
- * Opens a Markdown file through the editor, which owns the document lifecycle.
- *
- * OpenFile() reads the UTF-8 file into the editor and reports the resulting
- * in-memory text through HandleMarkdownDocumentChanged(). That handler passes
- * the text to MarkdownPreviewPanel for asynchronous Markdown-to-HTML parsing;
- * once rendering finishes, HandleMarkdownReady() receives the generated HTML.
- */
-void MainFrame::HandleOpenMarkdownFile(const wxFileName& filePath) {
-    (void)m_markdownEditorPanel->OpenFile(filePath);
+/** Markdown documents replace the editor document; other files open for reference only. */
+void MainFrame::HandleOpenFile(const wxFileName& filePath) {
+    if (IsMarkdownFile(filePath)) {
+        (void)m_markdownEditorPanel->OpenFile(filePath);
+    } else {
+        ShowReferenceText(filePath);
+    }
+}
+
+void MainFrame::ShowReferenceText(const wxFileName& filePath) {
+    wxString text;
+    switch (ReadTextFileUtf8(filePath, text, kMaximumReferenceBytes)) {
+        case TextFileReadResult::TooLarge:
+            wxMessageBox(_("This file exceeds the 2 MiB quick-view limit. Use a search or chunked viewer instead."),
+                         _("File Too Large"), wxOK | wxICON_INFORMATION, this);
+            return;
+        case TextFileReadResult::NotUtf8Text:
+            wxMessageBox(_("This file is not UTF-8 text."), _("Cannot Preview File"), wxOK | wxICON_ERROR, this);
+            return;
+        case TextFileReadResult::IoError:
+            wxMessageBox(wxString::Format(_("Could not read file: %s"), filePath.GetFullPath().c_str()),
+                         _("Cannot Preview File"), wxOK | wxICON_ERROR, this);
+            return;
+        case TextFileReadResult::Ok:
+            break;
+    }
+
+    TextFilePreviewDialog dialog(this, filePath.GetFullName());
+    dialog.ShowText(text);
+    dialog.ShowModal();
+}
+
+void MainFrame::HandleFileBrowserHomeRequested() {
+    wxFileName homeDirectory;
+    homeDirectory.AssignHomeDir();
+    m_fileBrowserPanel->ListDir(homeDirectory);
+}
+
+void MainFrame::HandleFileBrowserCloseRequested() {
+    HideFileBrowser();
+}
+
+std::optional<wxString> MainFrame::HandleSelectBrowserFolderName(const std::optional<wxString>& previousName) {
+    wxTextEntryDialog dialog(this, _("Name for the new folder:"), _("New Folder"),
+                             previousName.value_or(_("New Folder")));
+    if (dialog.ShowModal() != wxID_OK) {
+        return std::nullopt;
+    }
+    return dialog.GetValue();
+}
+
+void MainFrame::HandleBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error) {
+    const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+    const wxString message = wxString::Format(_("Could not create folder \"%s\": %s"), error.name.c_str(),
+                                              detail.c_str());
+    wxMessageBox(message, _("New Folder"), wxOK | wxICON_ERROR, this);
+}
+
+bool MainFrame::HandleConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
+    wxString message;
+    if (paths.size() == 1) {
+        const auto& path = paths.front();
+        const wxString name = path.isDirectory ? GetLastDirectoryName(path.path) : path.path.GetFullName();
+        message = path.isDirectory
+                      ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"), name.c_str())
+                      : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
+    } else {
+        message = wxString::Format(_("Permanently delete %zu selected items and all folder contents?"), paths.size());
+    }
+    const bool affectsCurrentDocument =
+        std::ranges::any_of(paths, [this](const auto& path) { return IsCurrentDocumentAffectedByDelete(path); });
+    if (affectsCurrentDocument && m_markdownEditorPanel->HasUnsavedChanges()) {
+        message += _("\n\nUnsaved changes in the open document will be lost.");
+    }
+    wxMessageDialog dialog(this, message, _("Delete"), wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+    dialog.SetOKCancelLabels(_("Delete"), wxGetStockLabel(wxID_CANCEL));
+    return dialog.ShowModal() == wxID_OK;
+}
+
+bool MainFrame::IsCurrentDocumentAffectedByDelete(const FileBrowserTreePanel::DeletePrompt& deleted) const {
+    return IsSameFilePath(m_currentDocument, deleted.path) ||
+           (deleted.isDirectory && IsFileWithinDirectory(m_currentDocument, deleted.path));
+}
+
+void MainFrame::HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted) {
+    if (IsCurrentDocumentAffectedByDelete(deleted)) {
+        m_markdownEditorPanel->DiscardDocument();
+    }
+}
+
+void MainFrame::HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors) {
+    wxString message;
+    if (errors.size() == 1) {
+        const auto& error = errors.front();
+        const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
+        const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+        message = wxString::Format(_("Could not completely delete \"%s\": %s"), name.c_str(), detail.c_str());
+    } else {
+        message = wxString::Format(_("Could not completely delete %zu items:"), errors.size());
+        for (const auto& error : errors) {
+            const wxString name = error.isDirectory ? GetLastDirectoryName(error.path) : error.path.GetFullName();
+            const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+            message += wxString::Format("\n%s: %s", name.c_str(), detail.c_str());
+        }
+    }
+    wxMessageBox(message, _("Delete"), wxOK | wxICON_ERROR, this);
+}
+
+void MainFrame::HandleBookmarksMenuOpen(wxMenuEvent& event) {
+    if (event.GetMenu() == m_bookmarksMenu && m_bookmarkStore) {
+        m_bookmarkStore->Refresh();
+    }
+    event.Skip();
+}
+
+void MainFrame::HandleAddOrRemoveDirectoryBookmark(wxCommandEvent& event) {
+    (void)event;
+    if (m_bookmarkStore) {
+        m_bookmarkStore->AddOrRemoveBookmark(BookmarkStore::Kind::Directory, m_fileBrowserPanel->GetCurrentDirectory());
+    }
+}
+
+void MainFrame::HandleAddOrRemoveDocumentBookmark(wxCommandEvent& event) {
+    (void)event;
+    if (m_bookmarkStore) {
+        m_bookmarkStore->AddOrRemoveBookmark(BookmarkStore::Kind::Document, m_currentDocument);
+    }
+}
+
+void MainFrame::HandleOpenBookmark(wxCommandEvent& event) {
+    const std::size_t index = static_cast<std::size_t>(event.GetId() - m_bookmarkMenuBaseId);
+    if (index >= m_visibleBookmarks.size()) {
+        return;
+    }
+
+    const BookmarkStore::Bookmark bookmark = m_visibleBookmarks[index];
+    const bool exists =
+        bookmark.kind == BookmarkStore::Kind::Directory ? bookmark.path.DirExists() : bookmark.path.FileExists();
+    if (!exists) {
+        const wxString target = bookmark.kind == BookmarkStore::Kind::Directory ? _("directory") : _("document");
+        wxMessageDialog dialog(
+            this, wxString::Format(_("This bookmarked %s no longer exists.\n\nRemove the bookmark?"), target.c_str()),
+            _("Missing Bookmark"), wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+        dialog.SetOKCancelLabels(_("Remove Bookmark"), wxGetStockLabel(wxID_CANCEL));
+        if (dialog.ShowModal() == wxID_OK && m_bookmarkStore) {
+            m_bookmarkStore->RemoveBookmark(bookmark);
+        }
+        return;
+    }
+
+    if (bookmark.kind == BookmarkStore::Kind::Directory) {
+        HandleOpenBookmarkedDirectory(bookmark.path);
+    } else {
+        HandleOpenBookmarkedDocument(bookmark.path);
+    }
+}
+
+void MainFrame::HandleBookmarksChanged(const std::vector<BookmarkStore::Bookmark>& bookmarks) {
+    RebuildBookmarksMenu(bookmarks);
+    UpdateBookmarkCommands();
+}
+
+void MainFrame::RebuildBookmarksMenu(const std::vector<BookmarkStore::Bookmark>& bookmarks) {
+    for (wxMenuItem* item : m_dynamicBookmarkMenuItems) {
+        m_bookmarksMenu->Destroy(item);
+    }
+    m_dynamicBookmarkMenuItems.clear();
+    m_visibleBookmarks.clear();
+
+    if (bookmarks.empty()) {
+        return;
+    }
+
+    m_dynamicBookmarkMenuItems.push_back(m_bookmarksMenu->AppendSeparator());
+    const auto appendKind = [&](BookmarkStore::Kind kind) {
+        for (const BookmarkStore::Bookmark& bookmark : bookmarks) {
+            if (bookmark.kind != kind) {
+                continue;
+            }
+
+            const int id = m_bookmarkMenuBaseId + static_cast<int>(m_visibleBookmarks.size());
+            wxMenuItem* item = m_bookmarksMenu->Append(id, m_bookmarkStore->MakeBookmarkLabel(bookmark),
+                                                       bookmark.path.GetFullPath());
+            const wxArtID artId = kind == BookmarkStore::Kind::Directory ? wxART_FOLDER : wxART_NORMAL_FILE;
+            item->SetBitmap(wxArtProvider::GetBitmap(artId, wxART_MENU));
+            m_dynamicBookmarkMenuItems.push_back(item);
+            m_visibleBookmarks.push_back(bookmark);
+        }
+    };
+
+    const bool hasDirectories = std::ranges::any_of(bookmarks, [](const BookmarkStore::Bookmark& bookmark) {
+        return bookmark.kind == BookmarkStore::Kind::Directory;
+    });
+    const bool hasDocuments = std::ranges::any_of(bookmarks, [](const BookmarkStore::Bookmark& bookmark) {
+        return bookmark.kind == BookmarkStore::Kind::Document;
+    });
+
+    appendKind(BookmarkStore::Kind::Directory);
+    if (hasDirectories && hasDocuments) {
+        m_dynamicBookmarkMenuItems.push_back(m_bookmarksMenu->AppendSeparator());
+    }
+    appendKind(BookmarkStore::Kind::Document);
+}
+
+void MainFrame::UpdateBookmarkCommands() {
+    if (!m_bookmarkStore) {
+        return;
+    }
+
+    const auto updateCommand = [&](wxMenuItem* command, BookmarkStore::Kind kind, const wxFileName& currentPath) {
+        const bool validPath = currentPath.IsOk();
+        const bool bookmarked = validPath && m_bookmarkStore->Contains(kind, currentPath);
+        const bool targetExists =
+            validPath && (kind == BookmarkStore::Kind::Directory ? currentPath.DirExists() : currentPath.FileExists());
+        command->Enable(bookmarked || (targetExists && !m_bookmarkStore->IsFull()));
+
+        if (kind == BookmarkStore::Kind::Directory) {
+            command->SetItemLabel(bookmarked ? _("Remove Current Directory Bookmark\tCtrl+Shift+D")
+                                             : _("Bookmark Current Directory\tCtrl+Shift+D"));
+            command->SetBitmap(
+                wxArtProvider::GetBitmap(bookmarked ? wxART_MINUS : wxART_PLUS, wxART_MENU));
+        } else {
+            command->SetItemLabel(bookmarked ? _("Remove Current Document Bookmark\tCtrl+D")
+                                             : _("Bookmark Current Document\tCtrl+D"));
+        }
+    };
+
+    updateCommand(m_bookmarkCurrentDirectoryMenuItem, BookmarkStore::Kind::Directory,
+                  m_fileBrowserPanel->GetCurrentDirectory());
+    updateCommand(m_bookmarkCurrentDocumentMenuItem, BookmarkStore::Kind::Document, m_currentDocument);
+}
+
+void MainFrame::HandleOpenBookmarkedDirectory(const wxFileName& directory) {
+    ShowFileBrowser();
+    if (!m_fileBrowserPanel->IsShowingDir(directory)) {
+        m_fileBrowserPanel->ListDir(directory);
+    }
+}
+
+void MainFrame::HandleOpenBookmarkedDocument(const wxFileName& document) {
+    if (m_currentDocument.IsOk() && m_currentDocument.SameAs(document)) {
+        m_markdownPreviewPanel->FocusContent();
+        return;
+    }
+    HandleOpenFile(document);
 }
 
 void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
     m_browsedDirectory = wxFileName::DirName(filePath.GetFullPath());
     RefreshBrowserWatcher();
+    UpdateBookmarkCommands();
 }
 
 void MainFrame::HandleBrowserWatcherChange() {
@@ -585,8 +947,15 @@ void MainFrame::RefreshBrowserWatcher() {
 }
 
 void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change) {
+    m_currentDocument = change.filePath;
+    toolBar->EnableTool(m_editTool->GetId(), true);
+
     if (change.filePath.IsOk()) {
         SetTitle(change.filePath.GetFullName() + " - " + kApplicationTitle);
+    } else {
+        SetTitle(_("Untitled") + wxString(" - ") + kApplicationTitle);
+        statusBar->SetStatusText(wxString{});
+        m_replaceEditorStatusOnPreviewReady = false;
     }
 
     if (change.reason == MarkdownEditorPanel::ChangeReason::Opened || change.diskEntryChanged) {
@@ -595,7 +964,10 @@ void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::Documen
         m_fileBrowserPanel->ShowFile(change.filePath);
     }
 
-    const ScrollBehavior scrollBehavior = change.reason == MarkdownEditorPanel::ChangeReason::Opened
+    UpdateBookmarkCommands();
+
+    const bool isNewDocument = change.reason == MarkdownEditorPanel::ChangeReason::NewDocument;
+    const ScrollBehavior scrollBehavior = change.reason == MarkdownEditorPanel::ChangeReason::Opened || isNewDocument
                                               ? ScrollBehavior::ResetToTop
                                               : ScrollBehavior::KeepPosition;
     m_markdownPreviewPanel->LoadMarkdown(change.text, change.filePath, GetPreviewOptions(scrollBehavior));
@@ -642,7 +1014,17 @@ void MainFrame::HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessag
 }
 
 std::optional<wxFileName> MainFrame::HandleSelectOpenFile() {
-    wxFileDialog dialog(this, "Open Markdown File", {}, {}, kMarkdownFileWildcard, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+    wxString defaultDirectory;
+    if (m_currentDocument.IsOk()) {
+        defaultDirectory = m_currentDocument.GetPath();
+    } else {
+        const wxFileName browsedDirectory = m_fileBrowserPanel->GetCurrentDirectory();
+        if (browsedDirectory.IsOk()) {
+            defaultDirectory = browsedDirectory.GetFullPath();
+        }
+    }
+    wxFileDialog dialog(this, "Open File", defaultDirectory, {}, kOpenFileWildcard,
+                        wxFD_OPEN | wxFD_FILE_MUST_EXIST);
     if (dialog.ShowModal() != wxID_OK) {
         return std::nullopt;
     }
@@ -651,7 +1033,15 @@ std::optional<wxFileName> MainFrame::HandleSelectOpenFile() {
 }
 
 std::optional<wxFileName> MainFrame::HandleSelectSaveFile(const wxFileName& currentFile) {
-    const wxString defaultDirectory = currentFile.IsOk() ? currentFile.GetPath() : wxString{};
+    wxString defaultDirectory;
+    if (currentFile.IsOk()) {
+        defaultDirectory = currentFile.GetPath();
+    } else {
+        const wxFileName browsedDirectory = m_fileBrowserPanel->GetCurrentDirectory();
+        if (browsedDirectory.IsOk()) {
+            defaultDirectory = browsedDirectory.GetFullPath();
+        }
+    }
     const wxString defaultFileName = currentFile.IsOk() ? currentFile.GetFullName() : wxString{};
     wxFileDialog dialog(this, "Save Markdown File", defaultDirectory, defaultFileName, kMarkdownFileWildcard,
                         wxFD_SAVE | wxFD_OVERWRITE_PROMPT);

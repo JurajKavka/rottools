@@ -1,0 +1,144 @@
+# Dedicated ARM64 package built with the macOS 26 SDK. It can be run manually
+# for testing and is also called by release-rotreader.yml so the Liquid Glass
+# and compatibility DMGs are published together.
+name: rotreader macOS 26
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: rotreader (macos-26)
+    runs-on: macos-26
+    env:
+      VCPKG_DISABLE_METRICS: "1"
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify release tag matches rotreader version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          VERSION=$(tr -d '\r\n' < apps/rotreader/VERSION)
+          EXPECTED_TAG="rotreader-v${VERSION}"
+          if [[ "${GITHUB_REF_NAME}" != "${EXPECTED_TAG}" ]]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match apps/rotreader/VERSION (${VERSION})." >&2
+            echo "Expected tag: ${EXPECTED_TAG}" >&2
+            exit 1
+          fi
+
+      - name: Verify macOS 26 SDK
+        shell: bash
+        run: |
+          SDK_VERSION=$(xcrun --sdk macosx --show-sdk-version)
+          if [[ ! "${SDK_VERSION}" =~ ^26\. ]]; then
+            echo "Expected a macOS 26 SDK, found ${SDK_VERSION}." >&2
+            exit 1
+          fi
+          echo "Using macOS SDK ${SDK_VERSION}."
+
+      - name: Read pinned vcpkg baseline
+        id: vcpkg
+        shell: bash
+        run: |
+          VCPKG_BASELINE=$(awk -F'"' '/"builtin-baseline"/ { print $4; exit }' vcpkg.json)
+          if [[ ! "${VCPKG_BASELINE}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "vcpkg.json does not contain a valid builtin-baseline." >&2
+            exit 1
+          fi
+
+          printf 'baseline=%s\n' "${VCPKG_BASELINE}" >> "${GITHUB_OUTPUT}"
+
+      - name: Check out pinned vcpkg
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          ref: ${{ steps.vcpkg.outputs.baseline }}
+          path: .vcpkg
+          persist-credentials: false
+
+      - name: Bootstrap pinned vcpkg
+        shell: bash
+        run: ./.vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+      - name: Use pinned vcpkg
+        shell: bash
+        run: printf 'VCPKG_ROOT=%s/.vcpkg\n' "${GITHUB_WORKSPACE}" >> "${GITHUB_ENV}"
+
+      - name: Create vcpkg cache directory
+        shell: bash
+        run: mkdir -p "${{ github.workspace }}/vcpkg-cache"
+
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg-cache
+          key: vcpkg-macos-26-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-triplets/*.cmake') }}-${{ github.sha }}
+          restore-keys: |
+            vcpkg-macos-26-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-triplets/*.cmake') }}-
+            vcpkg-macos-26-
+
+      - name: Install Ninja
+        run: brew install ninja
+
+      - name: Configure rotreader
+        shell: bash
+        run: |
+          cmake --preset ci-macos26 \
+            -DROTTOOLS_BUILD_ROTREADER=ON \
+            -DROTTOOLS_BUILD_ROTPAD=OFF
+
+      - name: Verify wxWidgets version
+        shell: bash
+        run: |
+          WX_CONFIG=$(find build/ci-macos26/vcpkg_installed \
+            -type f -path '*/tools/wxwidgets/wx-config' -print -quit)
+          if [[ -z "${WX_CONFIG}" ]]; then
+            echo "Unable to find the vcpkg wx-config executable." >&2
+            exit 1
+          fi
+
+          WX_VERSION=$("${WX_CONFIG}" --version)
+          if [[ "${WX_VERSION}" != "3.3.3" ]]; then
+            echo "Expected wxWidgets 3.3.3, found ${WX_VERSION}." >&2
+            exit 1
+          fi
+          echo "Verified wxWidgets ${WX_VERSION}."
+
+      - name: Build
+        run: cmake --build --preset ci-macos26
+
+      - name: Verify application SDK and deployment target
+        shell: bash
+        run: |
+          APP_BINARY=build/ci-macos26/apps/rotreader/rotreader.app/Contents/MacOS/rotreader
+          SDK_VERSION=$(otool -l "${APP_BINARY}" | awk '$1 == "sdk" { print $2; exit }')
+          MINIMUM_VERSION=$(otool -l "${APP_BINARY}" | awk '$1 == "minos" { print $2; exit }')
+          if [[ ! "${SDK_VERSION}" =~ ^26\. ]]; then
+            echo "Expected the application to use a macOS 26 SDK, found ${SDK_VERSION}." >&2
+            exit 1
+          fi
+          if [[ "${MINIMUM_VERSION}" != "26.0" ]]; then
+            echo "Expected a macOS 26.0 deployment target, found ${MINIMUM_VERSION}." >&2
+            exit 1
+          fi
+          echo "Verified SDK ${SDK_VERSION} and deployment target ${MINIMUM_VERSION}."
+
+      - name: Package
+        shell: bash
+        run: |
+          VERSION=$(tr -d '\r\n' < apps/rotreader/VERSION)
+          cd build/ci-macos26
+          cpack -D "CPACK_PACKAGE_FILE_NAME=rotreader-${VERSION}-macos-26-arm64"
+
+      - name: Upload macOS 26 installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: rotreader-macos-26
+          path: build/ci-macos26/*.dmg
+          if-no-files-found: error

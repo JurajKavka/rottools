@@ -6,6 +6,7 @@
 // Forward declaration prevents bloated compile times
 class wxMouseEvent;
 class wxWebView;
+class wxWebViewEvent;
 
 // ScrollBehavior comes from HelperFunctions.h; it is shared with the other
 // content panels.
@@ -15,6 +16,7 @@ class WebViewPanel : public WebViewPanelWx {
     wxWebView* m_webView = nullptr;
 
     void HandleWebViewLeftDown(wxMouseEvent& event);
+    void HandleWebViewNavigation(wxWebViewEvent& event);
 
    public:
     explicit WebViewPanel(wxWindow* parent);
@@ -35,6 +37,8 @@ class WebViewPanel : public WebViewPanelWx {
 
     /**
      * @brief Shows an HTML page in the webview.
+     * HTTP and HTTPS links open in the default browser, including links that
+     * request a new window. In-page anchors retain native webview navigation.
      *
      * @param html The full HTML page to show
      * @param scrollBehavior With KeepPosition the page is updated in place (its

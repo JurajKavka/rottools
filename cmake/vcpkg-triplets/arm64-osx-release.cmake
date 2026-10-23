@@ -1,9 +1,10 @@
-# Mirrors the builtin arm64-osx triplet, release-only. See README.md.
+# macOS 15+ compatibility build, based on the builtin arm64-osx triplet.
 set(VCPKG_TARGET_ARCHITECTURE arm64)
 set(VCPKG_CRT_LINKAGE dynamic)
 set(VCPKG_LIBRARY_LINKAGE static)
 
 set(VCPKG_CMAKE_SYSTEM_NAME Darwin)
 set(VCPKG_OSX_ARCHITECTURES arm64)
+set(VCPKG_OSX_DEPLOYMENT_TARGET 15.0)
 
 set(VCPKG_BUILD_TYPE release)

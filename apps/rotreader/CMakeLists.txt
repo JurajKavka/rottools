@@ -2,6 +2,7 @@ include(RotToolsVersion)
 include(RotToolsPackaging)
 
 add_executable(rotreader
+    AgentPrompts.cpp
     main.cpp
     MainFrame.cpp
     MainFrameWx.cpp
@@ -9,9 +10,11 @@ add_executable(rotreader
 
 target_compile_features(rotreader PRIVATE cxx_std_20)
 target_link_libraries(rotreader PRIVATE
+    rottools::bookmark_store
     rottools::ui_webview
     rottools::ui_markdownpreview
     rottools::ui_htmlsource
+    rottools::ui_textfilepreviewdialog
     rottools::ui_markdowneditor
     rottools::ui_filetree
     rottools::ui_filedrop

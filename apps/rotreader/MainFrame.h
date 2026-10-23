@@ -6,7 +6,9 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
+#include "BookmarkStore.h"
 #include "CssThemes.h"
 #include "FileBrowserTreePanel.h"
 #include "FsWatcher.h"
@@ -29,6 +31,13 @@ class MainFrame : public MainFrameWx {
     HtmlSourcePanel* m_htmlSourcePanel = nullptr;
     MarkdownEditorPanel* m_markdownEditorPanel = nullptr;
     FileBrowserTreePanel* m_fileBrowserPanel = nullptr;
+    std::unique_ptr<BookmarkStore> m_bookmarkStore;
+    wxMenuItem* m_bookmarkCurrentDirectoryMenuItem = nullptr;
+    wxMenuItem* m_bookmarkCurrentDocumentMenuItem = nullptr;
+    std::vector<BookmarkStore::Bookmark> m_visibleBookmarks;
+    std::vector<wxMenuItem*> m_dynamicBookmarkMenuItems;
+    wxWindowID m_bookmarkMenuBaseId = wxID_ANY;
+    wxFileName m_currentDocument;
     wxSplitterWindow* m_mainSplitter = nullptr;
     int m_fileBrowserWidth = 100;
     // Right of the always-visible preview it holds the source-views area
@@ -57,8 +66,10 @@ class MainFrame : public MainFrameWx {
     bool m_findDialogIsReplace = false;
 
     void HandleNewWindowMenuItemClick(wxCommandEvent& event);
+    void HandleNewFileMenuItemClick(wxCommandEvent& event);
     void HandleCloseWindow(wxCloseEvent& event);
     void HandleOpenFileMenuItemClick(wxCommandEvent& event);
+    void HandleEditToolClick(wxCommandEvent& event);
     void HandleSaveMenuItemClick(wxCommandEvent& event);
     void HandleSaveAsMenuItemClick(wxCommandEvent& event);
     void HandleUndoMenuItemClick(wxCommandEvent& event);
@@ -87,12 +98,34 @@ class MainFrame : public MainFrameWx {
     void HandleToggleMarkdownEditorPanelMenuItemClick(wxCommandEvent& event);
     void HandleWordWrapMenuItemClick(wxCommandEvent& event);
     void HandleFontMenuItemClick(wxCommandEvent& event);
+    void HandleCopyEnglishReviewPromptMenuItemClick(wxCommandEvent& event);
+    void HandleUpdateCopyEnglishReviewPromptMenuItem(wxUpdateUIEvent& event);
+    void HandleAboutMenuItemClick(wxCommandEvent& event);
     void HandleHtmlSourcePanelClose();
+    void HandleMarkdownEditorPanelClose();
     void HideFileBrowser();
+    void ShowFileBrowser();
     void ApplySourcePanelVisibility(wxWindow* focusedWindowBeforeChange = nullptr);
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);
+    void HandleBookmarksMenuOpen(wxMenuEvent& event);
+    void HandleAddOrRemoveDirectoryBookmark(wxCommandEvent& event);
+    void HandleAddOrRemoveDocumentBookmark(wxCommandEvent& event);
+    void HandleOpenBookmark(wxCommandEvent& event);
+    void HandleBookmarksChanged(const std::vector<BookmarkStore::Bookmark>& bookmarks);
+    void RebuildBookmarksMenu(const std::vector<BookmarkStore::Bookmark>& bookmarks);
+    void UpdateBookmarkCommands();
     MarkdownPreviewOptions GetPreviewOptions(ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop) const;
+    void HandleFileBrowserHomeRequested();
+    void HandleFileBrowserCloseRequested();
+    std::optional<wxString> HandleSelectBrowserFolderName(const std::optional<wxString>& previousName);
+    void HandleBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error);
+    bool HandleConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths);
+    void HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted);
+    void HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors);
+    [[nodiscard]] bool IsCurrentDocumentAffectedByDelete(const FileBrowserTreePanel::DeletePrompt& deleted) const;
+    void HandleOpenBookmarkedDirectory(const wxFileName& directory);
+    void HandleOpenBookmarkedDocument(const wxFileName& document);
     void HandleDirectoryChanged(const wxFileName& filePath);
     void HandleBrowserWatcherChange();
     void RefreshBrowserWatcher();
@@ -105,6 +138,7 @@ class MainFrame : public MainFrameWx {
         const MarkdownEditorPanel::OverwritePromptMessage& prompt);
     void HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessage& message);
     std::optional<wxFileName> HandleSelectOpenFile();
+    void ShowReferenceText(const wxFileName& filePath);
     std::optional<wxFileName> HandleSelectSaveFile(const wxFileName& currentFile);
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
     void HandleMarkdownError(const wxString& error);
@@ -113,5 +147,5 @@ class MainFrame : public MainFrameWx {
     explicit MainFrame(wxWindow* parent);
     ~MainFrame();
 
-    void HandleOpenMarkdownFile(const wxFileName& filePath);
+    void HandleOpenFile(const wxFileName& filePath);
 };
