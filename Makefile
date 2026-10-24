@@ -1,14 +1,14 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help all dev configure build rebuild bump-version release-tag cleanup-branches web-icons \
+.PHONY: help all dev configure build rebuild bump-version release-tag cleanup-branches web-icons ui-icons \
         rotreader rotreader-all rotreader-dev rotreader-build rotreader-rebuild \
         rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
-        run-filetree run-flatbuttons run-headerpanel run-htmlsource run-texteditor run-scintillatexteditor \
+        run-filetree run-flatbuttons run-headerpanel run-icons run-htmlsource run-texteditor run-scintillatexteditor \
         run-textfilepreviewdialog \
         run-dirscan run-md2html run-helpers run-filemanager \
-        build-texteditor build-scintillatexteditor build-textfilepreviewdialog \
+        build-icons build-texteditor build-scintillatexteditor build-textfilepreviewdialog \
         build-webview build-filedrop \
         format check clean _demos
 
@@ -98,6 +98,9 @@ rotpad-clean:             ## Remove only rotpad's isolated build
 web-icons:             ## Regenerate the rottools suite icons into www/public
 	./scripts/generate-icons.sh rottools --name "ROT Tools" --web-out www/public
 
+ui-icons:              ## Extract embeddable UI SVGs from their authoring sources
+	python3 scripts/extract-ui-icons.py
+
 ##@ Components — build & run a shared library in isolation
 run-headerpanel: _demos ## HeaderPanel (rottools::ui_headerpanel)
 	cmake --build build --target rottools_ui_headerpanel_app
@@ -106,6 +109,12 @@ run-headerpanel: _demos ## HeaderPanel (rottools::ui_headerpanel)
 run-flatbuttons: _demos ## FlatButtons (rottools::ui_flatbuttons)
 	cmake --build build --target rottools_ui_flatbuttons_app
 	./build/libs/ui/FlatButtons/rottools_ui_flatbuttons_app
+
+build-icons: _demos    ## Build Icons smoke app (rottools::ui_icons)
+	cmake --build build --target rottools_ui_icons_app
+
+run-icons: build-icons ## Run Icons smoke app (rottools::ui_icons)
+	./build/libs/ui/Icons/rottools_ui_icons_app
 
 run-filetree: _demos   ## FileBrowserTreePanel   (rottools::ui_filetree)
 	cmake --build build --target rottools_ui_filetree_app

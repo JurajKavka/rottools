@@ -2,6 +2,7 @@
 add_subdirectory(FileDropTarget)
 add_subdirectory(FlatButtons)
 add_subdirectory(HeaderPanel)
+add_subdirectory(Icons)
 add_subdirectory(WebViewPanel)
 add_subdirectory(HtmlSourcePanel)
 add_subdirectory(FileBrowserTreePanel)

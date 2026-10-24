@@ -1,0 +1,8 @@
+#pragma once
+
+namespace rottools::ui::icons::detail {
+
+inline constexpr char kFileSvg[] = R"rottools_svg(@ROTTOOLS_FILE_SVG@)rottools_svg";
+inline constexpr char kFolderSvg[] = R"rottools_svg(@ROTTOOLS_FOLDER_SVG@)rottools_svg";
+
+}  // namespace rottools::ui::icons::detail
