@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <linearGradient id="linearGradient78-1">
+      <stop style="stop-color:#ffffff;stop-opacity:1;" offset="0" id="stop79" />
+      <stop style="stop-color:#01ceff;stop-opacity:1;" offset="0.07307062" id="stop83" />
+      <stop style="stop-color:#027cff;stop-opacity:1;" offset="0.91133004" id="stop78" />
+    </linearGradient>
+    <linearGradient xlink:href="#linearGradient78-1" id="linearGradient79" x1="11.999999" y1="8.9656124" x2="11.999999" y2="22.00469" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1.0008576,0,0,1.0070872,5.9545423e-4,-1.4766386)" />
+  </defs>
+  <g id="iconGlyph">
+    <path id="rect77" style="opacity:0.99115;fill:#308eff;stroke:#ffffff;stroke-width:0.341586;stroke-opacity:0.579112" transform="matrix(0.99889401,-0.04701871,0,1,0,0)" d="m 9.0895996,2.9273812 1.4959624,1.8287602 10.056666,0.1124959 c 0,0 1.323955,0.2922038 1.325793,1.0578377 l 0.03165,13.177738 c 0.0021,0.867259 -0.50902,1.565276 -1.1413,1.565276 H 3.1682069 c -0.6322805,0 -1.1447558,-0.698283 -1.1413006,-1.565276 L 2.0898411,3.3125473 c 0,0 -0.4668523,0.6816665 2.7858353,0.1309864 C 6.1964788,3.2199219 8.877636,2.6682634 9.0895996,2.9273812 Z" />
+    <rect style="color:#46484d;opacity:0.99115;fill:#ffffff;fill-opacity:0.95684803;stroke:#ffffff;stroke-width:0.263459;stroke-opacity:0.579112" id="rect78" width="17.013073" height="13.31981" x="3.491714" y="6.023273" rx="0.97217554" ry="1.0931762" transform="matrix(0.99917047,-0.04072318,0,1,0,0)" />
+    <rect style="color:#46484d;opacity:0.99115;fill:url(#linearGradient79);fill-opacity:1;stroke:#ffffff;stroke-width:0.283811;stroke-opacity:0.579112" id="rect76" width="20.026539" height="13.13149" x="1.9976166" y="7.5525169" rx="1.1443735" ry="1.0777204" transform="matrix(0.99909365,-0.04256624,0,1,0,0)" />
+  </g>
+</svg>

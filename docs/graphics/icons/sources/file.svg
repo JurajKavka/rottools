@@ -4,13 +4,12 @@
    height="1480"
    viewBox="0 0 1180 1480"
    version="1.1"
-   id="rottools-single-ui-icon-template-fixed-v3"
-   sodipodi0:docname="Rottools-Single-UI-Icon-Template-Fixed-v3.svg"
-   inkscape:version="1.3.2 (091e20e, 2023-11-25)"
-   sodipodi:docname="folder-v3.svg"
+   id="rottools-ui-icon-template"
+   sodipodi0:docname="icon-template.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   sodipodi:docname="file.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns:sodipodi0="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd">
@@ -23,15 +22,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.4127079"
-     inkscape:cx="408.08152"
-     inkscape:cy="381.89069"
+     inkscape:zoom="1"
+     inkscape:cx="588.5"
+     inkscape:cy="573.5"
      inkscape:window-width="1920"
-     inkscape:window-height="968"
-     inkscape:window-x="1"
+     inkscape:window-height="966"
+     inkscape:window-x="0"
      inkscape:window-y="30"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="layerIcon" />
+     inkscape:window-maximized="1"
+     inkscape:current-layer="iconGlyph" />
   <sodipodi0:namedview
      id="namedview"
      pagecolor="#efeff2"
@@ -42,32 +41,18 @@
      showgrid="false" />
   <defs
      id="defs48">
-    <linearGradient
-       id="linearGradient78">
-      <stop
-         style="stop-color:#3093ff;stop-opacity:1;"
-         offset="1"
-         id="stop80" />
-      <stop
-         style="stop-color:#3093ff;stop-opacity:0;"
-         offset="1"
-         id="stop81" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient78-1">
-      <stop
-         style="stop-color:#ffffff;stop-opacity:1;"
-         offset="0"
-         id="stop79" />
-      <stop
-         style="stop-color:#01ceff;stop-opacity:1;"
-         offset="0.07307062"
-         id="stop83" />
-      <stop
-         style="stop-color:#027cff;stop-opacity:1;"
-         offset="0.91133004"
-         id="stop78" />
-    </linearGradient>
+    <rect
+       x="556"
+       y="455"
+       width="55"
+       height="28"
+       id="rect91" />
+    <rect
+       x="506"
+       y="302"
+       width="43"
+       height="174"
+       id="rect90" />
     <style
        id="style1"><![CDATA[
       .title { font: 700 44px 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #222; }
@@ -442,16 +427,6 @@
          class="center"
          id="line48" />
     </g>
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient78-1"
-       id="linearGradient79"
-       x1="11.999999"
-       y1="8.9656124"
-       x2="11.999999"
-       y2="22.00469"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.0008576,0,0,1.0070872,5.9545423e-4,-1.4766386)" />
   </defs>
   <rect
      x="0"
@@ -475,7 +450,7 @@
        y="122"
        text-anchor="middle"
        class="subtitle"
-       id="text49">One icon only. Edit the large folder icon, then export the object “iconExport”.</text>
+       id="text49">One icon only. Edit the artwork inside “iconGlyph”.</text>
   </g>
   <g
      inkscape:label="02 - Guides"
@@ -486,7 +461,7 @@
        y="176"
        text-anchor="middle"
        class="section"
-       id="text50">Folder Icon Showcase</text>
+       id="text50">UI Icon Drawing Board</text>
     <g
        transform="translate(422 212)"
        id="g50">
@@ -570,12 +545,12 @@
        x="120"
        y="586"
        class="label"
-       id="text55">2 px rounded stroke</text>
+       id="text55">Use simple geometry</text>
     <text
        x="120"
        y="610"
        class="label"
-       id="text56">Edit with Node tool</text>
+       id="text56">Check every preview size</text>
     <line
        x1="764"
        y1="252"
@@ -593,7 +568,7 @@
        x="936"
        y="258"
        class="label"
-       id="text57">Select object: iconExport</text>
+       id="text57">Extractor reads: iconExport</text>
     <line
        x1="764"
        y1="348"
@@ -659,55 +634,35 @@
      inkscape:groupmode="layer"
      id="layerIcon"
      style="color:#46484d;">
-    <!-- Select iconExport when exporting. The invisible exportBounds keeps the object exactly 24x24. -->
+    <!-- The extractor reads iconExport. The invisible exportBounds keeps its canvas exactly 24x24. -->
     <g
        id="iconExport"
        transform="translate(422 212) scale(14)"
-       inkscape:export-filename="iconExport-16.png"
-       inkscape:export-xdpi="4.5714288"
-       inkscape:export-ydpi="4.5714288">
+       style="fill:#f2f2f2;stroke:none;stroke-opacity:0.35018051;fill-opacity:1">
       <rect
          id="exportBounds"
          x="0"
          y="0"
          width="24"
          height="24"
-         style="fill:#000000;fill-opacity:0;stroke:none"
-         sodipodi:insensitive="true" />
+         style="fill:#f2f2f2;fill-opacity:1;stroke:none;stroke-opacity:0.35018051" />
       <g
-         id="iconGlyph">
+         id="iconGlyph"
+         style="fill:#f2f2f2;stroke:none;stroke-opacity:0.35018051;fill-opacity:1">
         <path
-           id="rect77"
-           style="opacity:0.99115;fill:#308eff;stroke:#ffffff;stroke-width:0.341586;stroke-opacity:0.579112"
-           inkscape:label="back"
-           transform="matrix(0.99889401,-0.04701871,0,1,0,0)"
-           d="m 9.0895996,2.9273812 1.4959624,1.8287602 10.056666,0.1124959 c 0,0 1.323955,0.2922038 1.325793,1.0578377 l 0.03165,13.177738 c 0.0021,0.867259 -0.50902,1.565276 -1.1413,1.565276 H 3.1682069 c -0.6322805,0 -1.1447558,-0.698283 -1.1413006,-1.565276 L 2.0898411,3.3125473 c 0,0 -0.4668523,0.6816665 2.7858353,0.1309864 C 6.1964788,3.2199219 8.877636,2.6682634 9.0895996,2.9273812 Z"
-           sodipodi:nodetypes="sccssssscss"
-           inkscape:export-filename="./rect77.png"
-           inkscape:export-xdpi="4.5714288"
-           inkscape:export-ydpi="4.5714288" />
-        <rect
-           style="color:#46484d;opacity:0.99115;fill:#ffffff;fill-opacity:0.95684803;stroke:#ffffff;stroke-width:0.263459;stroke-opacity:0.579112"
-           id="rect78"
-           width="17.013073"
-           height="13.31981"
-           x="3.491714"
-           y="6.023273"
-           rx="0.97217554"
-           ry="1.0931762"
-           inkscape:label="paper"
-           transform="matrix(0.99917047,-0.04072318,0,1,0,0)" />
-        <rect
-           style="color:#46484d;opacity:0.99115;fill:url(#linearGradient79);fill-opacity:1;stroke:#ffffff;stroke-width:0.283811;stroke-opacity:0.579112"
-           id="rect76"
-           width="20.026539"
-           height="13.13149"
-           x="1.9976166"
-           y="7.5525169"
-           rx="1.1443735"
-           ry="1.0777204"
-           inkscape:label="front"
-           transform="matrix(0.99909365,-0.04256624,0,1,0,0)" />
+           d="M 15,2.0192522 V 6.8013393 C 15,7.4653712 15.539309,8 16.209263,8 h 4.734933 z"
+           style="opacity:0.99115;fill:#999999;fill-opacity:1;stroke:#000000;stroke-width:0.363995;stroke-opacity:0.35018051"
+           id="path98" />
+        <path
+           d="m 4.3364955,2.0192522 c -0.6699543,0 -1.2092634,0.5346289 -1.2092634,1.1986607 V 20.637835 c 0,0.664032 0.5393091,1.198521 1.2092634,1.198521 H 19.734933 c 0.669954,0 1.209263,-0.534489 1.209263,-1.198521 V 8 H 16.209263 C 15.539309,8 15,7.4653712 15,6.8013393 V 2.0192522 Z"
+           style="opacity:0.99115;fill:#f2f2f2;fill-opacity:1;stroke:#000000;stroke-width:0.363995;stroke-opacity:0.35018051"
+           id="path97" />
+        <path
+           d="M 11.790688,14.805063 14.290213,8.7328477 H 18.0395 v 0.2513109 h -0.298856 q -0.407531,0 -0.65205,0.142636 -0.169805,0.095091 -0.271688,0.3192328 -0.07471,0.1630125 -0.07471,0.8490236 v 6.072216 q 0,0.706387 0.07471,0.882984 0.07472,0.176597 0.305649,0.312441 0.230934,0.129051 0.618089,0.129051 H 18.0395 v 0.251311 h -4.808869 v -0.251311 h 0.298857 q 0.407531,0 0.65205,-0.142636 0.169804,-0.09509 0.271687,-0.326025 0.07471,-0.163012 0.07471,-0.855815 V 9.541118 l -3.531937,8.401936 H 10.832989 L 7.246714,9.6022477 v 6.4865393 q 0,0.679219 0.033961,0.835439 0.088298,0.339609 0.3803625,0.556959 0.2988563,0.210558 0.9305298,0.210558 v 0.251311 H 5.4399921 v -0.251311 h 0.095091 q 0.3056484,0.0068 0.5705438,-0.09509 0.2648953,-0.108675 0.400739,-0.285272 0.1358438,-0.176597 0.2105579,-0.49583 0.013584,-0.07471 0.013584,-0.692803 v -5.827697 q 0,-0.6995955 -0.074714,-0.8694002 Q 6.5810796,9.249054 6.3501452,9.1200024 6.1192108,8.9841586 5.7320561,8.9841586 H 5.4399921 V 8.7328477 h 3.762872 z"
+           id="text98"
+           style="font-weight:bold;font-size:13.9104px;line-height:1.2;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman,  Bold';letter-spacing:0.958823px;opacity:0.99115;fill:#1a1a1a;stroke-width:1.12649;stroke-opacity:0.350181"
+           transform="scale(0.93383923,1.0708481)"
+           aria-label="M" />
       </g>
     </g>
   </g>
@@ -902,32 +857,32 @@
        x="120"
        y="1100"
        class="section"
-       id="text70">How to export</text>
+       id="text70">Source workflow</text>
     <text
        x="120"
        y="1140"
        class="label"
-       id="text71">1. Open Object → Objects and select “iconExport”.</text>
+       id="text71">1. Copy this file to sources/&lt;icon-name&gt;.svg.</text>
     <text
        x="120"
        y="1168"
        class="label"
-       id="text72">2. File → Export, choose Selection.</text>
+       id="text72">2. Edit only the artwork in “iconGlyph”; prefer inline fill and stroke styles.</text>
     <text
        x="120"
        y="1196"
        class="label"
-       id="text73">3. Set width = 24 and height = 24, or export 16 / 20 / 24 / 32 / 48 as needed.</text>
+       id="text73">3. Keep “iconExport” and its 24×24 “exportBounds” object.</text>
     <text
        x="120"
        y="1224"
        class="label"
-       id="text74">4. If the size stops being square, you probably deleted “exportBounds”. Undo or restore it.</text>
+       id="text74">4. Register the icon in extract-ui-icons.py, then run make ui-icons.</text>
     <text
        x="120"
        y="1288"
        class="small"
-       id="text75">Editable object path: layerIcon → iconExport → iconGlyph → folderPath</text>
+       id="text75">Editable object path: layerIcon → iconExport → iconGlyph → iconPath</text>
     <text
        x="120"
        y="1312"

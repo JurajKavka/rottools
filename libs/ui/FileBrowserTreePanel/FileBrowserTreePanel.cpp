@@ -1,6 +1,5 @@
 #include "FileBrowserTreePanel.h"
 
-#include <wx/artprov.h>
 #include <wx/clipbrd.h>
 #include <wx/dataobj.h>
 #include <wx/imaglist.h>
@@ -13,6 +12,7 @@
 #include <utility>
 
 #include "FileManagerBackend.h"
+#include "Icons.h"
 
 FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks,
                                            std::vector<FileTypeFilter> fileTypeFilter)
@@ -29,12 +29,12 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
     // The 'true' parameter means it supports transparency (alpha channels)
     wxImageList* imageList = new wxImageList(16, 16, true);
 
-    // 3. Fetch native OS icons and add them to the list
+    // 3. Add the custom folder and file artwork.
     // Index 0: The Folder Icon
-    imageList->Add(wxArtProvider::GetBitmap(wxART_FOLDER, wxART_OTHER, wxSize(16, 16)));
+    imageList->Add(rottools::ui::icons::Folder());
 
     // Index 1: The File Icon
-    imageList->Add(wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16, 16)));
+    imageList->Add(rottools::ui::icons::File());
 
     // 4. Assign the image list to your tree control
     // 'AssignImageList' tells the tree to take ownership, so you don't need to 'delete' it later

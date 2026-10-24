@@ -7,8 +7,8 @@
   height="1480"
   viewBox="0 0 1180 1480"
   version="1.1"
-  id="rottools-single-ui-icon-template-fixed-v3"
-  sodipodi:docname="Rottools-Single-UI-Icon-Template-Fixed-v3.svg"
+  id="rottools-ui-icon-template"
+  sodipodi:docname="icon-template.svg"
   inkscape:version="1.3">
 
   <sodipodi:namedview
@@ -100,11 +100,11 @@
 
   <g inkscape:label="01 - Header" inkscape:groupmode="layer" id="layerHeader">
     <text x="590" y="82" text-anchor="middle" class="title">Rottools Single UI Icon Template</text>
-    <text x="590" y="122" text-anchor="middle" class="subtitle">One icon only. Edit the large folder icon, then export the object “iconExport”.</text>
+    <text x="590" y="122" text-anchor="middle" class="subtitle">One icon only. Edit the artwork inside “iconGlyph”.</text>
   </g>
 
   <g inkscape:label="02 - Guides" inkscape:groupmode="layer" id="layerGuides">
-    <text x="590" y="176" text-anchor="middle" class="section">Folder Icon Showcase</text>
+    <text x="590" y="176" text-anchor="middle" class="section">UI Icon Drawing Board</text>
     <g transform="translate(422 212)">
       <use href="#grid24"/>
     </g>
@@ -124,12 +124,12 @@
 
     <line x1="280" y1="594" x2="474" y2="594" class="callout"/>
     <circle cx="474" cy="594" r="5" class="calloutDot"/>
-    <text x="120" y="586" class="label">2 px rounded stroke</text>
-    <text x="120" y="610" class="label">Edit with Node tool</text>
+    <text x="120" y="586" class="label">Use simple geometry</text>
+    <text x="120" y="610" class="label">Check every preview size</text>
 
     <line x1="764" y1="252" x2="912" y2="252" class="callout"/>
     <circle cx="764" cy="252" r="5" class="calloutDot"/>
-    <text x="936" y="258" class="label">Select object: iconExport</text>
+    <text x="936" y="258" class="label">Extractor reads: iconExport</text>
 
     <line x1="764" y1="348" x2="912" y2="348" class="callout"/>
     <circle cx="764" cy="348" r="5" class="calloutDot"/>
@@ -146,11 +146,11 @@
   </g>
 
   <g inkscape:label="03 - Icon (EDIT HERE)" inkscape:groupmode="layer" id="layerIcon" style="color:#46484d;">
-    <!-- Select iconExport when exporting. The invisible exportBounds keeps the object exactly 24x24. -->
+    <!-- The extractor reads iconExport. The invisible exportBounds keeps its canvas exactly 24x24. -->
     <g id="iconExport" transform="translate(422 212) scale(14)">
       <rect id="exportBounds" x="0" y="0" width="24" height="24" style="fill:#000000;fill-opacity:0;stroke:none"/>
       <g id="iconGlyph">
-        <path id="folderPath" class="iconStroke" d="M4.5 8.5V18c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2v-6.5c0-1.1-.9-2-2-2H11L9.2 7.5H6.5c-1.1 0-2 .9-2 2z"/>
+        <path id="iconPath" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round" d="M5 12h14M12 5v14"/>
       </g>
     </g>
   </g>
@@ -199,13 +199,13 @@
 
   <g inkscape:label="05 - Export notes" inkscape:groupmode="layer" id="layerNotes">
     <line x1="70" y1="1040" x2="1110" y2="1040" class="divider"/>
-    <text x="120" y="1100" class="section">How to export</text>
-    <text x="120" y="1140" class="label">1. Open Object → Objects and select “iconExport”.</text>
-    <text x="120" y="1168" class="label">2. File → Export, choose Selection.</text>
-    <text x="120" y="1196" class="label">3. Set width = 24 and height = 24, or export 16 / 20 / 24 / 32 / 48 as needed.</text>
-    <text x="120" y="1224" class="label">4. If the size stops being square, you probably deleted “exportBounds”. Undo or restore it.</text>
+    <text x="120" y="1100" class="section">Source workflow</text>
+    <text x="120" y="1140" class="label">1. Copy this file to sources/&lt;icon-name&gt;.svg.</text>
+    <text x="120" y="1168" class="label">2. Edit only the artwork in “iconGlyph”; prefer inline fill and stroke styles.</text>
+    <text x="120" y="1196" class="label">3. Keep “iconExport” and its 24×24 “exportBounds” object.</text>
+    <text x="120" y="1224" class="label">4. Register the icon in extract-ui-icons.py, then run make ui-icons.</text>
 
-    <text x="120" y="1288" class="small">Editable object path: layerIcon → iconExport → iconGlyph → folderPath</text>
+    <text x="120" y="1288" class="small">Editable object path: layerIcon → iconExport → iconGlyph → iconPath</text>
     <text x="120" y="1312" class="small">Important: keep exportBounds at x=0, y=0, width=24, height=24.</text>
   </g>
 </svg>
