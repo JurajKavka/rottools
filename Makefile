@@ -5,7 +5,7 @@
         rotreader-run rotreader-run-fg rotreader-package rotreader-icons rotreader-clean \
         rotpad rotpad-all rotpad-dev rotpad-build rotpad-rebuild \
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
-        run-filetree run-flatbuttons run-headerpanel run-icons run-htmlsource run-texteditor run-scintillatexteditor \
+        run-filetree run-flatbuttons run-headerpanel run-icons run-htmlsource run-webview run-texteditor run-scintillatexteditor \
         run-textfilepreviewdialog \
         run-dirscan run-md2html run-helpers run-filemanager \
         build-icons build-texteditor build-scintillatexteditor build-textfilepreviewdialog \
@@ -116,6 +116,12 @@ build-icons: _demos    ## Build Icons smoke app (rottools::ui_icons)
 run-icons: build-icons ## Run Icons smoke app (rottools::ui_icons)
 	./build/libs/ui/Icons/rottools_ui_icons_app
 
+build-webview: _demos ## Build WebViewPanel proof-of-concept app
+	cmake --build build --target rottools_ui_webview_app
+
+run-webview: build-webview ## Run WebViewPanel proof-of-concept app
+	./build/libs/ui/WebViewPanel/rottools_ui_webview_app
+
 run-filetree: _demos   ## FileBrowserTreePanel   (rottools::ui_filetree)
 	cmake --build build --target rottools_ui_filetree_app
 	./build/libs/ui/FileBrowserTreePanel/rottools_ui_filetree_app
@@ -163,9 +169,6 @@ run-helpers: _demos    ## HelperFunctions        (rottools::helpers)
 	./build/libs/HelperFunctions/rottools_helpers_app
 
 ##@ Components — library-only (no demo app; compile-check the lib)
-build-webview:         ## WebViewPanel           (rottools::ui_webview)
-	cmake -S . -B build -G Ninja && cmake --build build --target rottools_ui_webview
-
 build-filedrop:        ## FileDropTarget         (rottools::ui_filedrop)
 	cmake -S . -B build -G Ninja && cmake --build build --target rottools_ui_filedrop
 

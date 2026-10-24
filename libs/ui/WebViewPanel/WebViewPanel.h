@@ -14,7 +14,9 @@ class wxWebViewEvent;
 class WebViewPanel : public WebViewPanelWx {
    private:
     wxWebView* m_webView = nullptr;
+    bool m_openHttpLinksExternally = true;
 
+    void EnsureWebView();
     void HandleWebViewLeftDown(wxMouseEvent& event);
     void HandleWebViewNavigation(wxWebViewEvent& event);
 
@@ -47,4 +49,7 @@ class WebViewPanel : public WebViewPanelWx {
      *        page to update yet.
      */
     void LoadHtml(const wxString& html, ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop);
+
+    /** Loads a web page and keeps its HTTP and HTTPS navigation in the panel. */
+    void LoadUrl(const wxString& url);
 };

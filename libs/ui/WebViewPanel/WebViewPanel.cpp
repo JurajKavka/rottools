@@ -45,6 +45,19 @@ WebViewPanel::WebViewPanel(wxWindow* parent) : WebViewPanelWx(parent) {
     Layout();
 }
 
+void WebViewPanel::EnsureWebView() {
+    if (m_webView != nullptr) {
+        return;
+    }
+
+    m_webView = wxWebView::New(this, wxID_ANY);
+    m_webView->Bind(wxEVT_LEFT_DOWN, &WebViewPanel::HandleWebViewLeftDown, this);
+    m_webView->Bind(wxEVT_WEBVIEW_NAVIGATING, &WebViewPanel::HandleWebViewNavigation, this);
+    m_webView->Bind(wxEVT_WEBVIEW_NEWWINDOW, &WebViewPanel::HandleWebViewNavigation, this);
+    GetSizer()->Add(m_webView, 1, wxEXPAND | wxALL, 0);
+    Layout();
+}
+
 void WebViewPanel::Copy() {
     if (CanCopy()) {
         m_webView->Copy();
@@ -98,8 +111,11 @@ void WebViewPanel::ClearSearch() {
 void WebViewPanel::HandleWebViewLeftDown(wxMouseEvent& event) {
     // A non-editable native web view can consume a click without becoming the
     // wxWidgets focus window. Make the same focus transition explicitly so
-    // frame-level commands such as Find and Copy target the preview.
-    m_webView->SetFocus();
+    // frame-level commands such as Find and Copy target the HTML preview. A
+    // loaded web app keeps the native web view's normal mouse handling.
+    if (m_openHttpLinksExternally) {
+        m_webView->SetFocus();
+    }
     event.Skip();
 }
 
@@ -112,22 +128,26 @@ void WebViewPanel::HandleWebViewNavigation(wxWebViewEvent& event) {
         return;
     }
 
+    if (!m_openHttpLinksExternally) {
+        if (event.GetEventType() == wxEVT_WEBVIEW_NEWWINDOW) {
+            event.Veto();
+            CallAfter([this, url]() { m_webView->LoadURL(url); });
+            return;
+        }
+        event.Skip();
+        return;
+    }
+
     // Keep the rendered document in place, even if the browser cannot launch.
     event.Veto();
     wxLaunchDefaultBrowser(url);
 }
 
 void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior) {
-    if (!m_webView) {
-        // 3. Instantiate the wxWebView
-        m_webView = wxWebView::New(this, wxID_ANY);
-        m_webView->Bind(wxEVT_LEFT_DOWN, &WebViewPanel::HandleWebViewLeftDown, this);
-        m_webView->Bind(wxEVT_WEBVIEW_NAVIGATING, &WebViewPanel::HandleWebViewNavigation, this);
-        m_webView->Bind(wxEVT_WEBVIEW_NEWWINDOW, &WebViewPanel::HandleWebViewNavigation, this);
-        wxSizer* mainSizer = GetSizer();
-        // 4. Add it to the sizer, expanding to fill the panel
-        mainSizer->Add(m_webView, 1, wxEXPAND | wxALL, 0);
-        Layout();
+    m_openHttpLinksExternally = true;
+    const bool isFirstLoad = m_webView == nullptr;
+    EnsureWebView();
+    if (isFirstLoad) {
         // First load: no page to update in place yet.
         m_webView->SetPage(html, "");
         return;
@@ -165,4 +185,10 @@ void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior)
 }})();)",
                                                      EscapeForJsString(html)));
     m_webView->RunScriptAsync(script);
+}
+
+void WebViewPanel::LoadUrl(const wxString& url) {
+    m_openHttpLinksExternally = false;
+    EnsureWebView();
+    m_webView->LoadURL(url);
 }
