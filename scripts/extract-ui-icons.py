@@ -31,9 +31,14 @@ class Icon:
 
 ICONS = (
     Icon(
-        name="file",
-        source=ROOT / "docs/graphics/icons/sources/file.svg",
-        output=ROOT / "docs/graphics/icons/generated/file.svg",
+        name="default-file",
+        source=ROOT / "docs/graphics/icons/sources/default-file.svg",
+        output=ROOT / "docs/graphics/icons/generated/default-file.svg",
+    ),
+    Icon(
+        name="md-file",
+        source=ROOT / "docs/graphics/icons/sources/md-file.svg",
+        output=ROOT / "docs/graphics/icons/generated/md-file.svg",
     ),
     Icon(
         name="folder",

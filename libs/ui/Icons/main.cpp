@@ -16,7 +16,8 @@ class IconsFrame final : public wxFrame {
 
         auto* iconSizer = new wxBoxSizer(wxHORIZONTAL);
         for (const auto& [label, bitmap] : {
-                 std::pair{"File", rottools::ui::icons::File()},
+                 std::pair{"Default file", rottools::ui::icons::DefaultFile()},
+                 std::pair{"Markdown", rottools::ui::icons::MarkdownFile()},
                  std::pair{"Folder", rottools::ui::icons::Folder()},
              })
         {
@@ -26,7 +27,7 @@ class IconsFrame final : public wxFrame {
                            FromDIP(8));
             iconSizer->Add(itemSizer, 1, wxLEFT | wxRIGHT | wxALIGN_BOTTOM, FromDIP(12));
         }
-        wxLogMessage("Icons demo ready; file and folder icons rendered at 16 px.");
+        wxLogMessage("Icons demo ready; default file, Markdown, and folder icons rendered at 16 px.");
 
         panelSizer->Add(iconSizer, 1, wxLEFT | wxRIGHT | wxBOTTOM | wxEXPAND, FromDIP(16));
         panel->SetSizer(panelSizer);

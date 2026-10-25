@@ -20,6 +20,12 @@
 #endif
 
 namespace {
+enum TreeIconIndex {
+    kFolderIconIndex,
+    kMarkdownFileIconIndex,
+    kDefaultFileIconIndex,
+};
+
 std::error_code MovePathToTrash(const wxFileName& path) {
 #ifdef wxHAS_MOVE_TO_TRASH
     return wxMoveToTrash(path.GetFullPath()) ? std::error_code{} : std::make_error_code(std::errc::io_error);
@@ -65,12 +71,10 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
     // The 'true' parameter means it supports transparency (alpha channels)
     wxImageList* imageList = new wxImageList(16, 16, true);
 
-    // 3. Add the custom folder and file artwork.
-    // Index 0: The Folder Icon
+    // 3. Add the custom folder and file artwork in TreeIconIndex order.
     imageList->Add(rottools::ui::icons::Folder());
-
-    // Index 1: The File Icon
-    imageList->Add(rottools::ui::icons::File());
+    imageList->Add(rottools::ui::icons::MarkdownFile());
+    imageList->Add(rottools::ui::icons::DefaultFile());
 
     // 4. Assign the image list to your tree control
     // 'AssignImageList' tells the tree to take ownership, so you don't need to 'delete' it later
@@ -108,10 +112,16 @@ void FileBrowserTreePanel::UpdateTree(const std::vector<FileEntry>& entries) {
 
     wxDataViewItem root;
 
-    m_dataViewTreeCtrl1->AppendItem(root, "..", 0);
+    m_dataViewTreeCtrl1->AppendItem(root, "..", kFolderIconIndex);
 
     for (const auto& entry : sortedData) {
-        m_dataViewTreeCtrl1->AppendItem(root, entry.name, entry.isDirectory ? 0 : 1);
+        int iconIndex = kDefaultFileIconIndex;
+        if (entry.isDirectory) {
+            iconIndex = kFolderIconIndex;
+        } else if (IsMarkdownFile(wxFileName(entry.name))) {
+            iconIndex = kMarkdownFileIconIndex;
+        }
+        m_dataViewTreeCtrl1->AppendItem(root, entry.name, iconIndex);
     }
 
     wxDataViewItemArray selections;
