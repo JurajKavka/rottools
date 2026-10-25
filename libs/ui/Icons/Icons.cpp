@@ -3,30 +3,21 @@
 
 #include <wx/artprov.h>
 #include <wx/bmpbndl.h>
-#include <wx/debug.h>
 #include <wx/gdicmn.h>
 
 namespace rottools::ui::icons {
 
 namespace {
 
-const wxSize kSize16(16, 16);
-
-const wxSize& GetWxSize(Size size)
+wxSize GetWxSize(Size size)
 {
-    switch (size)
-    {
-        case Size::Px16:
-            return kSize16;
-    }
-
-    wxFAIL_MSG("Unsupported icon size");
-    return kSize16;
+    const int dimension = static_cast<int>(size);
+    return {dimension, dimension};
 }
 
 wxBitmap MakeBitmap(const char* svg, Size size, const wxArtID& fallbackId, const wxArtClient& fallbackClient)
 {
-    const wxSize& bitmapSize = GetWxSize(size);
+    const wxSize bitmapSize = GetWxSize(size);
 #ifdef wxHAS_SVG
     if (svg != nullptr && svg[0] != '\0')
     {
@@ -42,36 +33,22 @@ wxBitmap MakeBitmap(const char* svg, Size size, const wxArtID& fallbackId, const
 
 }  // namespace
 
-wxBitmap File(Size size)
+wxBitmap DefaultFile(Size size)
 {
-    switch (size)
-    {
-        case Size::Px16:
-        {
-            static const wxBitmap bitmap =
-                MakeBitmap(detail::kFileSvg, Size::Px16, wxART_NORMAL_FILE, wxART_OTHER);
-            return bitmap;
-        }
-    }
+    static const wxBitmap bitmap = MakeBitmap(detail::kDefaultFileSvg, size, wxART_NORMAL_FILE, wxART_OTHER);
+    return bitmap;
+}
 
-    wxFAIL_MSG("Unsupported file icon size");
-    return {};
+wxBitmap MarkdownFile(Size size)
+{
+    static const wxBitmap bitmap = MakeBitmap(detail::kMarkdownFileSvg, size, wxART_NORMAL_FILE, wxART_OTHER);
+    return bitmap;
 }
 
 wxBitmap Folder(Size size)
 {
-    switch (size)
-    {
-        case Size::Px16:
-        {
-            static const wxBitmap bitmap =
-                MakeBitmap(detail::kFolderSvg, Size::Px16, wxART_FOLDER, wxART_OTHER);
-            return bitmap;
-        }
-    }
-
-    wxFAIL_MSG("Unsupported folder icon size");
-    return {};
+    static const wxBitmap bitmap = MakeBitmap(detail::kFolderSvg, size, wxART_FOLDER, wxART_OTHER);
+    return bitmap;
 }
 
 }  // namespace rottools::ui::icons

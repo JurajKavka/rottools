@@ -12,6 +12,9 @@ components. These are separate from the application logos under
 - `generated/` contains the compact, standalone SVGs consumed by CMake. Do not
   edit these files by hand; commit them after regeneration.
 
+`md-file.svg` is the Markdown file icon. `default-file.svg` is used for every
+other file type shown in the file browser.
+
 The template and every source use a 24 x 24 design grid. The visible artwork
 belongs in the `iconGlyph` group inside `iconExport`. Keep the transparent
 `exportBounds` rectangle at 24 x 24: the extractor uses it to define the output

@@ -2,7 +2,8 @@
 
 namespace rottools::ui::icons::detail {
 
-inline constexpr char kFileSvg[] = R"rottools_svg(@ROTTOOLS_FILE_SVG@)rottools_svg";
+inline constexpr char kDefaultFileSvg[] = R"rottools_svg(@ROTTOOLS_DEFAULT_FILE_SVG@)rottools_svg";
+inline constexpr char kMarkdownFileSvg[] = R"rottools_svg(@ROTTOOLS_MARKDOWN_FILE_SVG@)rottools_svg";
 inline constexpr char kFolderSvg[] = R"rottools_svg(@ROTTOOLS_FOLDER_SVG@)rottools_svg";
 
 }  // namespace rottools::ui::icons::detail
