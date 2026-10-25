@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#030711">
+  <title>Moon Taxi</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #030711;
+      color: #f4fbff;
+      user-select: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      padding: 20px 24px;
+      pointer-events: none;
+    }
+
+    .hud-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      color: #ffd84c;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .32em;
+    }
+
+    .stats {
+      display: flex;
+      gap: 28px;
+      color: #7891a7;
+      font-size: 9px;
+      letter-spacing: .18em;
+      text-align: right;
+      text-transform: uppercase;
+    }
+
+    .stats strong {
+      display: block;
+      margin-top: 4px;
+      color: #f7ffff;
+      font-size: 18px;
+      letter-spacing: .04em;
+    }
+
+    .mission {
+      position: absolute;
+      top: 62px;
+      left: 24px;
+      color: #97abc0;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .mission strong {
+      color: #ffdd55;
+    }
+
+    .fuel-wrap {
+      position: absolute;
+      bottom: 23px;
+      left: 24px;
+      width: 190px;
+      color: #8099ae;
+      font-size: 9px;
+      letter-spacing: .17em;
+      text-transform: uppercase;
+    }
+
+    .fuel-track {
+      height: 5px;
+      margin-top: 8px;
+      border: 1px solid rgba(131, 160, 183, .5);
+      background: #08111e;
+    }
+
+    .fuel-fill {
+      width: 100%;
+      height: 100%;
+      background: #ffda4f;
+      transform-origin: left;
+    }
+
+    .velocity {
+      position: absolute;
+      right: 24px;
+      bottom: 23px;
+      color: #8099ae;
+      font-size: 9px;
+      letter-spacing: .13em;
+      text-align: right;
+      text-transform: uppercase;
+    }
+
+    .velocity strong {
+      color: #bdfaff;
+    }
+
+    .toast {
+      position: absolute;
+      top: 102px;
+      left: 50%;
+      padding: 9px 14px;
+      border: 1px solid rgba(255, 216, 76, .5);
+      background: rgba(9, 13, 23, .88);
+      color: #ffe676;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      opacity: 0;
+      text-transform: uppercase;
+      transform: translateX(-50%) translateY(-8px);
+      transition: opacity .16s ease, transform .16s ease;
+    }
+
+    .toast.active {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background: rgba(2, 6, 14, .86);
+      transition: opacity .2s ease;
+    }
+
+    .overlay.hidden {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      width: min(590px, 94vw);
+      padding: 46px 44px 40px;
+      border: 1px solid #40677f;
+      background: #07101d;
+      text-align: center;
+      clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+    }
+
+    .eyebrow {
+      color: #72e7ef;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 16px 0 10px;
+      color: #ffd849;
+      font-size: clamp(48px, 10vw, 82px);
+      line-height: .86;
+      letter-spacing: -.075em;
+      text-transform: uppercase;
+    }
+
+    .copy {
+      max-width: 460px;
+      margin: 20px auto 26px;
+      color: #9eb2c5;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    button {
+      min-width: 210px;
+      padding: 13px 20px;
+      border: 1px solid #ffdb52;
+      border-radius: 0;
+      background: #111b25;
+      color: #fff4b4;
+      font: 900 11px/1 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    button:hover,
+    button:focus-visible {
+      background: #ffd84c;
+      color: #11151b;
+      outline: none;
+    }
+
+    .controls-copy {
+      margin-top: 24px;
+      color: #668095;
+      font-size: 9px;
+      letter-spacing: .11em;
+      line-height: 1.8;
+      text-transform: uppercase;
+    }
+
+    .controls-copy b {
+      color: #d4e8f4;
+    }
+
+    .touch-controls {
+      position: fixed;
+      right: 18px;
+      bottom: 54px;
+      left: 18px;
+      display: none;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .touch-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .touch-key {
+      display: grid;
+      width: 58px;
+      min-width: 0;
+      height: 58px;
+      padding: 0;
+      place-items: center;
+      border-color: rgba(184, 224, 235, .55);
+      background: rgba(6, 14, 25, .72);
+      color: #ddf6ff;
+      font-size: 17px;
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    .touch-key.thrust {
+      border-color: #ffdc56;
+      color: #ffdc56;
+    }
+
+    @media (pointer: coarse) {
+      .touch-controls {
+        display: flex;
+      }
+
+      .velocity,
+      .fuel-wrap {
+        bottom: 126px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .hud {
+        padding: 14px;
+      }
+
+      .stats {
+        gap: 14px;
+      }
+
+      .stats strong {
+        font-size: 15px;
+      }
+
+      .mission,
+      .fuel-wrap {
+        left: 14px;
+      }
+
+      .velocity {
+        right: 14px;
+      }
+
+      .card {
+        padding: 38px 24px 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" aria-label="Moon Taxi game"></canvas>
+
+  <div class="hud" aria-hidden="true">
+    <div class="hud-top">
+      <div class="brand">MOON TAXI</div>
+      <div class="stats">
+        <div>Fares<strong id="fares">0</strong></div>
+        <div>Credits<strong id="credits">000000</strong></div>
+        <div>Hull<strong id="hull">◆ ◆ ◆</strong></div>
+      </div>
+    </div>
+    <div class="mission" id="mission"><strong>Dispatch:</strong> waiting</div>
+    <div class="fuel-wrap">
+      Fuel <span id="fuelText">100%</span>
+      <div class="fuel-track"><div class="fuel-fill" id="fuelFill"></div></div>
+    </div>
+    <div class="velocity">H <strong id="horizontalSpeed">00</strong> · V <strong id="verticalSpeed">00</strong></div>
+    <div class="toast" id="toast">Passenger aboard</div>
+  </div>
+
+  <div class="touch-controls" aria-label="Touch controls">
+    <div class="touch-group">
+      <button class="touch-key" data-key="ArrowLeft" aria-label="Rotate left">↶</button>
+      <button class="touch-key" data-key="ArrowRight" aria-label="Rotate right">↷</button>
+    </div>
+    <div class="touch-group">
+      <button class="touch-key thrust" data-key="ArrowUp" aria-label="Main thruster">▲</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <div class="eyebrow" id="eyebrow">Lunar transport authority</div>
+      <h1 id="title">Moon<br>Taxi</h1>
+      <div class="copy" id="copy">Fly the yellow cab. Land gently beside the calling astronaut, then carry them to the blue destination beacon. Momentum is real. Fuel is not free.</div>
+      <button id="startButton">Start meter</button>
+      <div class="controls-copy"><b>A / D</b> or <b>← / →</b> rotate &nbsp; <b>W / ↑ / Space</b> thrust<br><b>R</b> restart fare &nbsp; <b>M</b> sound</div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('game');
+      const context = canvas.getContext('2d');
+      const overlay = document.getElementById('overlay');
+      const titleNode = document.getElementById('title');
+      const eyebrowNode = document.getElementById('eyebrow');
+      const copyNode = document.getElementById('copy');
+      const startButton = document.getElementById('startButton');
+      const faresNode = document.getElementById('fares');
+      const creditsNode = document.getElementById('credits');
+      const hullNode = document.getElementById('hull');
+      const missionNode = document.getElementById('mission');
+      const fuelTextNode = document.getElementById('fuelText');
+      const fuelFillNode = document.getElementById('fuelFill');
+      const horizontalSpeedNode = document.getElementById('horizontalSpeed');
+      const verticalSpeedNode = document.getElementById('verticalSpeed');
+      const toastNode = document.getElementById('toast');
+
+      const VIEW_WIDTH = 1280;
+      const VIEW_HEIGHT = 720;
+      const WORLD_WIDTH = 4200;
+      const GRAVITY = 34;
+      const THRUST = 86;
+      const ROTATION_SPEED = 2.45;
+      const SAFE_VERTICAL_SPEED = 48;
+      const SAFE_HORIZONTAL_SPEED = 34;
+      const SAFE_ANGLE = 0.24;
+      const keys = new Set();
+      const stars = [];
+      const dust = [];
+      const particles = [];
+      const pads = [];
+      const terrain = [];
+
+      let width = 0;
+      let height = 0;
+      let scale = 1;
+      let offsetX = 0;
+      let offsetY = 0;
+      let cameraX = 0;
+      let lastTime = 0;
+      let state = 'intro';
+      let audioContext = null;
+      let muted = false;
+      let toastTimer = 0;
+      let boardingTimer = 0;
+      let respawnTimer = 0;
+      let missionNumber = 0;
+      let fares = 0;
+      let credits = 0;
+      let hull = 3;
+      let pickupIndex = 1;
+      let destinationIndex = 3;
+      let phase = 'pickup';
+      let lastSafePad = 0;
+      let passengerHue = 180;
+      let taxi;
+
+      function seededRandom(seed) {
+        let value = seed >>> 0;
+        return () => {
+          value += 0x6D2B79F5;
+          let result = value;
+          result = Math.imul(result ^ result >>> 15, result | 1);
+          result ^= result + Math.imul(result ^ result >>> 7, result | 61);
+          return ((result ^ result >>> 14) >>> 0) / 4294967296;
+        };
+      }
+
+      function buildWorld() {
+        const random = seededRandom(4201978);
+        terrain.length = 0;
+        pads.length = 0;
+        stars.length = 0;
+
+        for (let x = 0; x <= WORLD_WIDTH; x += 80) {
+          const wave = Math.sin(x * .0047) * 34 + Math.sin(x * .013) * 18;
+          terrain.push({ x, y: 596 + wave + (random() - .5) * 28 });
+        }
+
+        const padXs = [150, 690, 1220, 1790, 2350, 2940, 3520, 4010];
+        const names = ['Apollo', 'Tranquility', 'Tycho', 'Copernicus', 'Artemis', 'Kepler', 'Selene', 'Far Side'];
+        padXs.forEach((x, index) => {
+          pads.push({
+            x,
+            y: rawGroundHeight(x),
+            width: index === 0 ? 150 : 120 + Math.floor(random() * 34),
+            name: names[index]
+          });
+        });
+
+        for (let index = 0; index < 180; index += 1) {
+          stars.push({
+            x: random() * WORLD_WIDTH,
+            y: 28 + random() * 430,
+            size: random() < .12 ? 2 : 1,
+            alpha: .28 + random() * .68
+          });
+        }
+      }
+
+      function rawGroundHeight(x) {
+        const clampedX = Math.max(0, Math.min(WORLD_WIDTH, x));
+        const index = Math.min(terrain.length - 2, Math.floor(clampedX / 80));
+        const left = terrain[index];
+        const right = terrain[index + 1];
+        const progress = (clampedX - left.x) / (right.x - left.x);
+        return left.y + (right.y - left.y) * progress;
+      }
+
+      function padAt(x, margin = 0) {
+        return pads.findIndex((pad) => Math.abs(x - pad.x) <= pad.width * .5 - margin);
+      }
+
+      function groundHeight(x) {
+        const index = padAt(x);
+        return index >= 0 ? pads[index].y : rawGroundHeight(x);
+      }
+
+      function resetTaxi(padIndex = 0) {
+        const pad = pads[padIndex];
+        taxi = {
+          x: pad.x,
+          y: pad.y - 23,
+          vx: 0,
+          vy: 0,
+          angle: 0,
+          angularVelocity: 0,
+          fuel: Math.max(taxi?.fuel ?? 100, 58),
+          landed: true,
+          thrusting: false,
+          alive: true,
+          passenger: taxi?.passenger ?? false
+        };
+        cameraX = Math.max(0, Math.min(WORLD_WIDTH - VIEW_WIDTH, taxi.x - VIEW_WIDTH * .5));
+      }
+
+      function beginGame() {
+        state = 'playing';
+        fares = 0;
+        credits = 0;
+        hull = 3;
+        missionNumber = 0;
+        phase = 'pickup';
+        lastSafePad = 0;
+        taxi = null;
+        resetTaxi(0);
+        taxi.fuel = 100;
+        taxi.passenger = false;
+        chooseFare(0);
+        overlay.classList.add('hidden');
+        updateHud();
+        playTone(320, .08, 'square', .035);
+      }
+
+      function chooseFare(fromIndex) {
+        missionNumber += 1;
+        phase = 'pickup';
+        taxi.passenger = false;
+        pickupIndex = chooseDifferentPad(fromIndex);
+        destinationIndex = chooseDifferentPad(pickupIndex);
+        passengerHue = [42, 176, 205, 310][missionNumber % 4];
+        boardingTimer = 0;
+        showToast('NEW FARE · ' + pads[pickupIndex].name.toUpperCase());
+      }
+
+      function chooseDifferentPad(excludedIndex) {
+        let index = (missionNumber * 3 + fares * 5 + excludedIndex + 1) % pads.length;
+        if (index === excludedIndex) {
+          index = (index + 2) % pads.length;
+        }
+        return index;
+      }
+
+      function completeFare() {
+        const distance = Math.abs(pads[pickupIndex].x - pads[destinationIndex].x);
+        const fuelBonus = Math.round(taxi.fuel * 6);
+        const fareValue = 700 + Math.round(distance * .45) + missionNumber * 90 + fuelBonus;
+        credits += fareValue;
+        fares += 1;
+        taxi.passenger = false;
+        taxi.fuel = Math.min(100, taxi.fuel + 26);
+        lastSafePad = destinationIndex;
+        showToast('FARE +' + fareValue + ' · FUEL BONUS');
+        playSequence([520, 660, 830], .07);
+        chooseFare(destinationIndex);
+      }
+
+      function handleLanding(padIndex) {
+        const pad = pads[padIndex];
+        taxi.x = Math.max(pad.x - pad.width * .34, Math.min(pad.x + pad.width * .34, taxi.x));
+        taxi.y = pad.y - 23;
+        taxi.vx = 0;
+        taxi.vy = 0;
+        taxi.angle = 0;
+        taxi.angularVelocity = 0;
+        taxi.landed = true;
+        lastSafePad = padIndex;
+        playTone(230, .08, 'triangle', .035);
+
+        const isTarget = phase === 'pickup' ? padIndex === pickupIndex : padIndex === destinationIndex;
+        if (isTarget) {
+          boardingTimer = 1.05;
+          showToast(phase === 'pickup' ? 'BOARDING PASSENGER' : 'PASSENGER DISEMBARKING');
+        } else {
+          showToast(pad.name.toUpperCase() + ' · SAFE LANDING');
+        }
+      }
+
+      function crash() {
+        if (!taxi.alive) {
+          return;
+        }
+        taxi.alive = false;
+        taxi.thrusting = false;
+        hull -= 1;
+        respawnTimer = 1.65;
+        spawnExplosion(taxi.x, taxi.y);
+        playNoise();
+        showToast('HARD LANDING · HULL DAMAGED');
+        updateHud();
+      }
+
+      function respawn() {
+        if (hull <= 0) {
+          endGame();
+          return;
+        }
+        const hadPassenger = taxi.passenger;
+        const remainingFuel = taxi.fuel;
+        resetTaxi(lastSafePad);
+        taxi.passenger = hadPassenger;
+        taxi.fuel = Math.max(remainingFuel, 52);
+        showToast('TAXI RECONSTRUCTED');
+      }
+
+      function endGame() {
+        state = 'gameover';
+        eyebrowNode.textContent = 'License suspended';
+        titleNode.innerHTML = 'Shift<br>Over';
+        copyNode.textContent = `You completed ${fares} fares and earned ${credits.toLocaleString()} credits. The lunar night shift still needs drivers.`;
+        startButton.textContent = 'Drive again';
+        overlay.classList.remove('hidden');
+      }
+
+      function restartFare() {
+        if (state !== 'playing') {
+          return;
+        }
+        taxi.passenger = phase === 'dropoff';
+        resetTaxi(lastSafePad);
+        taxi.fuel = Math.max(45, taxi.fuel - 10);
+        showToast('FARE RESET · 10% FUEL FEE');
+      }
+
+      function update(dt) {
+        updateParticles(dt);
+        if (state !== 'playing') {
+          return;
+        }
+
+        if (!taxi.alive) {
+          respawnTimer -= dt;
+          if (respawnTimer <= 0) {
+            respawn();
+          }
+          return;
+        }
+
+        if (boardingTimer > 0) {
+          boardingTimer -= dt;
+          if (boardingTimer <= 0 && taxi.landed) {
+            if (phase === 'pickup') {
+              phase = 'dropoff';
+              taxi.passenger = true;
+              showToast('PASSENGER ABOARD · ' + pads[destinationIndex].name.toUpperCase());
+              playSequence([390, 520], .08);
+            } else {
+              completeFare();
+            }
+          }
+        }
+
+        const left = keys.has('ArrowLeft') || keys.has('KeyA');
+        const right = keys.has('ArrowRight') || keys.has('KeyD');
+        const thrust = keys.has('ArrowUp') || keys.has('KeyW') || keys.has('Space');
+        taxi.thrusting = thrust && taxi.fuel > 0;
+
+        if (taxi.landed) {
+          if (taxi.thrusting) {
+            taxi.landed = false;
+            taxi.vy = -10;
+            boardingTimer = 0;
+          } else {
+            taxi.thrusting = false;
+            updateCamera(dt);
+            updateHud();
+            return;
+          }
+        }
+
+        const rotationInput = (right ? 1 : 0) - (left ? 1 : 0);
+        taxi.angularVelocity += rotationInput * ROTATION_SPEED * dt;
+        taxi.angularVelocity *= Math.pow(.38, dt);
+        taxi.angle += taxi.angularVelocity * dt;
+        taxi.angle = normalizeAngle(taxi.angle);
+
+        if (taxi.thrusting) {
+          taxi.vx += Math.sin(taxi.angle) * THRUST * dt;
+          taxi.vy -= Math.cos(taxi.angle) * THRUST * dt;
+          taxi.fuel = Math.max(0, taxi.fuel - 7.6 * dt);
+          spawnThrustDust();
+        }
+
+        taxi.vy += GRAVITY * dt;
+        taxi.x += taxi.vx * dt;
+        taxi.y += taxi.vy * dt;
+
+        if (taxi.x < 8 || taxi.x > WORLD_WIDTH - 8 || taxi.y < -90) {
+          crash();
+        } else {
+          const footY = taxi.y + 23;
+          const surfaceY = groundHeight(taxi.x);
+          if (footY >= surfaceY) {
+            const landingPad = padAt(taxi.x, 15);
+            const safe = landingPad >= 0 && Math.abs(taxi.vy) <= SAFE_VERTICAL_SPEED && Math.abs(taxi.vx) <= SAFE_HORIZONTAL_SPEED && Math.abs(taxi.angle) <= SAFE_ANGLE;
+            if (safe) {
+              handleLanding(landingPad);
+            } else {
+              crash();
+            }
+          }
+        }
+
+        updateCamera(dt);
+        updateHud();
+      }
+
+      function normalizeAngle(angle) {
+        let result = angle;
+        while (result > Math.PI) {
+          result -= Math.PI * 2;
+        }
+        while (result < -Math.PI) {
+          result += Math.PI * 2;
+        }
+        return result;
+      }
+
+      function updateCamera(dt) {
+        const target = Math.max(0, Math.min(WORLD_WIDTH - VIEW_WIDTH, taxi.x - VIEW_WIDTH * .5 + taxi.vx * 2.2));
+        cameraX += (target - cameraX) * Math.min(1, dt * 3.4);
+      }
+
+      function spawnThrustDust() {
+        if (Math.random() > .72) {
+          return;
+        }
+        const flameX = taxi.x - Math.sin(taxi.angle) * 24;
+        const flameY = taxi.y + Math.cos(taxi.angle) * 24;
+        dust.push({
+          x: flameX,
+          y: flameY,
+          vx: -Math.sin(taxi.angle) * 35 + (Math.random() - .5) * 24,
+          vy: Math.cos(taxi.angle) * 35 + (Math.random() - .5) * 24,
+          life: .45,
+          maxLife: .45
+        });
+      }
+
+      function spawnExplosion(x, y) {
+        for (let index = 0; index < 34; index += 1) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 35 + Math.random() * 140;
+          particles.push({
+            x,
+            y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: .55 + Math.random() * .65,
+            maxLife: 1.2,
+            color: Math.random() < .58 ? '#ffd84c' : '#65f5ff'
+          });
+        }
+      }
+
+      function updateParticles(dt) {
+        for (let index = dust.length - 1; index >= 0; index -= 1) {
+          const mote = dust[index];
+          mote.x += mote.vx * dt;
+          mote.y += mote.vy * dt;
+          mote.life -= dt;
+          if (mote.life <= 0) {
+            dust.splice(index, 1);
+          }
+        }
+        for (let index = particles.length - 1; index >= 0; index -= 1) {
+          const particle = particles[index];
+          particle.x += particle.vx * dt;
+          particle.y += particle.vy * dt;
+          particle.vy += GRAVITY * .35 * dt;
+          particle.life -= dt;
+          if (particle.life <= 0) {
+            particles.splice(index, 1);
+          }
+        }
+      }
+
+      function draw() {
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.fillStyle = '#030711';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.setTransform(scale, 0, 0, scale, offsetX, offsetY);
+        context.save();
+        context.beginPath();
+        context.rect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+        context.clip();
+        drawSky();
+        drawWorld();
+        drawRadar();
+        context.restore();
+      }
+
+      function drawSky() {
+        const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+        gradient.addColorStop(0, '#030711');
+        gradient.addColorStop(.72, '#091424');
+        gradient.addColorStop(1, '#101b28');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+
+        context.fillStyle = '#173249';
+        context.beginPath();
+        context.arc(1090 - cameraX * .025, 112, 70, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = '#63b9c7';
+        context.beginPath();
+        context.arc(1068 - cameraX * .025, 91, 19, 0, Math.PI * 2);
+        context.arc(1120 - cameraX * .025, 125, 14, 0, Math.PI * 2);
+        context.fill();
+
+        for (const star of stars) {
+          const x = star.x - cameraX * .18;
+          if (x < -5 || x > VIEW_WIDTH + 5) {
+            continue;
+          }
+          context.globalAlpha = star.alpha;
+          context.fillStyle = '#d9f8ff';
+          context.fillRect(Math.round(x), Math.round(star.y), star.size, star.size);
+        }
+        context.globalAlpha = 1;
+
+        context.strokeStyle = 'rgba(75, 140, 168, .16)';
+        context.lineWidth = 1;
+        for (let x = -cameraX % 100; x < VIEW_WIDTH; x += 100) {
+          context.beginPath();
+          context.moveTo(Math.round(x) + .5, 0);
+          context.lineTo(Math.round(x) + .5, VIEW_HEIGHT);
+          context.stroke();
+        }
+        for (let y = 120; y < VIEW_HEIGHT; y += 100) {
+          context.beginPath();
+          context.moveTo(0, y + .5);
+          context.lineTo(VIEW_WIDTH, y + .5);
+          context.stroke();
+        }
+      }
+
+      function drawWorld() {
+        context.save();
+        context.translate(-cameraX, 0);
+        drawTerrain();
+        drawPads();
+        drawPassenger();
+        drawDust();
+        if (taxi && taxi.alive) {
+          drawTaxi();
+        }
+        drawParticles();
+        context.restore();
+      }
+
+      function drawTerrain() {
+        context.beginPath();
+        context.moveTo(0, VIEW_HEIGHT);
+        context.lineTo(0, groundHeight(0));
+        for (let x = 0; x <= WORLD_WIDTH; x += 16) {
+          context.lineTo(x, groundHeight(x));
+        }
+        context.lineTo(WORLD_WIDTH, VIEW_HEIGHT);
+        context.closePath();
+        context.fillStyle = '#101925';
+        context.fill();
+        context.strokeStyle = '#4d7080';
+        context.lineWidth = 2;
+        context.stroke();
+
+        context.strokeStyle = 'rgba(117, 155, 169, .2)';
+        context.lineWidth = 1;
+        for (let x = 30; x < WORLD_WIDTH; x += 70) {
+          const y = groundHeight(x);
+          context.beginPath();
+          context.moveTo(x - 22, y + 18);
+          context.lineTo(x, y + 7);
+          context.lineTo(x + 30, y + 20);
+          context.stroke();
+        }
+      }
+
+      function drawPads() {
+        pads.forEach((pad, index) => {
+          const activePickup = phase === 'pickup' && index === pickupIndex;
+          const activeDropoff = phase === 'dropoff' && index === destinationIndex;
+          const active = activePickup || activeDropoff;
+          context.fillStyle = '#0b1723';
+          context.fillRect(pad.x - pad.width * .5, pad.y - 5, pad.width, 8);
+          context.strokeStyle = active ? (activePickup ? '#ffd84c' : '#63eff8') : '#476b7e';
+          context.lineWidth = active ? 3 : 2;
+          context.beginPath();
+          context.moveTo(pad.x - pad.width * .5, pad.y - 5);
+          context.lineTo(pad.x + pad.width * .5, pad.y - 5);
+          context.stroke();
+
+          for (let marker = -1; marker <= 1; marker += 2) {
+            context.fillStyle = active ? '#ffffff' : '#668799';
+            context.fillRect(pad.x + marker * (pad.width * .5 - 4), pad.y - 10, 4, 5);
+          }
+
+          context.fillStyle = active ? '#eefeff' : '#7290a0';
+          context.font = '800 9px ui-monospace, monospace';
+          context.textAlign = 'center';
+          context.fillText(pad.name.toUpperCase(), pad.x, pad.y + 18);
+
+          if (active) {
+            const beaconColor = activePickup ? '#ffd84c' : '#63eff8';
+            context.strokeStyle = beaconColor;
+            context.lineWidth = 1;
+            context.setLineDash([5, 7]);
+            context.beginPath();
+            context.moveTo(pad.x, pad.y - 12);
+            context.lineTo(pad.x, 125);
+            context.stroke();
+            context.setLineDash([]);
+            context.fillStyle = beaconColor;
+            context.beginPath();
+            context.moveTo(pad.x, 112);
+            context.lineTo(pad.x - 7, 125);
+            context.lineTo(pad.x + 7, 125);
+            context.closePath();
+            context.fill();
+          }
+        });
+      }
+
+      function drawPassenger() {
+        if (phase !== 'pickup' || taxi?.passenger) {
+          return;
+        }
+        const pad = pads[pickupIndex];
+        const wave = Math.sin(performance.now() * .007) * .45;
+        context.save();
+        context.translate(pad.x + pad.width * .31, pad.y - 7);
+        context.strokeStyle = `hsl(${passengerHue} 86% 68%)`;
+        context.fillStyle = '#d9f9ff';
+        context.lineWidth = 3;
+        context.beginPath();
+        context.arc(0, -23, 6, 0, Math.PI * 2);
+        context.fill();
+        context.strokeRect(-6, -17, 12, 15);
+        context.beginPath();
+        context.moveTo(-4, -2);
+        context.lineTo(-8, 7);
+        context.moveTo(4, -2);
+        context.lineTo(8, 7);
+        context.moveTo(-6, -14);
+        context.lineTo(-13, -9);
+        context.moveTo(6, -14);
+        context.lineTo(13 + wave * 7, -22 - Math.abs(wave) * 5);
+        context.stroke();
+        context.restore();
+      }
+
+      function drawTaxi() {
+        context.save();
+        context.translate(taxi.x, taxi.y);
+        context.rotate(taxi.angle);
+
+        if (taxi.thrusting) {
+          const length = 16 + Math.random() * 13;
+          context.fillStyle = '#ff7a2f';
+          context.beginPath();
+          context.moveTo(-7, 17);
+          context.lineTo(0, 17 + length);
+          context.lineTo(7, 17);
+          context.closePath();
+          context.fill();
+          context.fillStyle = '#fff17a';
+          context.beginPath();
+          context.moveTo(-3, 17);
+          context.lineTo(0, 23 + length * .45);
+          context.lineTo(3, 17);
+          context.closePath();
+          context.fill();
+        }
+
+        context.strokeStyle = '#9adce4';
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(-13, 12);
+        context.lineTo(-19, 22);
+        context.lineTo(-27, 22);
+        context.moveTo(13, 12);
+        context.lineTo(19, 22);
+        context.lineTo(27, 22);
+        context.stroke();
+
+        context.fillStyle = '#ffd43f';
+        context.strokeStyle = '#fff0a1';
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(-25, 11);
+        context.lineTo(-22, -5);
+        context.lineTo(-13, -13);
+        context.lineTo(14, -13);
+        context.lineTo(23, -5);
+        context.lineTo(26, 11);
+        context.closePath();
+        context.fill();
+        context.stroke();
+
+        context.fillStyle = '#102438';
+        context.fillRect(-12, -10, 24, 11);
+        context.strokeStyle = '#64e9f3';
+        context.lineWidth = 1;
+        context.strokeRect(-12, -10, 24, 11);
+
+        context.fillStyle = '#111923';
+        for (let x = -22; x < 22; x += 8) {
+          context.fillRect(x, 3, 4, 4);
+          context.fillRect(x + 4, 7, 4, 4);
+        }
+        context.fillStyle = '#f5fbff';
+        context.font = '900 7px ui-monospace, monospace';
+        context.textAlign = 'center';
+        context.fillText('TAXI', 0, 16);
+
+        if (taxi.passenger) {
+          context.fillStyle = `hsl(${passengerHue} 86% 68%)`;
+          context.fillRect(-6, -8, 4, 5);
+        }
+        context.restore();
+      }
+
+      function drawDust() {
+        for (const mote of dust) {
+          context.globalAlpha = Math.max(0, mote.life / mote.maxLife);
+          context.fillStyle = '#ffd76a';
+          context.fillRect(mote.x - 1, mote.y - 1, 3, 3);
+        }
+        context.globalAlpha = 1;
+      }
+
+      function drawParticles() {
+        for (const particle of particles) {
+          context.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+          context.fillStyle = particle.color;
+          context.fillRect(particle.x - 2, particle.y - 2, 4, 4);
+        }
+        context.globalAlpha = 1;
+      }
+
+      function drawRadar() {
+        if (state !== 'playing' || !taxi) {
+          return;
+        }
+        const radarWidth = 270;
+        const radarX = (VIEW_WIDTH - radarWidth) * .5;
+        const radarY = 24;
+        context.fillStyle = 'rgba(4, 11, 21, .84)';
+        context.fillRect(radarX, radarY, radarWidth, 25);
+        context.strokeStyle = '#36556a';
+        context.lineWidth = 1;
+        context.strokeRect(radarX + .5, radarY + .5, radarWidth - 1, 24);
+
+        for (const pad of pads) {
+          const x = radarX + 8 + (pad.x / WORLD_WIDTH) * (radarWidth - 16);
+          context.fillStyle = '#66879a';
+          context.fillRect(x - 1, radarY + 15, 3, 4);
+        }
+
+        const targetIndex = phase === 'pickup' ? pickupIndex : destinationIndex;
+        const targetX = radarX + 8 + (pads[targetIndex].x / WORLD_WIDTH) * (radarWidth - 16);
+        context.fillStyle = phase === 'pickup' ? '#ffd84c' : '#64edf6';
+        context.fillRect(targetX - 2, radarY + 7, 5, 10);
+
+        const taxiX = radarX + 8 + (taxi.x / WORLD_WIDTH) * (radarWidth - 16);
+        context.fillStyle = '#ffffff';
+        context.beginPath();
+        context.moveTo(taxiX, radarY + 6);
+        context.lineTo(taxiX - 4, radarY + 12);
+        context.lineTo(taxiX + 4, radarY + 12);
+        context.closePath();
+        context.fill();
+      }
+
+      function updateHud() {
+        if (!taxi) {
+          return;
+        }
+        faresNode.textContent = String(fares);
+        creditsNode.textContent = String(credits).padStart(6, '0');
+        hullNode.textContent = Array.from({ length: 3 }, (_, index) => index < hull ? '◆' : '◇').join(' ');
+        fuelTextNode.textContent = Math.ceil(taxi.fuel) + '%';
+        fuelFillNode.style.transform = `scaleX(${taxi.fuel / 100})`;
+        fuelFillNode.style.background = taxi.fuel < 22 ? '#ff5d64' : '#ffda4f';
+        horizontalSpeedNode.textContent = Math.round(Math.abs(taxi.vx)).toString().padStart(2, '0');
+        verticalSpeedNode.textContent = Math.round(Math.abs(taxi.vy)).toString().padStart(2, '0');
+        const target = phase === 'pickup' ? pads[pickupIndex] : pads[destinationIndex];
+        const verb = phase === 'pickup' ? 'Collect at' : 'Deliver to';
+        missionNode.innerHTML = `<strong>Fare ${missionNumber}:</strong> ${verb} ${target.name}`;
+      }
+
+      function showToast(message) {
+        toastNode.textContent = message;
+        toastNode.classList.add('active');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastNode.classList.remove('active'), 1700);
+      }
+
+      function ensureAudio() {
+        if (!audioContext) {
+          audioContext = new AudioContext();
+        }
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+      }
+
+      function playTone(frequency, duration, type = 'square', volume = .025) {
+        if (muted) {
+          return;
+        }
+        ensureAudio();
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = type;
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(volume, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.0001, audioContext.currentTime + duration);
+        oscillator.connect(gain).connect(audioContext.destination);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + duration);
+      }
+
+      function playSequence(frequencies, duration) {
+        frequencies.forEach((frequency, index) => {
+          setTimeout(() => playTone(frequency, duration, 'square', .026), index * duration * 850);
+        });
+      }
+
+      function playNoise() {
+        if (muted) {
+          return;
+        }
+        ensureAudio();
+        const samples = Math.floor(audioContext.sampleRate * .18);
+        const buffer = audioContext.createBuffer(1, samples, audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let index = 0; index < samples; index += 1) {
+          data[index] = (Math.random() * 2 - 1) * (1 - index / samples);
+        }
+        const source = audioContext.createBufferSource();
+        const gain = audioContext.createGain();
+        gain.gain.value = .09;
+        source.buffer = buffer;
+        source.connect(gain).connect(audioContext.destination);
+        source.start();
+      }
+
+      function resize() {
+        const ratio = Math.min(2, window.devicePixelRatio || 1);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+        scale = Math.min(canvas.width / VIEW_WIDTH, canvas.height / VIEW_HEIGHT);
+        offsetX = (canvas.width - VIEW_WIDTH * scale) * .5;
+        offsetY = (canvas.height - VIEW_HEIGHT * scale) * .5;
+        context.imageSmoothingEnabled = false;
+      }
+
+      function frame(time) {
+        const dt = Math.min(.032, Math.max(0, (time - lastTime) / 1000 || 0));
+        lastTime = time;
+        update(dt);
+        draw();
+        requestAnimationFrame(frame);
+      }
+
+      function setKey(code, pressed) {
+        if (pressed) {
+          keys.add(code);
+        } else {
+          keys.delete(code);
+        }
+      }
+
+      window.addEventListener('keydown', (event) => {
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'Space'].includes(event.code)) {
+          event.preventDefault();
+        }
+        if (event.code === 'KeyR' && !event.repeat) {
+          restartFare();
+          return;
+        }
+        if (event.code === 'KeyM' && !event.repeat) {
+          muted = !muted;
+          showToast(muted ? 'SOUND OFF' : 'SOUND ON');
+          return;
+        }
+        setKey(event.code, true);
+      });
+
+      window.addEventListener('keyup', (event) => setKey(event.code, false));
+      window.addEventListener('blur', () => keys.clear());
+      window.addEventListener('resize', resize);
+      document.addEventListener('visibilitychange', () => {
+        lastTime = performance.now();
+        keys.clear();
+      });
+
+      document.querySelectorAll('.touch-key').forEach((button) => {
+        const code = button.dataset.key;
+        button.addEventListener('pointerdown', (event) => {
+          event.preventDefault();
+          button.setPointerCapture(event.pointerId);
+          setKey(code, true);
+        });
+        button.addEventListener('pointerup', () => setKey(code, false));
+        button.addEventListener('pointercancel', () => setKey(code, false));
+      });
+
+      startButton.addEventListener('click', () => {
+        eyebrowNode.textContent = 'Lunar transport authority';
+        titleNode.innerHTML = 'Moon<br>Taxi';
+        copyNode.textContent = 'Fly the yellow cab. Land gently beside the calling astronaut, then carry them to the blue destination beacon. Momentum is real. Fuel is not free.';
+        startButton.textContent = 'Start meter';
+        beginGame();
+      });
+
+      buildWorld();
+      resetTaxi(0);
+      resize();
+      updateHud();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
