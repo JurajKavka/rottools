@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <utility>
 #include <vector>
 
 #include "AgentPrompts.h"
@@ -86,6 +87,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_FIND_REPLACE, &MainFrame::HandleFindDialogReplace, this);
     Bind(wxEVT_FIND_REPLACE_ALL, &MainFrame::HandleFindDialogReplaceAll, this);
     Bind(wxEVT_FIND_CLOSE, &MainFrame::HandleFindDialogClose, this);
+    Bind(wxEVT_CHAR_HOOK, &MainFrame::HandleGameModeKey, this);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateUndoMenuItem, this, wxID_UNDO);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateRedoMenuItem, this, wxID_REDO);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateCopyMenuItem, this, wxID_COPY);
@@ -134,6 +136,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     }
 
     PopulateThemeMenu();
+    PopulateGamesMenu();
 
     // 1. Instantiate the panels: file browser on the left, and on the right a
     // nested splitter holding the rendered preview and the source/editor area
@@ -156,6 +159,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     m_markdownPreviewPanel =
         new MarkdownPreviewPanel(m_rightSplitter, std::bind_front(&MainFrame::HandleMarkdownReady, this),
                                  std::bind_front(&MainFrame::HandleMarkdownError, this));
+    m_markdownPreviewPanel->SetEscapePressedCallback(
+        std::bind_front(&MainFrame::HandleGameEscapeRequested, this));
     m_sourceSplitter =
         new wxSplitterWindow(m_rightSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE);
     m_htmlSourcePanel =
@@ -445,6 +450,10 @@ void MainFrame::HandleUpdateReplaceMenuItem(wxUpdateUIEvent& event) {
 // Collapses every panel except the always-visible markdown preview so it fills
 // the window. The individual toggle items then bring the others back one by one.
 void MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& event) {
+    ShowOnlyMarkdownPreview();
+}
+
+void MainFrame::ShowOnlyMarkdownPreview() {
     wxWindow* focusedWindow = wxWindow::FindFocus();
     HideFileBrowser();
     m_htmlSourcePanel->Hide();
@@ -653,6 +662,49 @@ void MainFrame::ApplySourcePanelVisibility(wxWindow* focusedWindowBeforeChange) 
     }
 }
 
+MainFrame::LayoutState MainFrame::CaptureLayoutState() const {
+    const auto sashOrRemembered = [](wxSplitterWindow* splitter, int remembered) {
+        if (splitter->IsSplit()) {
+            const int sashPosition = splitter->GetSashPosition();
+            if (sashPosition > 0) {
+                return sashPosition;
+            }
+        }
+        return remembered;
+    };
+
+    return {
+        .fileBrowserVisible = m_mainSplitter->IsSplit(),
+        .htmlSourceVisible = m_htmlSourcePanel->IsShown(),
+        .markdownEditorVisible = m_markdownEditorPanel->IsShown(),
+        .fileBrowserWidth = sashOrRemembered(m_mainSplitter, m_fileBrowserWidth),
+        .previewWidth = sashOrRemembered(m_rightSplitter, m_previewWidth),
+        .htmlSourceWidth = sashOrRemembered(m_sourceSplitter, m_htmlSourceWidth),
+        .statusText = statusBar->GetStatusText(),
+    };
+}
+
+void MainFrame::RestoreLayoutState(const LayoutState& state) {
+    // Collapse the current arrangement first so rebuilding any target state
+    // follows the same path and cannot inherit unrelated live sash positions.
+    HideFileBrowser();
+    m_htmlSourcePanel->Hide();
+    m_markdownEditorPanel->Hide();
+    ApplySourcePanelVisibility();
+
+    m_fileBrowserWidth = state.fileBrowserWidth;
+    m_previewWidth = state.previewWidth;
+    m_htmlSourceWidth = state.htmlSourceWidth;
+
+    if (state.fileBrowserVisible) {
+        ShowFileBrowser();
+    }
+    m_htmlSourcePanel->Show(state.htmlSourceVisible);
+    m_markdownEditorPanel->Show(state.markdownEditorVisible);
+    ApplySourcePanelVisibility();
+    statusBar->SetStatusText(state.statusText);
+}
+
 // Fills the (empty) Theme submenu from the CssThemes.h table, one radio item per
 // theme. The ids run from m_themeMenuBaseId in CssThemeId order, so an item's id
 // minus the base is the theme's index in cssThemes.
@@ -673,6 +725,94 @@ void MainFrame::HandleThemeMenuItemClick(wxCommandEvent& event) {
     // The document is already parsed; only the page around it changes, so keep
     // the reader's scroll position.
     m_markdownPreviewPanel->Render(GetPreviewOptions(ScrollBehavior::KeepPosition));
+}
+
+void MainFrame::PopulateGamesMenu() {
+    const std::vector<rottools::WebGame>& games = rottools::GetWebGames();
+    wxMenuItem* gamesMenuItem = m_toolMenu->FindItem(wxID_GAMES);
+    if (gamesMenuItem == nullptr) {
+        return;
+    }
+
+    m_gamesSubmenu = gamesMenuItem->GetSubMenu();
+    if (m_gamesSubmenu == nullptr) {
+        m_toolMenu->Remove(gamesMenuItem);
+        m_gamesSubmenu = new wxMenu();
+        gamesMenuItem->SetSubMenu(m_gamesSubmenu);
+        m_toolMenu->Append(gamesMenuItem);
+    }
+
+    if (games.empty()) {
+        gamesMenuItem->Enable(false);
+        return;
+    }
+
+    m_firstGameCommandId = wxWindow::NewControlId(static_cast<int>(games.size()));
+    for (std::size_t gameIndex = 0; gameIndex < games.size(); ++gameIndex) {
+        m_gamesSubmenu->Append(m_firstGameCommandId + static_cast<int>(gameIndex), games[gameIndex].name);
+    }
+
+    Bind(wxEVT_MENU, &MainFrame::HandleGameMenuItemClick, this, m_firstGameCommandId,
+         m_firstGameCommandId + static_cast<int>(games.size()) - 1);
+}
+
+void MainFrame::HandleGameMenuItemClick(wxCommandEvent& event) {
+    const std::vector<rottools::WebGame>& games = rottools::GetWebGames();
+    const int gameIndex = event.GetId() - m_firstGameCommandId;
+    if (gameIndex < 0 || static_cast<std::size_t>(gameIndex) >= games.size()) {
+        return;
+    }
+
+    const rottools::WebGame& game = games[static_cast<std::size_t>(gameIndex)];
+    EnterGameMode(game.name, game.url);
+}
+
+void MainFrame::HandleGameModeKey(wxKeyEvent& event) {
+    if (m_layoutBeforeGame && event.GetKeyCode() == WXK_ESCAPE) {
+        HandleGameEscapeRequested();
+        return;
+    }
+
+    event.Skip();
+}
+
+void MainFrame::HandleGameEscapeRequested() {
+    if (m_layoutBeforeGame) {
+        ExitGameMode();
+    }
+}
+
+void MainFrame::EnterGameMode(const wxString& name, const wxString& url) {
+    if (!m_layoutBeforeGame) {
+        m_layoutBeforeGame = CaptureLayoutState();
+    }
+
+    ShowOnlyMarkdownPreview();
+    m_markdownPreviewPanel->LoadUrl(url);
+    m_markdownPreviewPanel->FocusContent();
+    statusBar->SetStatusText(wxString::Format(_("%s - press Esc to exit"), name.c_str()));
+}
+
+void MainFrame::ExitGameMode(bool reloadPreview) {
+    if (!m_layoutBeforeGame) {
+        return;
+    }
+
+    const LayoutState layout = std::move(*m_layoutBeforeGame);
+    m_layoutBeforeGame.reset();
+    RestoreLayoutState(layout);
+
+    if (reloadPreview) {
+        // Re-render the editor's in-memory text. This does not save, discard,
+        // or otherwise change the document or its modified state.
+        m_markdownPreviewPanel->LoadMarkdown(m_markdownEditorPanel->GetText(), m_currentDocument,
+                                             GetPreviewOptions(ScrollBehavior::ResetToTop));
+    }
+    if (layout.markdownEditorVisible) {
+        m_markdownEditorPanel->FocusEditor();
+    } else {
+        m_markdownPreviewPanel->FocusContent();
+    }
 }
 
 MarkdownPreviewOptions MainFrame::GetPreviewOptions(ScrollBehavior scrollBehavior) const {
@@ -969,6 +1109,7 @@ void MainFrame::RefreshBrowserWatcher() {
 }
 
 void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change) {
+    ExitGameMode(false);
     m_currentDocument = change.filePath;
     toolBar->EnableTool(m_editTool->GetId(), true);
 
@@ -996,7 +1137,11 @@ void MainFrame::HandleMarkdownDocumentChanged(const MarkdownEditorPanel::Documen
 }
 
 void MainFrame::HandleMarkdownEditorStatusChanged(const MarkdownEditorPanel::StatusMessage& message) {
-    statusBar->SetStatusText(message.label);
+    if (m_layoutBeforeGame) {
+        m_layoutBeforeGame->statusText = message.label;
+    } else {
+        statusBar->SetStatusText(message.label);
+    }
     m_replaceEditorStatusOnPreviewReady = message.replaceOnPreviewReady;
 }
 

@@ -116,6 +116,10 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_copyEnglishReviewPromptMenuItem = new wxMenuItem( m_toolMenu, wxID_COPY_ENGLISH_REVIEW_PROMPT_MENU_ITEM, wxString( _("Copy English Review Prompt") ) , _("Copy a prompt for an AI agent to proofread the current document"), wxITEM_NORMAL );
 	m_toolMenu->Append( m_copyEnglishReviewPromptMenuItem );
 
+	wxMenuItem* m_gamesMenuItem;
+	m_gamesMenuItem = new wxMenuItem( m_toolMenu, wxID_GAMES, wxString( _("Games") ) , wxEmptyString, wxITEM_NORMAL );
+	m_toolMenu->Append( m_gamesMenuItem );
+
 	MenuBar->Append( m_toolMenu, _("Tools") );
 
 	m_helpMenu = new wxMenu();

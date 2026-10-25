@@ -13,6 +13,19 @@
 #include <mutex>
 #include <sstream>
 #include <utility>
+#include <vector>
+
+namespace rottools {
+
+const std::vector<WebGame>& GetWebGames() {
+    static const std::vector<WebGame> games = {
+        {.name = "Asteroids", .url = "https://jurajkavka.github.io/rottools/g/asteroids/"},
+        {.name = "Arkanoid", .url = "https://jurajkavka.github.io/rottools/g/arkanoid/"},
+    };
+    return games;
+}
+
+}  // namespace rottools
 
 namespace detail {
 void WriteLogLine(std::ostream& stream, const std::string& line) {

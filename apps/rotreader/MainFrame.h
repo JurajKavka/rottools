@@ -26,6 +26,16 @@ class MainFrame : public MainFrameWx {
         MarkdownEditor,
     };
 
+    struct LayoutState {
+        bool fileBrowserVisible = false;
+        bool htmlSourceVisible = false;
+        bool markdownEditorVisible = false;
+        int fileBrowserWidth = 0;
+        int previewWidth = 0;
+        int htmlSourceWidth = 0;
+        wxString statusText;
+    };
+
     // Store a pointer to your custom panel
     MarkdownPreviewPanel* m_markdownPreviewPanel = nullptr;
     HtmlSourcePanel* m_htmlSourcePanel = nullptr;
@@ -60,6 +70,10 @@ class MainFrame : public MainFrameWx {
      * newer save confirmations and external-change warnings remain visible.
      */
     bool m_replaceEditorStatusOnPreviewReady = false;
+    wxMenu* m_gamesSubmenu = nullptr;
+    // First id in the dynamic game-command range; wxID_GAMES belongs to the parent submenu item.
+    wxWindowID m_firstGameCommandId = wxID_ANY;
+    std::optional<LayoutState> m_layoutBeforeGame;
     wxFindReplaceData m_findData{wxFR_DOWN};
     wxFindReplaceDialog* m_findDialog = nullptr;
     SearchTarget m_searchTarget = SearchTarget::MarkdownPreview;
@@ -93,6 +107,7 @@ class MainFrame : public MainFrameWx {
     void HandleUpdateFindMenuItem(wxUpdateUIEvent& event);
     void HandleUpdateReplaceMenuItem(wxUpdateUIEvent& event);
     void HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& event);
+    void ShowOnlyMarkdownPreview();
     void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleMarkdownEditorPanelMenuItemClick(wxCommandEvent& event);
@@ -106,8 +121,16 @@ class MainFrame : public MainFrameWx {
     void HideFileBrowser();
     void ShowFileBrowser();
     void ApplySourcePanelVisibility(wxWindow* focusedWindowBeforeChange = nullptr);
+    [[nodiscard]] LayoutState CaptureLayoutState() const;
+    void RestoreLayoutState(const LayoutState& state);
     void PopulateThemeMenu();
     void HandleThemeMenuItemClick(wxCommandEvent& event);
+    void PopulateGamesMenu();
+    void HandleGameMenuItemClick(wxCommandEvent& event);
+    void HandleGameModeKey(wxKeyEvent& event);
+    void HandleGameEscapeRequested();
+    void EnterGameMode(const wxString& name, const wxString& url);
+    void ExitGameMode(bool reloadPreview = true);
     void HandleBookmarksMenuOpen(wxMenuEvent& event);
     void HandleAddOrRemoveDirectoryBookmark(wxCommandEvent& event);
     void HandleAddOrRemoveDocumentBookmark(wxCommandEvent& event);
