@@ -48,7 +48,7 @@ TextSearchOptions GetTextSearchOptions(const wxFindDialogEvent& event) {
 }
 }  // namespace
 
-MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
+MainFrame::MainFrame(wxWindow* parent, const wxFileName& initialDirectory) : MainFrameWx(parent) {
     // Keep an ASCII fallback in the native window-title property. Some Linux
     // taskbars fall back to "Untitled Window" when the generated stylized
     // Unicode title cannot be represented in the legacy X11 property.
@@ -190,10 +190,11 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     wxSizer* mainSizer = this->GetSizer();
     mainSizer->Add(m_mainSplitter, 1, wxEXPAND | wxALL, 0);
 
-    // inital directory list
-    wxFileName initialDirectory;
-    initialDirectory.AssignHomeDir();
-    m_fileBrowserPanel->ListDir(initialDirectory);
+    wxFileName directoryToList = initialDirectory;
+    if (!directoryToList.IsOk() || !directoryToList.DirExists()) {
+        directoryToList.AssignHomeDir();
+    }
+    m_fileBrowserPanel->ListDir(directoryToList);
 
     m_bookmarkStore = std::make_unique<BookmarkStore>(std::bind_front(&MainFrame::HandleBookmarksChanged, this));
     m_bookmarkStore->Initialize();
@@ -216,7 +217,7 @@ MainFrame::~MainFrame() {
 // Each window is a fully independent MainFrame (own parser, watcher, panels);
 // wx keeps the app running until the last top-level window closes
 void MainFrame::HandleNewWindowMenuItemClick(wxCommandEvent& event) {
-    (new MainFrame(nullptr))->Show(true);
+    (new MainFrame(nullptr, m_fileBrowserPanel->GetCurrentDirectory()))->Show(true);
 }
 
 void MainFrame::HandleNewFileMenuItemClick(wxCommandEvent& event) {

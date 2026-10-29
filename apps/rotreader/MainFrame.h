@@ -146,7 +146,7 @@ class MainFrame : public MainFrameWx {
     void HandleMarkdownError(const wxString& error);
 
    public:
-    explicit MainFrame(wxWindow* parent);
+    explicit MainFrame(wxWindow* parent, const wxFileName& initialDirectory = {});
     ~MainFrame();
 
     void HandleOpenFile(const wxFileName& filePath);
