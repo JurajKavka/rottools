@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <utility>
 #ifndef __WXOSX__
 #include "AppIcon.h"
 #include "AppIconData.h"
@@ -70,7 +71,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this),
          .selectNewFolderName = std::bind_front(&MainFrame::HandleSelectBrowserFolderName, this),
          .onCreateFolderError = std::bind_front(&MainFrame::HandleBrowserCreateFolderError, this),
-         .confirmDelete = std::bind_front(&MainFrame::HandleConfirmBrowserDelete, this),
+         .onConfirmMoveToTrash = std::bind_front(&MainFrame::HandleConfirmBrowserMoveToTrash, this),
+         .onConfirmPermanentlyDelete = std::bind_front(&MainFrame::HandleConfirmBrowserPermanentlyDelete, this),
          .onPathDeleted = std::bind_front(&MainFrame::HandleBrowserPathDeleted, this),
          .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this)},
         {{_("Supported text files"), {"txt", "json", "csv", "md", "sql"}},
@@ -211,37 +213,49 @@ void MainFrame::HandleBrowserCreateFolderError(const FileBrowserTreePanel::Creat
     wxMessageBox(message, _("New Folder"), wxOK | wxICON_ERROR, this);
 }
 
-bool MainFrame::HandleConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths,
-                                           FileBrowserTreePanel::DeleteMode mode) {
-    const bool affectsCurrentDocument =
-        std::ranges::any_of(paths, [this](const auto& path) { return IsCurrentDocumentAffectedByDelete(path); });
-    const bool losesUnsavedChanges = affectsCurrentDocument && m_textEditorPanel->HasUnsavedChanges();
-
+bool MainFrame::HandleConfirmBrowserMoveToTrash(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
     const wxString trashName = FileBrowserTreePanel::GetTrashName();
     wxString message;
     if (paths.size() == 1) {
         const auto& path = paths.front();
         const wxString name = path.isDirectory ? GetLastDirectoryName(path.path) : path.path.GetFullName();
-        if (mode == FileBrowserTreePanel::DeleteMode::Trash) {
-            message = wxString::Format(_("Move \"%s\" to %s?"), name.c_str(), trashName.c_str());
-        } else {
-            message =
-                path.isDirectory
-                    ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"), name.c_str())
-                    : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
-        }
+        message = wxString::Format(_("Move \"%s\" to %s?"), name.c_str(), trashName.c_str());
     } else {
-        message =
-            mode == FileBrowserTreePanel::DeleteMode::Trash
-                ? wxString::Format(_("Move %zu selected items to %s?"), paths.size(), trashName.c_str())
-                : wxString::Format(_("Permanently delete %zu selected items and all folder contents?"), paths.size());
+        message = wxString::Format(_("Move %zu selected items to %s?"), paths.size(), trashName.c_str());
     }
-    if (losesUnsavedChanges) {
+    const wxString action = wxString::Format(_("Move to %s"), trashName.c_str());
+    return ConfirmBrowserDelete(paths, std::move(message), action);
+}
+
+bool MainFrame::HandleConfirmBrowserPermanentlyDelete(
+    const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
+    wxString message;
+    if (paths.size() == 1) {
+        const auto& path = paths.front();
+        const wxString name = path.isDirectory ? GetLastDirectoryName(path.path) : path.path.GetFullName();
+        message =
+            path.isDirectory
+                ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"), name.c_str())
+                : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
+        message += _("\n\nThis action cannot be undone.");
+    } else {
+        message = wxString::Format(_("Permanently delete %zu selected items and all folder contents?"
+                                     "\n\nThis action cannot be undone."),
+                                   paths.size());
+    }
+    const wxString action = _("Delete Permanently");
+    return ConfirmBrowserDelete(paths, std::move(message), action);
+}
+
+bool MainFrame::ConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths, wxString message,
+                                     const wxString& action) {
+    message += _("\n\nThis operation runs synchronously and may take some time. The application will be "
+                 "unresponsive until it finishes.");
+    const bool affectsCurrentDocument =
+        std::ranges::any_of(paths, [this](const auto& path) { return IsCurrentDocumentAffectedByDelete(path); });
+    if (affectsCurrentDocument && m_textEditorPanel->HasUnsavedChanges()) {
         message += _("\n\nUnsaved changes in the open document will be lost.");
     }
-    const wxString action = mode == FileBrowserTreePanel::DeleteMode::Trash
-                                ? wxString::Format(_("Move to %s"), trashName.c_str())
-                                : _("Delete Permanently");
     wxMessageDialog dialog(this, message, action, wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
     dialog.SetOKCancelLabels(action, wxGetStockLabel(wxID_CANCEL));
     return dialog.ShowModal() == wxID_OK;

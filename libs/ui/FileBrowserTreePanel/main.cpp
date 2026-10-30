@@ -17,7 +17,10 @@ class FileBrowserTreePanelFrame : public wxFrame {
             this,
             {.selectNewFolderName = std::bind_front(&FileBrowserTreePanelFrame::HandleSelectNewFolderName, this),
              .onCreateFolderError = std::bind_front(&FileBrowserTreePanelFrame::HandleCreateFolderError, this),
-             .confirmDelete = std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmDelete, this),
+             .onConfirmMoveToTrash =
+                 std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmMoveToTrash, this),
+             .onConfirmPermanentlyDelete =
+                 std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmPermanentlyDelete, this),
              .onDeleteError = std::bind_front(&FileBrowserTreePanelFrame::HandleDeleteError, this)});
 
         auto* frameSizer = new wxBoxSizer(wxVERTICAL);
@@ -46,28 +49,38 @@ class FileBrowserTreePanelFrame : public wxFrame {
         wxMessageBox(message, _("New Folder"), wxOK | wxICON_ERROR, this);
     }
 
-    bool HandleConfirmDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths,
-                             FileBrowserTreePanel::DeleteMode mode) {
-        const bool trash = mode == FileBrowserTreePanel::DeleteMode::Trash;
+    bool HandleConfirmMoveToTrash(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
         const wxString trashName = FileBrowserTreePanel::GetTrashName();
         wxString message;
         if (paths.size() == 1) {
             const auto& path = paths.front();
             const wxString name = path.isDirectory ? GetLastDirectoryName(path.path) : path.path.GetFullName();
-            if (trash) {
-                message = wxString::Format(_("Move \"%s\" to %s?"), name.c_str(), trashName.c_str());
-            } else {
-                message = path.isDirectory
-                              ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"),
-                                                 name.c_str())
-                              : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
-            }
+            message = wxString::Format(_("Move \"%s\" to %s?"), name.c_str(), trashName.c_str());
         } else {
-            message = trash ? wxString::Format(_("Move %zu selected items to %s?"), paths.size(), trashName.c_str())
-                            : wxString::Format(_("Permanently delete %zu selected items and all folder contents?"),
-                                               paths.size());
+            message = wxString::Format(_("Move %zu selected items to %s?"), paths.size(), trashName.c_str());
         }
-        const wxString action = trash ? wxString::Format(_("Move to %s"), trashName.c_str()) : _("Delete Permanently");
+        const wxString action = wxString::Format(_("Move to %s"), trashName.c_str());
+        wxMessageDialog dialog(this, message, action, wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
+        dialog.SetOKCancelLabels(action, wxGetStockLabel(wxID_CANCEL));
+        return dialog.ShowModal() == wxID_OK;
+    }
+
+    bool HandleConfirmPermanentlyDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
+        wxString message;
+        if (paths.size() == 1) {
+            const auto& path = paths.front();
+            const wxString name = path.isDirectory ? GetLastDirectoryName(path.path) : path.path.GetFullName();
+            message = path.isDirectory
+                          ? wxString::Format(_("Permanently delete the folder \"%s\" and all its contents?"),
+                                             name.c_str())
+                          : wxString::Format(_("Permanently delete the file \"%s\"?"), name.c_str());
+            message += _("\n\nThis action cannot be undone.");
+        } else {
+            message = wxString::Format(_("Permanently delete %zu selected items and all folder contents?"
+                                         "\n\nThis action cannot be undone."),
+                                       paths.size());
+        }
+        const wxString action = _("Delete Permanently");
         wxMessageDialog dialog(this, message, action, wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
         dialog.SetOKCancelLabels(action, wxGetStockLabel(wxID_CANCEL));
         return dialog.ShowModal() == wxID_OK;

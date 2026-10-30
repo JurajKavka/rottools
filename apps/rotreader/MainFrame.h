@@ -120,8 +120,10 @@ class MainFrame : public MainFrameWx {
     void HandleFileBrowserCloseRequested();
     std::optional<wxString> HandleSelectBrowserFolderName(const std::optional<wxString>& previousName);
     void HandleBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error);
-    bool HandleConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths,
-                                    FileBrowserTreePanel::DeleteMode mode);
+    bool HandleConfirmBrowserMoveToTrash(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths);
+    bool HandleConfirmBrowserPermanentlyDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths);
+    bool ConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths, wxString message,
+                              const wxString& action);
     void HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted);
     void HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,
                                   FileBrowserTreePanel::DeleteMode mode);

@@ -359,28 +359,43 @@ std::vector<FileBrowserTreePanel::DeletePrompt> FileBrowserTreePanel::GetSelecte
     return paths;
 }
 
-void FileBrowserTreePanel::DeletePaths(const std::vector<DeletePrompt>& paths, DeleteMode mode) {
-    if (paths.empty() || !m_callbacks.confirmDelete || !m_callbacks.confirmDelete(paths, mode)) {
+void FileBrowserTreePanel::MoveToTrash(const std::vector<DeletePrompt>& paths) {
+    if (paths.empty() || !m_callbacks.onConfirmMoveToTrash || !m_callbacks.onConfirmMoveToTrash(paths)) {
         return;
     }
 
-    std::vector<FileManagerBackend::Result> permanentResults;
-    if (mode == DeleteMode::Permanent) {
-        std::vector<std::filesystem::path> sources;
-        sources.reserve(paths.size());
-        std::transform(paths.begin(), paths.end(), std::back_inserter(sources),
-                       [](const DeletePrompt& path) { return ToFilesystemPath(path.path.GetFullPath()); });
-        permanentResults = FileManagerBackend::DeleteMany(sources);
+    std::vector<DeleteError> errors;
+    for (const DeletePrompt& path : paths) {
+        const std::error_code error = MovePathToTrash(path.path);
+        if (!error) {
+            if (m_callbacks.onPathDeleted) {
+                m_callbacks.onPathDeleted(path);
+            }
+        } else {
+            errors.push_back({path.path, path.isDirectory, error});
+        }
     }
+    if (!errors.empty() && m_callbacks.onDeleteError) {
+        m_callbacks.onDeleteError(errors, DeleteMode::Trash);
+    }
+    ReloadCurrentDir();
+}
+
+void FileBrowserTreePanel::PermanentlyDelete(const std::vector<DeletePrompt>& paths) {
+    if (paths.empty() || !m_callbacks.onConfirmPermanentlyDelete ||
+        !m_callbacks.onConfirmPermanentlyDelete(paths)) {
+        return;
+    }
+
+    std::vector<std::filesystem::path> sources;
+    sources.reserve(paths.size());
+    std::transform(paths.begin(), paths.end(), std::back_inserter(sources),
+                   [](const DeletePrompt& path) { return ToFilesystemPath(path.path.GetFullPath()); });
+    const std::vector<FileManagerBackend::Result> results = FileManagerBackend::DeleteMany(sources);
 
     std::vector<DeleteError> errors;
     for (std::size_t index = 0; index < paths.size(); ++index) {
-        std::error_code error;
-        if (mode == DeleteMode::Trash) {
-            error = MovePathToTrash(paths[index].path);
-        } else {
-            error = permanentResults[index].error;
-        }
+        const std::error_code error = results[index].error;
         if (!error) {
             if (m_callbacks.onPathDeleted) {
                 m_callbacks.onPathDeleted(paths[index]);
@@ -390,7 +405,7 @@ void FileBrowserTreePanel::DeletePaths(const std::vector<DeletePrompt>& paths, D
         }
     }
     if (!errors.empty() && m_callbacks.onDeleteError) {
-        m_callbacks.onDeleteError(errors, mode);
+        m_callbacks.onDeleteError(errors, DeleteMode::Permanent);
     }
     ReloadCurrentDir();
 }
@@ -421,10 +436,16 @@ void FileBrowserTreePanel::HandleTreeKeyDown(wxKeyEvent& event) {
         mode = event.ShiftDown() ? DeleteMode::Permanent : DeleteMode::Trash;
     }
 #endif
-    if (mode && m_callbacks.confirmDelete) {
+    const bool canConfirm = mode && ((*mode == DeleteMode::Trash && m_callbacks.onConfirmMoveToTrash) ||
+                                     (*mode == DeleteMode::Permanent && m_callbacks.onConfirmPermanentlyDelete));
+    if (canConfirm) {
         const auto paths = GetSelectedDeletePaths();
         if (!paths.empty()) {
-            DeletePaths(paths, *mode);
+            if (*mode == DeleteMode::Trash) {
+                MoveToTrash(paths);
+            } else {
+                PermanentlyDelete(paths);
+            }
             return;
         }
     }
@@ -440,6 +461,7 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
     int openId = wxID_NONE;
     int copyPathId = wxID_NONE;
     int trashId = wxID_NONE;
+    int permanentDeleteId = wxID_NONE;
     // Custom IDs avoid macOS applying responder-chain validation for stock
     // commands such as wxID_COPY and disabling the item.
     if (path.IsOk()) {
@@ -447,13 +469,16 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
             openId = menu.Append(wxID_ANY, _("Open"))->GetId();
             copyPathId = menu.Append(wxID_ANY, _("Copy Path"))->GetId();
         }
-        if (m_callbacks.confirmDelete && !deletePaths.empty()) {
+        if (!deletePaths.empty() && m_callbacks.onConfirmMoveToTrash) {
             const wxString trashName = GetTrashName();
             wxString label = wxString::Format(_("Move to %s"), trashName.c_str());
             if (deletePaths.size() > 1) {
                 label = wxString::Format(_("Move %zu Items to %s"), deletePaths.size(), trashName.c_str());
             }
             trashId = menu.Append(wxID_ANY, label)->GetId();
+        }
+        if (!deletePaths.empty() && m_callbacks.onConfirmPermanentlyDelete) {
+            permanentDeleteId = menu.Append(wxID_ANY, _("Delete Permanently"))->GetId();
         }
         menu.AppendSeparator();
     }
@@ -488,7 +513,9 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
     } else if (path.IsOk() && selection == copyPathId) {
         CopyPath(path);
     } else if (trashId != wxID_NONE && selection == trashId) {
-        DeletePaths(deletePaths, DeleteMode::Trash);
+        MoveToTrash(deletePaths);
+    } else if (permanentDeleteId != wxID_NONE && selection == permanentDeleteId) {
+        PermanentlyDelete(deletePaths);
     } else if (selection == newFolderId) {
         CreateFolder();
     } else if (selection == homeId && m_callbacks.onHomeRequested) {

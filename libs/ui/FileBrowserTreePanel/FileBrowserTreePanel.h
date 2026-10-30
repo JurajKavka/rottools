@@ -30,7 +30,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
         bool isDirectory = false;
     };
     enum class DeleteMode { Trash, Permanent };
-    using ConfirmDeleteCallback = std::function<bool(const std::vector<DeletePrompt>&, DeleteMode)>;
+    using ConfirmDeleteCallback = std::function<bool(const std::vector<DeletePrompt>&)>;
     using PathDeletedCallback = std::function<void(const DeletePrompt&)>;
 
     struct CreateFolderError {
@@ -55,8 +55,10 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
         SelectNewFolderNameCallback selectNewFolderName;
         /** Reports a failed folder creation so the host can present the error. */
         CreateFolderErrorCallback onCreateFolderError;
-        /** The host confirms each Trash or permanent removal; false or an omitted callback cancels it. */
-        ConfirmDeleteCallback confirmDelete;
+        /** The host confirms each move to Trash; false or an omitted callback cancels it. */
+        ConfirmDeleteCallback onConfirmMoveToTrash;
+        /** The host confirms each permanent removal; false or an omitted callback cancels it. */
+        ConfirmDeleteCallback onConfirmPermanentlyDelete;
         /** Called for each file or directory moved to Trash or completely deleted. */
         PathDeletedCallback onPathDeleted;
         /** Reports all failed removals together so the host can present one error. */
@@ -115,7 +117,8 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void CopyPath(const wxFileName& path);
     void CreateFolder();
     [[nodiscard]] std::vector<DeletePrompt> GetSelectedDeletePaths() const;
-    void DeletePaths(const std::vector<DeletePrompt>& paths, DeleteMode mode);
+    void MoveToTrash(const std::vector<DeletePrompt>& paths);
+    void PermanentlyDelete(const std::vector<DeletePrompt>& paths);
     void HandleDirectoryScanComplete(DirectoryScannerEvent& event);
     void SetShowHiddenFiles(bool showHiddenFiles);
     void SetFileTypeSelection(int selection);
