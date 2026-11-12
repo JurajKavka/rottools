@@ -21,7 +21,8 @@ class FileBrowserTreePanelFrame : public wxFrame {
                  std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmMoveToTrash, this),
              .onConfirmPermanentlyDelete =
                  std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmPermanentlyDelete, this),
-             .onDeleteError = std::bind_front(&FileBrowserTreePanelFrame::HandleDeleteError, this)});
+             .onDeleteError = std::bind_front(&FileBrowserTreePanelFrame::HandleDeleteError, this),
+             .onMoveError = std::bind_front(&FileBrowserTreePanelFrame::HandleMoveError, this)});
 
         auto* frameSizer = new wxBoxSizer(wxVERTICAL);
         frameSizer->Add(treePanel, 1, wxEXPAND);
@@ -84,6 +85,15 @@ class FileBrowserTreePanelFrame : public wxFrame {
         wxMessageDialog dialog(this, message, action, wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxICON_WARNING);
         dialog.SetOKCancelLabels(action, wxGetStockLabel(wxID_CANCEL));
         return dialog.ShowModal() == wxID_OK;
+    }
+
+    void HandleMoveError(const std::vector<FileBrowserTreePanel::MoveError>& errors) {
+        wxString message = _("Could not move the following items:") + "\n\n";
+        for (const auto& error : errors) {
+            const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+            message += wxString::Format("%s: %s\n", error.path.GetFullPath().c_str(), detail.c_str());
+        }
+        wxMessageBox(message, _("Move Files"), wxOK | wxICON_ERROR, this);
     }
 
     void HandleDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,

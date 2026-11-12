@@ -1,10 +1,12 @@
 #include "FileBrowserTreePanel.h"
 
+#include <wx/accel.h>
 #include <wx/clipbrd.h>
 #include <wx/dataobj.h>
 #include <wx/filefn.h>
 #include <wx/imaglist.h>
 #include <wx/menu.h>
+#include <wx/stockitem.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -13,6 +15,7 @@
 #include <utility>
 
 #include "FileManagerBackend.h"
+#include "CutFilesClipboard.h"
 #include "Icons.h"
 
 #if defined(__WXGTK__) && !defined(wxHAS_MOVE_TO_TRASH)
@@ -63,6 +66,16 @@ FileBrowserTreePanel::FileBrowserTreePanel(wxWindow* parent, Callbacks callbacks
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &FileBrowserTreePanel::HandleItemActivated, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &FileBrowserTreePanel::HandleItemContextMenu, this);
     m_dataViewTreeCtrl1->Bind(wxEVT_CHAR_HOOK, &FileBrowserTreePanel::HandleTreeKeyDown, this);
+    m_dataViewTreeCtrl1->Bind(wxEVT_MENU, &FileBrowserTreePanel::HandleCutCommand, this, wxID_CUT);
+    m_dataViewTreeCtrl1->Bind(wxEVT_MENU, &FileBrowserTreePanel::HandlePasteCommand, this, wxID_PASTE);
+    m_dataViewTreeCtrl1->Bind(wxEVT_UPDATE_UI, &FileBrowserTreePanel::HandleUpdateCutCommand, this, wxID_CUT);
+    m_dataViewTreeCtrl1->Bind(wxEVT_UPDATE_UI, &FileBrowserTreePanel::HandleUpdatePasteCommand, this, wxID_PASTE);
+
+    // Stock accelerators use Command on macOS and Ctrl on Windows/Linux.
+    // Keep the table on the tree so it also works in hosts without an Edit menu.
+    const wxAcceleratorEntry editingAccelerators[] = {
+        wxGetStockAccelerator(wxID_CUT), wxGetStockAccelerator(wxID_PASTE)};
+    m_dataViewTreeCtrl1->SetAcceleratorTable(wxAcceleratorTable(WXSIZEOF(editingAccelerators), editingAccelerators));
 
     // Use the first supplied file type for the initial scan.
     ApplySelectedFileType();
@@ -311,6 +324,99 @@ void FileBrowserTreePanel::CopyPath(const wxFileName& path) {
     wxTheClipboard->SetData(new wxTextDataObject(path.GetFullPath()));
 }
 
+void FileBrowserTreePanel::CutPaths(const std::vector<DeletePrompt>& paths) {
+    std::vector<wxFileName> files;
+    for (const auto& path : paths) {
+        files.push_back(path.path);
+    }
+    CutFilesClipboard::Set(files);
+}
+
+bool FileBrowserTreePanel::CanCut() const {
+    return !GetSelectedDeletePaths().empty();
+}
+
+bool FileBrowserTreePanel::CanPaste() const {
+    return m_currentPath.IsOk() && m_currentPath.DirExists() && CutFilesClipboard::HasFiles();
+}
+
+void FileBrowserTreePanel::Cut() {
+    CutPaths(GetSelectedDeletePaths());
+}
+
+void FileBrowserTreePanel::Paste() {
+    wxDataViewItemArray selections;
+    m_dataViewTreeCtrl1->GetSelections(selections);
+    const wxFileName path = selections.size() == 1 ? ResolveItemPath(selections[0]) : wxFileName{};
+    PastePaths(PasteDestination(path));
+}
+
+void FileBrowserTreePanel::HandleCutCommand(wxCommandEvent& event) {
+    Cut();
+}
+
+void FileBrowserTreePanel::HandlePasteCommand(wxCommandEvent& event) {
+    Paste();
+}
+
+void FileBrowserTreePanel::HandleUpdateCutCommand(wxUpdateUIEvent& event) {
+    event.Enable(CanCut());
+}
+
+void FileBrowserTreePanel::HandleUpdatePasteCommand(wxUpdateUIEvent& event) {
+    event.Enable(CanPaste());
+}
+
+wxFileName FileBrowserTreePanel::PasteDestination(const wxFileName& path) const {
+    if (path.IsOk() && !path.FileExists() && path.DirExists()) {
+        return path;
+    }
+    return m_currentPath;
+}
+
+void FileBrowserTreePanel::PastePaths(const wxFileName& destination) {
+    if (!destination.IsOk() || !destination.DirExists()) {
+        return;
+    }
+    const std::vector<wxFileName> cutFiles = CutFilesClipboard::GetFiles();
+    if (cutFiles.empty()) {
+        return;
+    }
+    std::vector<MovePrompt> paths;
+    paths.reserve(cutFiles.size());
+    std::vector<std::filesystem::path> sources;
+    sources.reserve(cutFiles.size());
+    for (const auto& path : cutFiles) {
+        paths.push_back({path, !path.FileExists() && path.DirExists()});
+        sources.push_back(ToFilesystemPath(path.GetFullPath()));
+    }
+    if (m_callbacks.onBeforeMove && !m_callbacks.onBeforeMove(paths)) {
+        return;
+    }
+    const auto results = FileManagerBackend::MoveMany(sources, ToFilesystemPath(destination.GetFullPath()));
+    std::vector<wxFileName> failed;
+    std::vector<MoveError> errors;
+    for (std::size_t index = 0; index < results.size(); ++index) {
+        if (!results[index].Succeeded()) {
+            failed.push_back(cutFiles[index]);
+            errors.push_back({cutFiles[index], results[index].error});
+        } else if (m_callbacks.onPathMoved) {
+            wxFileName target = destination;
+            if (paths[index].isDirectory) {
+                target.AppendDir(GetLastDirectoryName(paths[index].path));
+            } else {
+                target.SetFullName(paths[index].path.GetFullName());
+            }
+            m_callbacks.onPathMoved(paths[index], target);
+        }
+    }
+    CutFilesClipboard::KeepFiles(std::move(failed));
+    ReloadCurrentDir();
+    if (!errors.empty() && m_callbacks.onMoveError) {
+        m_callbacks.onMoveError(errors);
+    }
+}
+
 void FileBrowserTreePanel::CreateFolder() {
     if (!m_callbacks.selectNewFolderName) {
         return;
@@ -460,14 +566,19 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
 
     int openId = wxID_NONE;
     int copyPathId = wxID_NONE;
+    int cutId = wxID_NONE;
     int trashId = wxID_NONE;
     int permanentDeleteId = wxID_NONE;
+    const long stockLabelFlags = wxSTOCK_WITH_MNEMONIC | wxSTOCK_WITH_ACCELERATOR;
     // Custom IDs avoid macOS applying responder-chain validation for stock
     // commands such as wxID_COPY and disabling the item.
     if (path.IsOk()) {
         if (m_dataViewTreeCtrl1->GetSelectedItemsCount() == 1) {
             openId = menu.Append(wxID_ANY, _("Open"))->GetId();
             copyPathId = menu.Append(wxID_ANY, _("Copy Path"))->GetId();
+        }
+        if (!deletePaths.empty()) {
+            cutId = menu.Append(wxID_ANY, wxGetStockLabel(wxID_CUT, stockLabelFlags))->GetId();
         }
         if (!deletePaths.empty() && m_callbacks.onConfirmMoveToTrash) {
             const wxString trashName = GetTrashName();
@@ -482,6 +593,9 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
         }
         menu.AppendSeparator();
     }
+    const int pasteId = menu.Append(wxID_ANY, wxGetStockLabel(wxID_PASTE, stockLabelFlags))->GetId();
+    const wxFileName destination = PasteDestination(path);
+    menu.Enable(pasteId, destination.IsOk() && destination.DirExists() && CutFilesClipboard::HasFiles());
     const int newFolderId = menu.Append(wxID_ANY, _("New Folder"))->GetId();
     menu.Enable(newFolderId, m_callbacks.selectNewFolderName && m_currentPath.IsOk() && m_currentPath.DirExists());
     menu.AppendSeparator();
@@ -512,6 +626,10 @@ void FileBrowserTreePanel::ShowBrowserContextMenu(wxWindow* owner, const wxFileN
         OpenPath(path);
     } else if (path.IsOk() && selection == copyPathId) {
         CopyPath(path);
+    } else if (cutId != wxID_NONE && selection == cutId) {
+        CutPaths(deletePaths);
+    } else if (selection == pasteId) {
+        PastePaths(destination);
     } else if (trashId != wxID_NONE && selection == trashId) {
         MoveToTrash(deletePaths);
     } else if (permanentDeleteId != wxID_NONE && selection == permanentDeleteId) {
