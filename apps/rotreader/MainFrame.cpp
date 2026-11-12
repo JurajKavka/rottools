@@ -113,6 +113,9 @@ MainFrame::MainFrame(wxWindow* parent, const wxFileName& initialDirectory) : Mai
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveMenuItemClick, this, m_saveTool->GetId());
     Bind(wxEVT_TOOL, &MainFrame::HandleSaveAsMenuItemClick, this, m_saveAsTool->GetId());
     Bind(wxEVT_MENU_OPEN, &MainFrame::HandleBookmarksMenuOpen, this);
+#ifdef __WXOSX__
+    Bind(wxEVT_MENU_HIGHLIGHT, &MainFrame::HandleMenuHighlight, this);
+#endif
     Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDirectoryBookmark, this,
          m_bookmarkCurrentDirectoryMenuItem->GetId());
     Bind(wxEVT_MENU, &MainFrame::HandleAddOrRemoveDocumentBookmark, this,
@@ -150,7 +153,10 @@ MainFrame::MainFrame(wxWindow* parent, const wxFileName& initialDirectory) : Mai
          .onConfirmMoveToTrash = std::bind_front(&MainFrame::HandleConfirmBrowserMoveToTrash, this),
          .onConfirmPermanentlyDelete = std::bind_front(&MainFrame::HandleConfirmBrowserPermanentlyDelete, this),
          .onPathDeleted = std::bind_front(&MainFrame::HandleBrowserPathDeleted, this),
-         .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this)},
+         .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this),
+         .onMoveError = std::bind_front(&MainFrame::HandleFileTreeBrowserMoveError, this),
+         .onBeforeMove = std::bind_front(&MainFrame::HandleFileTreeBrowserBeforeMove, this),
+         .onPathMoved = std::bind_front(&MainFrame::HandleFileTreeBrowserPathMoved, this)},
         {{_("Markdown"), {"md", "markdown"}}, {_("All files"), {FileBrowserTreePanel::kFilterAllFiles}}});
 
     m_rightSplitter =
@@ -289,12 +295,16 @@ void MainFrame::HandleCopyMenuItemClick(wxCommandEvent& event) {
 void MainFrame::HandleCutMenuItemClick(wxCommandEvent& event) {
     if (ContainsFocus(m_markdownEditorPanel)) {
         m_markdownEditorPanel->Cut();
+    } else if (ContainsFocus(m_fileBrowserPanel)) {
+        m_fileBrowserPanel->Cut();
     }
 }
 
 void MainFrame::HandlePasteMenuItemClick(wxCommandEvent& event) {
     if (ContainsFocus(m_markdownEditorPanel)) {
         m_markdownEditorPanel->Paste();
+    } else if (ContainsFocus(m_fileBrowserPanel)) {
+        m_fileBrowserPanel->Paste();
     }
 }
 
@@ -429,11 +439,13 @@ void MainFrame::HandleUpdateCopyMenuItem(wxUpdateUIEvent& event) {
 }
 
 void MainFrame::HandleUpdateCutMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(ContainsFocus(m_markdownEditorPanel) && m_markdownEditorPanel->CanCut());
+    event.Enable((ContainsFocus(m_markdownEditorPanel) && m_markdownEditorPanel->CanCut()) ||
+                 (ContainsFocus(m_fileBrowserPanel) && m_fileBrowserPanel->CanCut()));
 }
 
 void MainFrame::HandleUpdatePasteMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(ContainsFocus(m_markdownEditorPanel) && m_markdownEditorPanel->CanPaste());
+    event.Enable((ContainsFocus(m_markdownEditorPanel) && m_markdownEditorPanel->CanPaste()) ||
+                 (ContainsFocus(m_fileBrowserPanel) && m_fileBrowserPanel->CanPaste()));
 }
 
 void MainFrame::HandleUpdateFindMenuItem(wxUpdateUIEvent& event) {
@@ -825,6 +837,63 @@ void MainFrame::HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel:
     const wxString title = trash ? wxString::Format(_("Move to %s"), trashName.c_str()) : _("Delete Permanently");
     wxMessageBox(message, title, wxOK | wxICON_ERROR, this);
 }
+
+void MainFrame::HandleFileTreeBrowserMoveError(const std::vector<FileBrowserTreePanel::MoveError>& errors) {
+    wxString message = _("Could not move the following items:") + "\n\n";
+    for (const auto& error : errors) {
+        const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+        message += wxString::Format("%s: %s\n", error.path.GetFullPath().c_str(), detail.c_str());
+    }
+    wxMessageBox(message, _("Move Files"), wxOK | wxICON_ERROR, this);
+}
+
+bool MainFrame::IsCurrentDocumentAffectedByMove(const FileBrowserTreePanel::MovePrompt& moved) const {
+    return IsSameFilePath(m_currentDocument, moved.path) ||
+           (moved.isDirectory && IsFileWithinDirectory(m_currentDocument, moved.path));
+}
+
+bool MainFrame::HandleFileTreeBrowserBeforeMove(const std::vector<FileBrowserTreePanel::MovePrompt>& paths) {
+    const bool affectsCurrentDocument =
+        std::ranges::any_of(paths, [this](const auto& path) { return IsCurrentDocumentAffectedByMove(path); });
+    if (affectsCurrentDocument && m_markdownEditorPanel->HasUnsavedChanges()) {
+        wxMessageBox(_("The open document has unsaved changes. Save or close it before moving it or its folder."),
+                     _("Move Files"), wxOK | wxICON_WARNING, this);
+        return false;
+    }
+    return true;
+}
+
+void MainFrame::HandleFileTreeBrowserPathMoved(const FileBrowserTreePanel::MovePrompt& moved,
+                                             const wxFileName& destination) {
+    if (IsCurrentDocumentAffectedByMove(moved)) {
+        wxFileName relocated = destination;
+        if (moved.isDirectory) {
+            // Preserve the document's path within the moved folder.
+            const wxArrayString& directories = m_currentDocument.GetDirs();
+            for (std::size_t index = moved.path.GetDirCount(); index < directories.size(); ++index) {
+                relocated.AppendDir(directories[index]);
+            }
+            relocated.SetFullName(m_currentDocument.GetFullName());
+        }
+        // Clear the old path and watcher before opening: the source no longer
+        // exists, so a normal OpenFile would prompt to recreate the removed file.
+        m_markdownEditorPanel->DiscardDocument();
+        HandleOpenFile(relocated);
+    }
+}
+
+#ifdef __WXOSX__
+void MainFrame::HandleMenuHighlight(wxMenuEvent& event) {
+    if (event.GetMenuId() == wxID_NONE) {
+        // Cocoa unhighlights keyboard shortcuts later, without a menu-close
+        // event. Dismiss help instead of showing empty help over a newly opened
+        // file's status. wxFrame preserves text changed since help was shown.
+        MainFrameWx::DoGiveHelp(wxString{}, false);
+        return;
+    }
+    event.Skip();
+}
+#endif
 
 void MainFrame::HandleBookmarksMenuOpen(wxMenuEvent& event) {
     if (event.GetMenu() == m_bookmarksMenu && m_bookmarkStore) {

@@ -90,6 +90,9 @@ class MainFrame : public MainFrameWx {
     void HandleUpdateCopyMenuItem(wxUpdateUIEvent& event);
     void HandleUpdateCutMenuItem(wxUpdateUIEvent& event);
     void HandleUpdatePasteMenuItem(wxUpdateUIEvent& event);
+#ifdef __WXOSX__
+    void HandleMenuHighlight(wxMenuEvent& event);
+#endif
     void HandleUpdateFindMenuItem(wxUpdateUIEvent& event);
     void HandleUpdateReplaceMenuItem(wxUpdateUIEvent& event);
     void HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& event);
@@ -127,6 +130,11 @@ class MainFrame : public MainFrameWx {
     void HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted);
     void HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,
                                   FileBrowserTreePanel::DeleteMode mode);
+    void HandleFileTreeBrowserMoveError(const std::vector<FileBrowserTreePanel::MoveError>& errors);
+    bool HandleFileTreeBrowserBeforeMove(const std::vector<FileBrowserTreePanel::MovePrompt>& paths);
+    void HandleFileTreeBrowserPathMoved(const FileBrowserTreePanel::MovePrompt& moved,
+                                       const wxFileName& destination);
+    [[nodiscard]] bool IsCurrentDocumentAffectedByMove(const FileBrowserTreePanel::MovePrompt& moved) const;
     [[nodiscard]] bool IsCurrentDocumentAffectedByDelete(const FileBrowserTreePanel::DeletePrompt& deleted) const;
     void HandleOpenBookmarkedDirectory(const wxFileName& directory);
     void HandleOpenBookmarkedDocument(const wxFileName& document);

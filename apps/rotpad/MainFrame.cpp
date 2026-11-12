@@ -7,6 +7,7 @@
 #include <wx/textdlg.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <functional>
 #include <utility>
 #ifndef __WXOSX__
@@ -46,6 +47,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateCopyMenuItem, this, wxID_COPY);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateCutMenuItem, this, wxID_CUT);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdatePasteMenuItem, this, wxID_PASTE);
+#ifdef __WXOSX__
+    Bind(wxEVT_MENU_HIGHLIGHT, &MainFrame::HandleMenuHighlight, this);
+#endif
     Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleWordWrapMenuItemClick, this, wxID_WORDWRAP);
     Bind(wxEVT_MENU, &MainFrame::HandleFontMenuItemClick, this, wxID_FONT);
@@ -74,7 +78,10 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          .onConfirmMoveToTrash = std::bind_front(&MainFrame::HandleConfirmBrowserMoveToTrash, this),
          .onConfirmPermanentlyDelete = std::bind_front(&MainFrame::HandleConfirmBrowserPermanentlyDelete, this),
          .onPathDeleted = std::bind_front(&MainFrame::HandleBrowserPathDeleted, this),
-         .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this)},
+         .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this),
+         .onMoveError = std::bind_front(&MainFrame::HandleFileTreeBrowserMoveError, this),
+         .onBeforeMove = std::bind_front(&MainFrame::HandleFileTreeBrowserBeforeMove, this),
+         .onPathMoved = std::bind_front(&MainFrame::HandleFileTreeBrowserPathMoved, this)},
         {{_("Supported text files"), {"txt", "json", "csv", "md", "sql"}},
          {_("All files"), {FileBrowserTreePanel::kFilterAllFiles}}});
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
@@ -298,6 +305,63 @@ void MainFrame::HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel:
     const wxString title = trash ? wxString::Format(_("Move to %s"), trashName.c_str()) : _("Delete Permanently");
     wxMessageBox(message, title, wxOK | wxICON_ERROR, this);
 }
+
+void MainFrame::HandleFileTreeBrowserMoveError(const std::vector<FileBrowserTreePanel::MoveError>& errors) {
+    wxString message = _("Could not move the following items:") + "\n\n";
+    for (const auto& error : errors) {
+        const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+        message += wxString::Format("%s: %s\n", error.path.GetFullPath().c_str(), detail.c_str());
+    }
+    wxMessageBox(message, _("Move Files"), wxOK | wxICON_ERROR, this);
+}
+
+bool MainFrame::IsCurrentDocumentAffectedByMove(const FileBrowserTreePanel::MovePrompt& moved) const {
+    return IsSameFilePath(m_currentFile, moved.path) ||
+           (moved.isDirectory && IsFileWithinDirectory(m_currentFile, moved.path));
+}
+
+bool MainFrame::HandleFileTreeBrowserBeforeMove(const std::vector<FileBrowserTreePanel::MovePrompt>& paths) {
+    const bool affectsCurrentDocument =
+        std::ranges::any_of(paths, [this](const auto& path) { return IsCurrentDocumentAffectedByMove(path); });
+    if (affectsCurrentDocument && m_textEditorPanel->HasUnsavedChanges()) {
+        wxMessageBox(_("The open document has unsaved changes. Save or close it before moving it or its folder."),
+                     _("Move Files"), wxOK | wxICON_WARNING, this);
+        return false;
+    }
+    return true;
+}
+
+void MainFrame::HandleFileTreeBrowserPathMoved(const FileBrowserTreePanel::MovePrompt& moved,
+                                             const wxFileName& destination) {
+    if (IsCurrentDocumentAffectedByMove(moved)) {
+        wxFileName relocated = destination;
+        if (moved.isDirectory) {
+            // Preserve the document's path within the moved folder.
+            const wxArrayString& directories = m_currentFile.GetDirs();
+            for (std::size_t index = moved.path.GetDirCount(); index < directories.size(); ++index) {
+                relocated.AppendDir(directories[index]);
+            }
+            relocated.SetFullName(m_currentFile.GetFullName());
+        }
+        m_currentFile = wxFileName();
+        m_textEditorPanel->LoadText(wxString{});
+        statusBar->SetStatusText(wxString{});
+        HandleOpenTextFile(relocated);
+    }
+}
+
+#ifdef __WXOSX__
+void MainFrame::HandleMenuHighlight(wxMenuEvent& event) {
+    if (event.GetMenuId() == wxID_NONE) {
+        // Cocoa unhighlights keyboard shortcuts later, without a menu-close
+        // event. Dismiss help instead of showing empty help over a newly opened
+        // file's status. wxFrame preserves text changed since help was shown.
+        MainFrameWx::DoGiveHelp(wxString{}, false);
+        return;
+    }
+    event.Skip();
+}
+#endif
 
 void MainFrame::HideFileBrowser() {
     m_viewMenu->Check(wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, false);
