@@ -48,6 +48,9 @@ class MainFrame final : public MainFrameWx {
     void HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,
                                   FileBrowserTreePanel::DeleteMode mode);
     void HandleFileTreeBrowserMoveError(const std::vector<FileBrowserTreePanel::MoveError>& errors);
+    void HandleFileTreeBrowserCopyError(const std::vector<FileBrowserTreePanel::CopyError>& errors);
+    bool HandleFileTreeBrowserConfirmOverwrite(const FileBrowserTreePanel::OverwritePrompt& prompt);
+    void HandleFileTreeBrowserDestinationUpdated(const wxFileName& destination);
     bool HandleFileTreeBrowserBeforeMove(const std::vector<FileBrowserTreePanel::MovePrompt>& paths);
     void HandleFileTreeBrowserPathMoved(const FileBrowserTreePanel::MovePrompt& moved,
                                        const wxFileName& destination);

@@ -7,7 +7,11 @@
 /** Synchronous filesystem actions for callers such as FileBrowserTreePanel.
  *
  * Names must be a single, non-empty path component. Existing destinations are
- * never replaced. Copy and move preserve symlinks rather than following them.
+ * refused by default. Copy and move can explicitly replace a regular file with
+ * another regular file; directories, symlinks, and transfers onto the source
+ * are refused. Copy replacement stages the complete copy before replacing the
+ * destination.
+ * Copy and move preserve symlinks rather than following them.
  * Moves use same-volume atomic renames; a cross-volume move fails with its
  * source intact. Delete is permanent and can partially succeed on an I/O
  * failure. Bulk actions process each item independently and return results in
@@ -15,6 +19,8 @@
  */
 namespace FileManagerBackend {
 namespace fs = std::filesystem;
+
+enum class ExistingFile { Refuse, Replace };
 
 struct Result {
     fs::path source;
@@ -33,8 +39,10 @@ struct Result {
 [[nodiscard]] Result CreateNewDirectory(const fs::path& parent, const fs::path& name);
 [[nodiscard]] Result CreateTextFile(const fs::path& parent, const fs::path& name);
 [[nodiscard]] Result Rename(const fs::path& source, const fs::path& newName);
-[[nodiscard]] Result Copy(const fs::path& source, const fs::path& destination);
-[[nodiscard]] Result Move(const fs::path& source, const fs::path& destination);
+[[nodiscard]] Result Copy(const fs::path& source, const fs::path& destination,
+                          ExistingFile existingFile = ExistingFile::Refuse);
+[[nodiscard]] Result Move(const fs::path& source, const fs::path& destination,
+                          ExistingFile existingFile = ExistingFile::Refuse);
 [[nodiscard]] Result Delete(const fs::path& source);
 
 // destinationDirectory must exist. Each source keeps its existing leaf name.

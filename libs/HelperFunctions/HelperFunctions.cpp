@@ -80,29 +80,21 @@ bool IsMarkdownFile(const wxFileName& filePath) {
 }
 
 void printCppVersion() {
-    switch (__cplusplus) {
-        case 202302L:
-            std::cout << "C++23" << std::endl;
-            break;
-        case 202002L:
-            std::cout << "C++20" << std::endl;
-            break;
-        case 201703L:
-            std::cout << "C++17" << std::endl;
-            break;
-        case 201402L:
-            std::cout << "C++14" << std::endl;
-            break;
-        case 201103L:
-            std::cout << "C++11" << std::endl;
-            break;
-        case 199711L:
-            std::cout << "C++98" << std::endl;
-            break;
-        default:
-            std::cout << "Unknown/Experimental (" << __cplusplus << ")" << std::endl;
-            break;
-    }
+#if __cplusplus == 202302L
+    std::cout << "C++23" << std::endl;
+#elif __cplusplus == 202002L
+    std::cout << "C++20" << std::endl;
+#elif __cplusplus == 201703L
+    std::cout << "C++17" << std::endl;
+#elif __cplusplus == 201402L
+    std::cout << "C++14" << std::endl;
+#elif __cplusplus == 201103L
+    std::cout << "C++11" << std::endl;
+#elif __cplusplus == 199711L
+    std::cout << "C++98" << std::endl;
+#else
+    std::cout << "Unknown/Experimental (" << __cplusplus << ")" << std::endl;
+#endif
 }
 
 bool ReadFileUtf8(const wxFileName& filePath, wxString& contents) {

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <iterator>
 #include <system_error>
 #include <unordered_set>
 
@@ -63,9 +64,8 @@ void DirectoryScanner::ScanThreadLogic(const wxFileName& fileName, const ScanOpt
 
     // Convert the vector into an unordered_set right inside the thread for efficient O(1) matching
     std::unordered_set<std::string> extSet;
-    for (const std::string& extension : options.extensions) {
-        extSet.insert(ToLowerCopy(extension));
-    }
+    std::transform(options.extensions.begin(), options.extensions.end(), std::inserter(extSet, extSet.end()),
+                   ToLowerCopy);
 
     std::filesystem::path rootPath = fileName.GetFullPath().ToStdWstring();
 
