@@ -1,4 +1,4 @@
-#include "CutFilesClipboard.h"
+#include "FileManagerClipboard.h"
 
 #include <wx/clipbrd.h>
 #include <wx/dataobj.h>
@@ -7,25 +7,26 @@
 #include <utility>
 
 namespace {
-struct CutState {
+struct ClipboardState {
     std::vector<wxFileName> files;
+    FileManagerClipboard::Operation operation = FileManagerClipboard::Operation::Copy;
     wxString token;
     unsigned long sequence = 0;
 };
 
-CutState& State() {
-    static CutState state;
+ClipboardState& State() {
+    static ClipboardState state;
     return state;
 }
 
 const wxDataFormat& Format() {
-    static const wxDataFormat format("application/x-rottools-cut-files");
+    static const wxDataFormat format("application/x-rottools-filemanager-files");
     return format;
 }
 }  // namespace
 
-namespace CutFilesClipboard {
-bool Set(const std::vector<wxFileName>& paths) {
+namespace FileManagerClipboard {
+bool Set(const std::vector<wxFileName>& paths, Operation operation) {
     if (paths.empty()) {
         return false;
     }
@@ -33,7 +34,7 @@ bool Set(const std::vector<wxFileName>& paths) {
     if (!clipboard) {
         return false;
     }
-    CutState& state = State();
+    ClipboardState& state = State();
     const wxString token = wxString::Format("%p-%lu", static_cast<void*>(&state), ++state.sequence);
     const wxScopedCharBuffer bytes = token.utf8_str();
     auto* data = new wxCustomDataObject(Format());
@@ -42,13 +43,14 @@ bool Set(const std::vector<wxFileName>& paths) {
         return false;
     }
     state.files = paths;
+    state.operation = operation;
     state.token = token;
     return true;
 }
 
 bool HasFiles() {
     wxClipboardLocker clipboard;
-    const CutState& state = State();
+    const ClipboardState& state = State();
     if (!clipboard || state.files.empty() || !wxTheClipboard->IsSupported(Format())) {
         return false;
     }
@@ -62,11 +64,14 @@ bool HasFiles() {
                       static_cast<const char*>(data.GetData()) + data.GetSize(), token.data());
 }
 
-std::vector<wxFileName> GetFiles() {
-    return HasFiles() ? State().files : std::vector<wxFileName>{};
+std::optional<Contents> GetFiles() {
+    if (!HasFiles()) {
+        return std::nullopt;
+    }
+    return Contents{State().files, State().operation};
 }
 
 void KeepFiles(std::vector<wxFileName> paths) {
     State().files = std::move(paths);
 }
-}  // namespace CutFilesClipboard
+}  // namespace FileManagerClipboard

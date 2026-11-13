@@ -156,7 +156,10 @@ MainFrame::MainFrame(wxWindow* parent, const wxFileName& initialDirectory) : Mai
          .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this),
          .onMoveError = std::bind_front(&MainFrame::HandleFileTreeBrowserMoveError, this),
          .onBeforeMove = std::bind_front(&MainFrame::HandleFileTreeBrowserBeforeMove, this),
-         .onPathMoved = std::bind_front(&MainFrame::HandleFileTreeBrowserPathMoved, this)},
+         .onPathMoved = std::bind_front(&MainFrame::HandleFileTreeBrowserPathMoved, this),
+         .onCopyError = std::bind_front(&MainFrame::HandleFileTreeBrowserCopyError, this),
+         .onConfirmOverwrite = std::bind_front(&MainFrame::HandleFileTreeBrowserConfirmOverwrite, this),
+         .onPathCopied = std::bind_front(&MainFrame::HandleFileTreeBrowserDestinationUpdated, this)},
         {{_("Markdown"), {"md", "markdown"}}, {_("All files"), {FileBrowserTreePanel::kFilterAllFiles}}});
 
     m_rightSplitter =
@@ -289,6 +292,8 @@ void MainFrame::HandleCopyMenuItemClick(wxCommandEvent& event) {
         m_htmlSourcePanel->Copy();
     } else if (ContainsFocus(m_markdownPreviewPanel)) {
         m_markdownPreviewPanel->Copy();
+    } else if (ContainsFocus(m_fileBrowserPanel)) {
+        m_fileBrowserPanel->Copy();
     }
 }
 
@@ -434,7 +439,8 @@ void MainFrame::HandleUpdateRedoMenuItem(wxUpdateUIEvent& event) {
 void MainFrame::HandleUpdateCopyMenuItem(wxUpdateUIEvent& event) {
     const bool canCopy = (ContainsFocus(m_markdownEditorPanel) && m_markdownEditorPanel->CanCopy()) ||
                          (ContainsFocus(m_htmlSourcePanel) && m_htmlSourcePanel->CanCopy()) ||
-                         (ContainsFocus(m_markdownPreviewPanel) && m_markdownPreviewPanel->CanCopy());
+                         (ContainsFocus(m_markdownPreviewPanel) && m_markdownPreviewPanel->CanCopy()) ||
+                         (ContainsFocus(m_fileBrowserPanel) && m_fileBrowserPanel->CanCopy());
     event.Enable(canCopy);
 }
 
@@ -847,6 +853,35 @@ void MainFrame::HandleFileTreeBrowserMoveError(const std::vector<FileBrowserTree
     wxMessageBox(message, _("Move Files"), wxOK | wxICON_ERROR, this);
 }
 
+void MainFrame::HandleFileTreeBrowserCopyError(const std::vector<FileBrowserTreePanel::CopyError>& errors) {
+    wxString message = _("Could not copy the following items:") + "\n\n";
+    for (const auto& error : errors) {
+        const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+        message += wxString::Format("%s: %s\n", error.path.GetFullPath().c_str(), detail.c_str());
+    }
+    wxMessageBox(message, _("Copy Files"), wxOK | wxICON_ERROR, this);
+}
+
+bool MainFrame::HandleFileTreeBrowserConfirmOverwrite(const FileBrowserTreePanel::OverwritePrompt& prompt) {
+    if (IsSameFilePath(m_currentDocument, prompt.destination) && m_markdownEditorPanel->HasUnsavedChanges()) {
+        wxMessageBox(_("The destination is open with unsaved changes. Save or close it before replacing it."),
+                     _("Replace File"), wxOK | wxICON_WARNING, this);
+        return false;
+    }
+    const wxString message =
+        wxString::Format(_("A file already exists at:\n%s\n\nReplace it with:\n%s?"),
+                         prompt.destination.GetFullPath().c_str(), prompt.source.GetFullPath().c_str());
+    wxMessageDialog dialog(this, message, _("Replace File"), wxYES_NO | wxNO_DEFAULT | wxICON_WARNING);
+    dialog.SetYesNoLabels(_("Replace"), _("Skip"));
+    return dialog.ShowModal() == wxID_YES;
+}
+
+void MainFrame::HandleFileTreeBrowserDestinationUpdated(const wxFileName& destination) {
+    if (IsSameFilePath(m_currentDocument, destination) && !m_markdownEditorPanel->HasUnsavedChanges()) {
+        (void)m_markdownEditorPanel->OpenFile(destination);
+    }
+}
+
 bool MainFrame::IsCurrentDocumentAffectedByMove(const FileBrowserTreePanel::MovePrompt& moved) const {
     return IsSameFilePath(m_currentDocument, moved.path) ||
            (moved.isDirectory && IsFileWithinDirectory(m_currentDocument, moved.path));
@@ -879,6 +914,9 @@ void MainFrame::HandleFileTreeBrowserPathMoved(const FileBrowserTreePanel::MoveP
         // exists, so a normal OpenFile would prompt to recreate the removed file.
         m_markdownEditorPanel->DiscardDocument();
         HandleOpenFile(relocated);
+    } else {
+        // A move can replace the open destination without moving its path.
+        HandleFileTreeBrowserDestinationUpdated(destination);
     }
 }
 

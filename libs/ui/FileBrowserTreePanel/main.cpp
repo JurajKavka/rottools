@@ -14,15 +14,15 @@ class FileBrowserTreePanelFrame : public wxFrame {
     FileBrowserTreePanelFrame()
         : wxFrame(nullptr, wxID_ANY, "Test: File Browser", wxDefaultPosition, wxSize(400, 600)) {
         auto* treePanel = new FileBrowserTreePanel(
-            this,
-            {.selectNewFolderName = std::bind_front(&FileBrowserTreePanelFrame::HandleSelectNewFolderName, this),
-             .onCreateFolderError = std::bind_front(&FileBrowserTreePanelFrame::HandleCreateFolderError, this),
-             .onConfirmMoveToTrash =
-                 std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmMoveToTrash, this),
-             .onConfirmPermanentlyDelete =
-                 std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmPermanentlyDelete, this),
-             .onDeleteError = std::bind_front(&FileBrowserTreePanelFrame::HandleDeleteError, this),
-             .onMoveError = std::bind_front(&FileBrowserTreePanelFrame::HandleMoveError, this)});
+            this, {.selectNewFolderName = std::bind_front(&FileBrowserTreePanelFrame::HandleSelectNewFolderName, this),
+                   .onCreateFolderError = std::bind_front(&FileBrowserTreePanelFrame::HandleCreateFolderError, this),
+                   .onConfirmMoveToTrash = std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmMoveToTrash, this),
+                   .onConfirmPermanentlyDelete =
+                       std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmPermanentlyDelete, this),
+                   .onDeleteError = std::bind_front(&FileBrowserTreePanelFrame::HandleDeleteError, this),
+                   .onMoveError = std::bind_front(&FileBrowserTreePanelFrame::HandleMoveError, this),
+                   .onCopyError = std::bind_front(&FileBrowserTreePanelFrame::HandleCopyError, this),
+                   .onConfirmOverwrite = std::bind_front(&FileBrowserTreePanelFrame::HandleConfirmOverwrite, this)});
 
         auto* frameSizer = new wxBoxSizer(wxVERTICAL);
         frameSizer->Add(treePanel, 1, wxEXPAND);
@@ -94,6 +94,24 @@ class FileBrowserTreePanelFrame : public wxFrame {
             message += wxString::Format("%s: %s\n", error.path.GetFullPath().c_str(), detail.c_str());
         }
         wxMessageBox(message, _("Move Files"), wxOK | wxICON_ERROR, this);
+    }
+
+    void HandleCopyError(const std::vector<FileBrowserTreePanel::CopyError>& errors) {
+        wxString message = _("Could not copy the following items:") + "\n\n";
+        for (const auto& error : errors) {
+            const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+            message += wxString::Format("%s: %s\n", error.path.GetFullPath().c_str(), detail.c_str());
+        }
+        wxMessageBox(message, _("Copy Files"), wxOK | wxICON_ERROR, this);
+    }
+
+    bool HandleConfirmOverwrite(const FileBrowserTreePanel::OverwritePrompt& prompt) {
+        const wxString message =
+            wxString::Format(_("A file already exists at:\n%s\n\nReplace it with:\n%s?"),
+                             prompt.destination.GetFullPath().c_str(), prompt.source.GetFullPath().c_str());
+        wxMessageDialog dialog(this, message, _("Replace File"), wxYES_NO | wxNO_DEFAULT | wxICON_WARNING);
+        dialog.SetYesNoLabels(_("Replace"), _("Skip"));
+        return dialog.ShowModal() == wxID_YES;
     }
 
     void HandleDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,

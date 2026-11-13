@@ -8,6 +8,7 @@
 
 #include "DirectoryScanner.h"
 #include "FileBrowserTreePanelWx.h"
+#include "FileManagerClipboard.h"
 #include "HelperFunctions.h"
 
 class FileBrowserTreePanel : public FileBrowserTreePanelWx {
@@ -52,6 +53,19 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     };
     using MoveErrorCallback = std::function<void(const std::vector<MoveError>&)>;
 
+    struct CopyError {
+        wxFileName path;
+        std::error_code error;
+    };
+    using CopyErrorCallback = std::function<void(const std::vector<CopyError>&)>;
+
+    struct OverwritePrompt {
+        wxFileName source;
+        wxFileName destination;
+    };
+    using ConfirmOverwriteCallback = std::function<bool(const OverwritePrompt&)>;
+    using PathCopiedCallback = std::function<void(const wxFileName& destination)>;
+
     struct MovePrompt {
         wxFileName path;
         bool isDirectory = false;
@@ -82,6 +96,12 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
         BeforeMoveCallback onBeforeMove;
         /** Reports successful moves with the full destination path, using directory form for folders. */
         PathMovedCallback onPathMoved;
+        /** Reports all failed copies together so the host can present one error. */
+        CopyErrorCallback onCopyError;
+        /** Confirms replacing a regular file during copy or move. False skips it; omission refuses replacement. */
+        ConfirmOverwriteCallback onConfirmOverwrite;
+        /** Reports a successful copy, allowing the host to reload an open destination. */
+        PathCopiedCallback onPathCopied;
     };
 
     /**
@@ -112,8 +132,10 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void ReloadCurrentDir();
     bool IsShowingDir(const wxFileName& dir) const;
     [[nodiscard]] bool CanCut() const;
+    [[nodiscard]] bool CanCopy() const;
     [[nodiscard]] bool CanPaste() const;
     void Cut();
+    void Copy();
     void Paste();
 
    private:
@@ -138,7 +160,7 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     [[nodiscard]] wxFileName ResolveItemPath(const wxDataViewItem& item) const;
     void OpenPath(const wxFileName& path);
     void CopyPath(const wxFileName& path);
-    void CutPaths(const std::vector<DeletePrompt>& paths);
+    void SetClipboardPaths(const std::vector<DeletePrompt>& paths, FileManagerClipboard::Operation operation);
     void PastePaths(const wxFileName& destination);
     [[nodiscard]] wxFileName PasteDestination(const wxFileName& path) const;
     void CreateFolder();
@@ -153,8 +175,10 @@ class FileBrowserTreePanel : public FileBrowserTreePanelWx {
     void HandleItemContextMenu(wxDataViewEvent& event);
     void HandleTreeKeyDown(wxKeyEvent& event);
     void HandleCutCommand(wxCommandEvent& event);
+    void HandleCopyCommand(wxCommandEvent& event);
     void HandlePasteCommand(wxCommandEvent& event);
     void HandleUpdateCutCommand(wxUpdateUIEvent& event);
+    void HandleUpdateCopyCommand(wxUpdateUIEvent& event);
     void HandleUpdatePasteCommand(wxUpdateUIEvent& event);
     void ShowBrowserContextMenu(wxWindow* owner, const wxFileName& path, const std::vector<DeletePrompt>& deletePaths);
 };

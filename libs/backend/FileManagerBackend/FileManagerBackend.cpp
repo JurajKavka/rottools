@@ -82,7 +82,8 @@ bool IsWithin(const fs::path& candidate, const fs::path& directory) {
     return true;
 }
 
-std::error_code CheckDestination(const fs::path& source, const fs::path& destination) {
+std::error_code CheckDestination(const fs::path& source, const fs::path& destination,
+                                 ExistingFile existingFile = ExistingFile::Refuse) {
     if (destination.empty() || !IsLeafName(destination.filename())) {
         return Error(std::errc::invalid_argument);
     }
@@ -93,7 +94,18 @@ std::error_code CheckDestination(const fs::path& source, const fs::path& destina
     std::error_code ec;
     const fs::file_status targetStatus = fs::symlink_status(destination, ec);
     if (!ec && fs::exists(targetStatus)) {
-        return Error(std::errc::file_exists);
+        if (existingFile == ExistingFile::Refuse) {
+            return Error(std::errc::file_exists);
+        }
+        if (!fs::is_regular_file(targetStatus) || !fs::is_regular_file(fs::symlink_status(source, ec))) {
+            return ec ? ec : Error(std::errc::operation_not_supported);
+        }
+        if (fs::equivalent(source, destination, ec)) {
+            return Error(std::errc::invalid_argument);
+        }
+        if (ec) {
+            return ec;
+        }
     }
     if (ec && ec != std::errc::no_such_file_or_directory) {
         return ec;
@@ -145,6 +157,19 @@ std::error_code RenameNoReplace(const fs::path& source, const fs::path& destinat
 #endif
 }
 
+std::error_code RenameReplace(const fs::path& source, const fs::path& destination) {
+#if defined(_WIN32)
+    if (MoveFileExW(source.c_str(), destination.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        return {};
+    }
+    return {static_cast<int>(GetLastError()), std::system_category()};
+#else
+    std::error_code ec;
+    fs::rename(source, destination, ec);
+    return ec;
+#endif
+}
+
 std::error_code MakeStage(const fs::path& parent, fs::path& stage) {
     static std::atomic<unsigned long long> sequence{0};
     const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
@@ -170,12 +195,23 @@ void CleanStage(Result& result, const fs::path& stage) {
     }
 }
 
-Result CopyOrMove(const fs::path& source, const fs::path& destination, bool move) {
+Result CopyOrMove(const fs::path& source, const fs::path& destination, bool move,
+                  ExistingFile existingFile = ExistingFile::Refuse) {
     Result result{source, destination};
     if (result.error = CheckSource(source); result.error) {
         return result;
     }
-    if (result.error = CheckDestination(source, destination); result.error) {
+    if (existingFile == ExistingFile::Replace) {
+        const auto status = fs::symlink_status(source, result.error);
+        if (result.error) {
+            return result;
+        }
+        if (!fs::is_regular_file(status)) {
+            result.error = Error(std::errc::operation_not_supported);
+            return result;
+        }
+    }
+    if (result.error = CheckDestination(source, destination, existingFile); result.error) {
         return result;
     }
 
@@ -183,7 +219,8 @@ Result CopyOrMove(const fs::path& source, const fs::path& destination, bool move
         // A same-volume, atomic rename keeps the original intact on failure.
         // A cross-volume move reports an error; callers can choose Copy then
         // Delete explicitly after reviewing the completed copy.
-        result.error = RenameNoReplace(source, destination);
+        result.error = existingFile == ExistingFile::Replace ? RenameReplace(source, destination)
+                                                             : RenameNoReplace(source, destination);
         return result;
     }
 
@@ -193,8 +230,13 @@ Result CopyOrMove(const fs::path& source, const fs::path& destination, bool move
     }
     const fs::path stagedItem = stage / "item";
     fs::copy(source, stagedItem, fs::copy_options::recursive | fs::copy_options::copy_symlinks, result.error);
+    // Recheck after staging: the destination may have changed during the copy.
+    if (!result.error && existingFile == ExistingFile::Replace) {
+        result.error = CheckDestination(source, destination, existingFile);
+    }
     if (!result.error) {
-        result.error = RenameNoReplace(stagedItem, destination);
+        result.error = existingFile == ExistingFile::Replace ? RenameReplace(stagedItem, destination)
+                                                             : RenameNoReplace(stagedItem, destination);
     }
     CleanStage(result, stage);
     return result;
@@ -307,12 +349,12 @@ Result Rename(const fs::path& source, const fs::path& newName) {
     return Move(normalized, normalized.parent_path() / newName);
 }
 
-Result Copy(const fs::path& source, const fs::path& destination) {
-    return CopyOrMove(WithoutTrailingSeparator(source), destination, false);
+Result Copy(const fs::path& source, const fs::path& destination, ExistingFile existingFile) {
+    return CopyOrMove(WithoutTrailingSeparator(source), destination, false, existingFile);
 }
 
-Result Move(const fs::path& source, const fs::path& destination) {
-    return CopyOrMove(WithoutTrailingSeparator(source), destination, true);
+Result Move(const fs::path& source, const fs::path& destination, ExistingFile existingFile) {
+    return CopyOrMove(WithoutTrailingSeparator(source), destination, true, existingFile);
 }
 
 Result Delete(const fs::path& source) {

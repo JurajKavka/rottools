@@ -81,7 +81,10 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameWx(parent) {
          .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this),
          .onMoveError = std::bind_front(&MainFrame::HandleFileTreeBrowserMoveError, this),
          .onBeforeMove = std::bind_front(&MainFrame::HandleFileTreeBrowserBeforeMove, this),
-         .onPathMoved = std::bind_front(&MainFrame::HandleFileTreeBrowserPathMoved, this)},
+         .onPathMoved = std::bind_front(&MainFrame::HandleFileTreeBrowserPathMoved, this),
+         .onCopyError = std::bind_front(&MainFrame::HandleFileTreeBrowserCopyError, this),
+         .onConfirmOverwrite = std::bind_front(&MainFrame::HandleFileTreeBrowserConfirmOverwrite, this),
+         .onPathCopied = std::bind_front(&MainFrame::HandleFileTreeBrowserDestinationUpdated, this)},
         {{_("Supported text files"), {"txt", "json", "csv", "md", "sql"}},
          {_("All files"), {FileBrowserTreePanel::kFilterAllFiles}}});
     m_textEditorPanel = new TextEditorPanel(m_mainSplitter);
@@ -151,18 +154,30 @@ void MainFrame::HandleRedoMenuItemClick(wxCommandEvent& event) {
 }
 
 void MainFrame::HandleCopyMenuItemClick(wxCommandEvent& event) {
-    m_textEditorPanel->Copy();
-    m_textEditorPanel->FocusEditor();
+    if (ContainsFocus(m_fileBrowserPanel)) {
+        m_fileBrowserPanel->Copy();
+    } else {
+        m_textEditorPanel->Copy();
+        m_textEditorPanel->FocusEditor();
+    }
 }
 
 void MainFrame::HandleCutMenuItemClick(wxCommandEvent& event) {
-    m_textEditorPanel->Cut();
-    m_textEditorPanel->FocusEditor();
+    if (ContainsFocus(m_fileBrowserPanel)) {
+        m_fileBrowserPanel->Cut();
+    } else {
+        m_textEditorPanel->Cut();
+        m_textEditorPanel->FocusEditor();
+    }
 }
 
 void MainFrame::HandlePasteMenuItemClick(wxCommandEvent& event) {
-    m_textEditorPanel->Paste();
-    m_textEditorPanel->FocusEditor();
+    if (ContainsFocus(m_fileBrowserPanel)) {
+        m_fileBrowserPanel->Paste();
+    } else {
+        m_textEditorPanel->Paste();
+        m_textEditorPanel->FocusEditor();
+    }
 }
 
 void MainFrame::HandleUpdateUndoMenuItem(wxUpdateUIEvent& event) {
@@ -174,15 +189,15 @@ void MainFrame::HandleUpdateRedoMenuItem(wxUpdateUIEvent& event) {
 }
 
 void MainFrame::HandleUpdateCopyMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(m_textEditorPanel->CanCopy());
+    event.Enable(ContainsFocus(m_fileBrowserPanel) ? m_fileBrowserPanel->CanCopy() : m_textEditorPanel->CanCopy());
 }
 
 void MainFrame::HandleUpdateCutMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(m_textEditorPanel->CanCut());
+    event.Enable(ContainsFocus(m_fileBrowserPanel) ? m_fileBrowserPanel->CanCut() : m_textEditorPanel->CanCut());
 }
 
 void MainFrame::HandleUpdatePasteMenuItem(wxUpdateUIEvent& event) {
-    event.Enable(m_textEditorPanel->CanPaste());
+    event.Enable(ContainsFocus(m_fileBrowserPanel) ? m_fileBrowserPanel->CanPaste() : m_textEditorPanel->CanPaste());
 }
 
 void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
@@ -315,6 +330,41 @@ void MainFrame::HandleFileTreeBrowserMoveError(const std::vector<FileBrowserTree
     wxMessageBox(message, _("Move Files"), wxOK | wxICON_ERROR, this);
 }
 
+void MainFrame::HandleFileTreeBrowserCopyError(const std::vector<FileBrowserTreePanel::CopyError>& errors) {
+    wxString message = _("Could not copy the following items:") + "\n\n";
+    for (const auto& error : errors) {
+        const wxString detail = wxString::FromUTF8(error.error.message().c_str());
+        message += wxString::Format("%s: %s\n", error.path.GetFullPath().c_str(), detail.c_str());
+    }
+    wxMessageBox(message, _("Copy Files"), wxOK | wxICON_ERROR, this);
+}
+
+bool MainFrame::HandleFileTreeBrowserConfirmOverwrite(const FileBrowserTreePanel::OverwritePrompt& prompt) {
+    if (IsSameFilePath(m_currentFile, prompt.destination) && m_textEditorPanel->HasUnsavedChanges()) {
+        wxMessageBox(_("The destination is open with unsaved changes. Save or close it before replacing it."),
+                     _("Replace File"), wxOK | wxICON_WARNING, this);
+        return false;
+    }
+    const wxString message =
+        wxString::Format(_("A file already exists at:\n%s\n\nReplace it with:\n%s?"),
+                         prompt.destination.GetFullPath().c_str(), prompt.source.GetFullPath().c_str());
+    wxMessageDialog dialog(this, message, _("Replace File"), wxYES_NO | wxNO_DEFAULT | wxICON_WARNING);
+    dialog.SetYesNoLabels(_("Replace"), _("Skip"));
+    return dialog.ShowModal() == wxID_YES;
+}
+
+void MainFrame::HandleFileTreeBrowserDestinationUpdated(const wxFileName& destination) {
+    if (IsSameFilePath(m_currentFile, destination) && !m_textEditorPanel->HasUnsavedChanges()) {
+        wxString text;
+        if (ReadFileUtf8(destination, text)) {
+            m_textEditorPanel->LoadText(text);
+        } else {
+            wxMessageBox(wxString::Format(_("Could not read file: %s"), destination.GetFullPath().c_str()),
+                         _("Reload File"), wxOK | wxICON_ERROR, this);
+        }
+    }
+}
+
 bool MainFrame::IsCurrentDocumentAffectedByMove(const FileBrowserTreePanel::MovePrompt& moved) const {
     return IsSameFilePath(m_currentFile, moved.path) ||
            (moved.isDirectory && IsFileWithinDirectory(m_currentFile, moved.path));
@@ -347,6 +397,9 @@ void MainFrame::HandleFileTreeBrowserPathMoved(const FileBrowserTreePanel::MoveP
         m_textEditorPanel->LoadText(wxString{});
         statusBar->SetStatusText(wxString{});
         HandleOpenTextFile(relocated);
+    } else {
+        // A move can replace the open destination without moving its path.
+        HandleFileTreeBrowserDestinationUpdated(destination);
     }
 }
 
