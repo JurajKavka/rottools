@@ -17,6 +17,17 @@ if(APPLE AND NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0" CACHE STRING "Minimum macOS version")
 endif()
 
+# Select tool dependencies before project(), which initializes the vcpkg
+# toolchain and installs manifest dependencies when one is in use.
+option(ROTTOOLS_BUILD_ROTREADER "Build the rotreader tool" ON)
+option(ROTTOOLS_BUILD_ROTPAD    "Build the rotpad tool" ON)
+option(ROTTOOLS_BUILD_LIB_APPS  "Build per-library standalone smoke-test apps" OFF)
+list(REMOVE_ITEM VCPKG_MANIFEST_FEATURES markdown)
+if(ROTTOOLS_BUILD_ROTREADER OR ROTTOOLS_BUILD_LIB_APPS)
+    list(APPEND VCPKG_MANIFEST_FEATURES markdown)
+    list(REMOVE_DUPLICATES VCPKG_MANIFEST_FEATURES)
+endif()
+
 project(rottools LANGUAGES CXX)
 
 # The Windows app icon ships in a .rc resource script (see RotToolsPackaging).
@@ -32,13 +43,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-# --- Per-tool build toggles (each tool builds/releases independently) --------
-option(ROTTOOLS_BUILD_ROTREADER "Build the rotreader tool" ON)
-option(ROTTOOLS_BUILD_ROTPAD    "Build the rotpad tool" ON)
-# Optional per-library standalone smoke-test executables (was the old
-# `if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)` app-per-folder trick).
-option(ROTTOOLS_BUILD_LIB_APPS  "Build per-library standalone smoke-test apps" OFF)
 
 # --- wxWidgets: found once for the whole tree --------------------------------
 # Ubuntu provides wxGTK 3.2; macOS and Windows use 3.3.3 or newer.

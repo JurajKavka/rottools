@@ -12,9 +12,14 @@
       "features": [
         "webview"
       ]
-    },
-    "md4c"
+    }
   ],
+  "features": {
+    "markdown": {
+      "description": "Markdown rendering for ROT Reader and the library demos",
+      "dependencies": ["md4c"]
+    }
+  },
   "overrides": [
     {
       "name": "wxwidgets",

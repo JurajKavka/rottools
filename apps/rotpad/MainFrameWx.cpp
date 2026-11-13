@@ -17,12 +17,16 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 
 	MenuBar = new wxMenuBar( 0 );
 	m_fileMenu = new wxMenu();
+	wxMenuItem* m_newFileMenuItem;
+	m_newFileMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW, wxString( _("&New File") ) + wxT('\t') + wxT("CTRL+N"), wxEmptyString, wxITEM_NORMAL );
+	m_fileMenu->Append( m_newFileMenuItem );
+
 	wxMenuItem* OpenFileMenuItem;
-	OpenFileMenuItem = new wxMenuItem( m_fileMenu, wxID_OPEN, wxString( _("&Open...") ) , wxEmptyString, wxITEM_NORMAL );
+	OpenFileMenuItem = new wxMenuItem( m_fileMenu, wxID_OPEN, wxString( _("&Open...") ) + wxT('\t') + wxT("CTRL+O") , wxEmptyString, wxITEM_NORMAL );
 	m_fileMenu->Append( OpenFileMenuItem );
 
 	wxMenuItem* m_newWindowMenuItem;
-	m_newWindowMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window\tCtrl+N") ) , wxEmptyString, wxITEM_NORMAL );
+	m_newWindowMenuItem = new wxMenuItem( m_fileMenu, wxID_NEW_WINDOW_MENU_ITEM, wxString( _("New Window") ) + wxT('\t') + wxT("CTRL+SHIFT+N") , wxEmptyString, wxITEM_NORMAL );
 	m_fileMenu->Append( m_newWindowMenuItem );
 
 	m_fileMenu->AppendSeparator();
@@ -34,6 +38,12 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	wxMenuItem* m_saveAsMenuItem;
 	m_saveAsMenuItem = new wxMenuItem( m_fileMenu, wxID_SAVEAS, wxString( _("Save As...") ) + wxT('\t') + wxT("CTRL+SHIFT+S"), wxEmptyString, wxITEM_NORMAL );
 	m_fileMenu->Append( m_saveAsMenuItem );
+
+	m_fileMenu->AppendSeparator();
+
+	wxMenuItem* m_closeMenuItem;
+	m_closeMenuItem = new wxMenuItem( m_fileMenu, wxID_CLOSE, wxString( _("&Close") ) + wxT('\t') + wxT("CTRL+W"), wxEmptyString, wxITEM_NORMAL );
+	m_fileMenu->Append( m_closeMenuItem );
 
 	MenuBar->Append( m_fileMenu, _("File") );
 
@@ -60,11 +70,25 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	m_pasteMenuItem = new wxMenuItem( m_editMenu, wxID_PASTE, wxString( _("Paste") ) , wxEmptyString, wxITEM_NORMAL );
 	m_editMenu->Append( m_pasteMenuItem );
 
+	wxMenuItem* m_selectAllMenuItem;
+	m_selectAllMenuItem = new wxMenuItem( m_editMenu, wxID_SELECTALL, wxString( _("Select All") ) + wxT('\t') + wxT("CTRL+A"), wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_selectAllMenuItem );
+
+	m_editMenu->AppendSeparator();
+
+	wxMenuItem* m_findMenuItem;
+	m_findMenuItem = new wxMenuItem( m_editMenu, wxID_FIND, wxString( _("Find...") ), wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_findMenuItem );
+
+	wxMenuItem* m_replaceMenuItem;
+	m_replaceMenuItem = new wxMenuItem( m_editMenu, wxID_REPLACE, wxString( _("Replace...") ), wxEmptyString, wxITEM_NORMAL );
+	m_editMenu->Append( m_replaceMenuItem );
+
 	MenuBar->Append( m_editMenu, _("Edit") );
 
 	m_viewMenu = new wxMenu();
 	wxMenuItem* m_toggleFileBrowserMenuItem;
-	m_toggleFileBrowserMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("Toggle file browser") ) , wxEmptyString, wxITEM_NORMAL );
+	m_toggleFileBrowserMenuItem = new wxMenuItem( m_viewMenu, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM, wxString( _("File Browser") ) , wxEmptyString, wxITEM_CHECK );
 	m_viewMenu->Append( m_toggleFileBrowserMenuItem );
 
 	wxMenuItem* m_wordWrap;
@@ -80,6 +104,13 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 
 	MenuBar->Append( m_settingsMenu, _("Settings") );
 
+	m_helpMenu = new wxMenu();
+	wxMenuItem* m_aboutMenuItem;
+	m_aboutMenuItem = new wxMenuItem( m_helpMenu, wxID_ABOUT, wxString( _("About ROT Pad") ), wxEmptyString, wxITEM_NORMAL );
+	m_helpMenu->Append( m_aboutMenuItem );
+
+	MenuBar->Append( m_helpMenu, _("Help") );
+
 	this->SetMenuBar( MenuBar );
 
 	wxBoxSizer* MainFrameSizer;
@@ -89,11 +120,13 @@ MainFrameWx::MainFrameWx( wxWindow* parent, wxWindowID id, const wxString& title
 	this->SetSizer( MainFrameSizer );
 	this->Layout();
 	toolBar = this->CreateToolBar( wxTB_HORIZONTAL, wxID_ANY );
-	m_fileOpenTool = toolBar->AddTool( wxID_ANY, _("Open file"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+	m_newFileTool = toolBar->AddTool( wxID_NEW, _("New File"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_NEW), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, _("New File"), _("Start a new text document"), NULL );
 
-	m_saveTool = toolBar->AddTool( wxID_ANY, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+	m_fileOpenTool = toolBar->AddTool( wxID_ANY, _("Open"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_OPEN), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, _("Open"), _("Open a text file"), NULL );
 
-	m_saveAsTool = toolBar->AddTool( wxID_ANY, _("tool"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE_AS), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL );
+	m_saveTool = toolBar->AddTool( wxID_ANY, _("Save"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, _("Save"), _("Save the current text file"), NULL );
+
+	m_saveAsTool = toolBar->AddTool( wxID_ANY, _("Save As"), wxArtProvider::GetBitmap( wxASCII_STR(wxART_FILE_SAVE_AS), wxASCII_STR(wxART_TOOLBAR) ), wxNullBitmap, wxITEM_NORMAL, _("Save As"), _("Save the current text file with a new name"), NULL );
 
 	toolBar->Realize();
 
