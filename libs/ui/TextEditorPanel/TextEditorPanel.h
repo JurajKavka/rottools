@@ -1,5 +1,9 @@
 #pragma once
 
+#include <optional>
+#include <utility>
+
+#include "HelperFunctions.h"
 #include "TextEditorPanelWx.h"
 
 class wxFont;
@@ -12,12 +16,14 @@ class TextEditorPanel : public TextEditorPanelWx {
     bool m_wordWrapEnabled = false;
 
     void RecreateTextEditor(bool wordWrapEnabled);
+    [[nodiscard]] std::optional<std::pair<long, long>> FindMatch(const wxString& text, const TextSearchOptions& options,
+                                                                 long start) const;
 
    public:
     explicit TextEditorPanel(wxWindow* parent);
 
     /** Replace the current document and start it with an empty undo history. */
-    void LoadText(const wxString& text);
+    void LoadText(const wxString& text, bool keepPosition = false);
 
     [[nodiscard]] wxString GetText() const;
     [[nodiscard]] bool HasUnsavedChanges() const;
@@ -27,6 +33,13 @@ class TextEditorPanel : public TextEditorPanelWx {
     void Copy();
     void Cut();
     void Paste();
+    void SelectAll();
+    [[nodiscard]] wxString GetSelectedText() const;
+    bool FindText(const wxString& text, const TextSearchOptions& options = {});
+    [[nodiscard]] bool ReplaceText(const wxString& text, const wxString& replacement,
+                                   const TextSearchOptions& options = {});
+    [[nodiscard]] int ReplaceAllText(const wxString& text, const wxString& replacement,
+                                     const TextSearchOptions& options = {});
     [[nodiscard]] bool CanUndo() const;
     [[nodiscard]] bool CanRedo() const;
     [[nodiscard]] bool CanCopy() const;

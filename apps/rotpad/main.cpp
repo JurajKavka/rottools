@@ -9,9 +9,6 @@ class RotpadApp final : public wxApp {
 #ifdef __WXOSX__
     void MacOpenFiles(const wxArrayString& fileNames) override;
 #endif
-
-   private:
-    MainFrame* m_frame = nullptr;
 };
 
 wxIMPLEMENT_APP(RotpadApp);
@@ -24,13 +21,13 @@ bool RotpadApp::OnInit() {
     OSXEnableAutomaticTabbing(false);
 #endif
 
-    m_frame = new MainFrame(nullptr);
-    m_frame->Show(true);
+    auto* frame = new MainFrame(nullptr);
+    frame->Show(true);
 
     // Linux and Windows desktop shells pass the selected document as a
     // command-line argument. This also makes `rotpad path/to/file` work.
     if (argc > 1) {
-        m_frame->HandleOpenTextFile(wxFileName(argv[1]));
+        frame->HandleOpenTextFile(wxFileName(argv[1]));
     }
 
     return true;
@@ -43,6 +40,20 @@ void RotpadApp::MacOpenFiles(const wxArrayString& fileNames) {
     if (fileNames.IsEmpty()) {
         return;
     }
-    m_frame->HandleOpenTextFile(wxFileName(fileNames[0]));
+    // New Window allows the original frame to close while the app stays open.
+    // Resolve a live frame for each Finder request instead of keeping that
+    // original frame's pointer.
+    MainFrame* frame = nullptr;
+    for (auto* window : wxTopLevelWindows) {
+        auto* candidate = dynamic_cast<MainFrame*>(window);
+        if (candidate != nullptr && (frame == nullptr || candidate->IsActive())) {
+            frame = candidate;
+        }
+    }
+    if (frame == nullptr) {
+        frame = new MainFrame(nullptr);
+        frame->Show(true);
+    }
+    frame->HandleOpenTextFile(wxFileName(fileNames[0]));
 }
 #endif

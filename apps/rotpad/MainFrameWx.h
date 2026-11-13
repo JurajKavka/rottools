@@ -47,7 +47,9 @@ class MainFrameWx : public wxFrame
 		wxMenu* m_editMenu;
 		wxMenu* m_viewMenu;
 		wxMenu* m_settingsMenu;
+		wxMenu* m_helpMenu;
 		wxToolBar* toolBar;
+		wxToolBarToolBase* m_newFileTool;
 		wxToolBarToolBase* m_fileOpenTool;
 		wxToolBarToolBase* m_saveTool;
 		wxToolBarToolBase* m_saveAsTool;
