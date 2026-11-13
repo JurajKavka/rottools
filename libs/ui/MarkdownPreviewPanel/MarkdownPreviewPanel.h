@@ -93,6 +93,9 @@ class MarkdownPreviewPanel : public WebViewPanel {
      */
     void LoadMarkdown(const wxString& markdown, const wxFileName& fileName, MarkdownPreviewOptions options = {});
 
+    /** Stops any pending Markdown render and displays a web page instead. */
+    void LoadUrl(const wxString& url);
+
     /**
      * @brief Re-renders the file already parsed with new options, e.g. a theme change.
      *

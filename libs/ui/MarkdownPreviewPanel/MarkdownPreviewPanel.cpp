@@ -27,6 +27,14 @@ void MarkdownPreviewPanel::LoadMarkdown(const wxString& markdown, const wxFileNa
     m_parseRequestId = m_markdownParser.ParseText(markdown, fileName);
 }
 
+void MarkdownPreviewPanel::LoadUrl(const wxString& url) {
+    m_markdownParser.AbortParseFile();
+    m_parseRequestId = 0;
+    m_parsePending = false;
+    m_hasCurrentParse = false;
+    WebViewPanel::LoadUrl(url);
+}
+
 void MarkdownPreviewPanel::Render(MarkdownPreviewOptions options) {
     if (m_parsePending) {
         // A theme can change while a new document is parsing. Keep that style

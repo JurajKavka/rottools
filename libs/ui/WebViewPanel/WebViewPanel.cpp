@@ -4,7 +4,25 @@
 #include <wx/utils.h>
 #include <wx/webview.h>
 
+#include <utility>
+
 namespace {
+
+constexpr auto kScriptMessageHandler = "rottoolsNative";
+constexpr auto kEscapeMessage = "escape";
+constexpr auto kEscapeScript = R"JS((function () {
+    if (window.__rottoolsEscapeHandlerInstalled) {
+        return;
+    }
+    window.__rottoolsEscapeHandlerInstalled = true;
+    window.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            window.rottoolsNative.postMessage("escape");
+        }
+    }, true);
+})();)JS";
 
 /**
  * @brief Escapes text for embedding in a double-quoted JavaScript string literal.
@@ -95,6 +113,28 @@ void WebViewPanel::ClearSearch() {
     }
 }
 
+void WebViewPanel::SetEscapePressedCallback(std::function<void()> callback) {
+    m_onEscapePressed = std::move(callback);
+}
+
+void WebViewPanel::EnsureWebView() {
+    if (m_webView != nullptr) {
+        return;
+    }
+
+    m_webView = wxWebView::New(this, wxID_ANY);
+    m_webView->Bind(wxEVT_LEFT_DOWN, &WebViewPanel::HandleWebViewLeftDown, this);
+    m_webView->Bind(wxEVT_WEBVIEW_NAVIGATING, &WebViewPanel::HandleWebViewNavigation, this);
+    m_webView->Bind(wxEVT_WEBVIEW_NEWWINDOW, &WebViewPanel::HandleWebViewNavigation, this);
+    m_webView->Bind(wxEVT_WEBVIEW_LOADED, &WebViewPanel::HandleWebViewLoaded, this);
+    m_scriptMessagingAvailable = m_webView->AddScriptMessageHandler(kScriptMessageHandler);
+    if (m_scriptMessagingAvailable) {
+        m_webView->Bind(wxEVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, &WebViewPanel::HandleWebViewScriptMessage, this);
+    }
+    GetSizer()->Add(m_webView, 1, wxEXPAND | wxALL, 0);
+    Layout();
+}
+
 void WebViewPanel::HandleWebViewLeftDown(wxMouseEvent& event) {
     // A non-editable native web view can consume a click without becoming the
     // wxWidgets focus window. Make the same focus transition explicitly so
@@ -112,22 +152,37 @@ void WebViewPanel::HandleWebViewNavigation(wxWebViewEvent& event) {
         return;
     }
 
+    if (!m_embeddedUrl.IsEmpty() &&
+        (url == m_embeddedUrl || url.StartsWith(m_embeddedUrl + "#") || url.StartsWith(m_embeddedUrl + "?"))) {
+        event.Skip();
+        return;
+    }
+
     // Keep the rendered document in place, even if the browser cannot launch.
     event.Veto();
     wxLaunchDefaultBrowser(url);
 }
 
+void WebViewPanel::HandleWebViewLoaded(wxWebViewEvent& event) {
+    if (m_scriptMessagingAvailable && !m_embeddedUrl.IsEmpty()) {
+        m_webView->RunScriptAsync(kEscapeScript);
+    }
+    event.Skip();
+}
+
+void WebViewPanel::HandleWebViewScriptMessage(wxWebViewEvent& event) {
+    if (event.GetMessageHandler() == kScriptMessageHandler && event.GetString() == kEscapeMessage &&
+        m_onEscapePressed) {
+        m_onEscapePressed();
+    }
+    event.Skip();
+}
+
 void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior) {
-    if (!m_webView) {
-        // 3. Instantiate the wxWebView
-        m_webView = wxWebView::New(this, wxID_ANY);
-        m_webView->Bind(wxEVT_LEFT_DOWN, &WebViewPanel::HandleWebViewLeftDown, this);
-        m_webView->Bind(wxEVT_WEBVIEW_NAVIGATING, &WebViewPanel::HandleWebViewNavigation, this);
-        m_webView->Bind(wxEVT_WEBVIEW_NEWWINDOW, &WebViewPanel::HandleWebViewNavigation, this);
-        wxSizer* mainSizer = GetSizer();
-        // 4. Add it to the sizer, expanding to fill the panel
-        mainSizer->Add(m_webView, 1, wxEXPAND | wxALL, 0);
-        Layout();
+    const bool isFirstLoad = m_webView == nullptr;
+    EnsureWebView();
+    m_embeddedUrl.clear();
+    if (isFirstLoad) {
         // First load: no page to update in place yet.
         m_webView->SetPage(html, "");
         return;
@@ -165,4 +220,11 @@ void WebViewPanel::LoadHtml(const wxString& html, ScrollBehavior scrollBehavior)
 }})();)",
                                                      EscapeForJsString(html)));
     m_webView->RunScriptAsync(script);
+}
+
+void WebViewPanel::LoadUrl(const wxString& url) {
+    EnsureWebView();
+    ClearSearch();
+    m_embeddedUrl = url;
+    m_webView->LoadURL(url);
 }
