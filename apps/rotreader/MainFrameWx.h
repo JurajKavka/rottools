@@ -45,6 +45,7 @@ class MainFrameWx : public wxFrame
 			wxID_WORDWRAP,
 			wxID_FONT,
 			wxID_COPY_ENGLISH_REVIEW_PROMPT_MENU_ITEM,
+			wxID_GAMES,
 			wxID_EDIT_TOOL,
 		};
 

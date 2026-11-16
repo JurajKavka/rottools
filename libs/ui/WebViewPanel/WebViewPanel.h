@@ -3,6 +3,8 @@
 #include "HelperFunctions.h"
 #include "WebViewPanelWx.h"
 
+#include <functional>
+
 // Forward declaration prevents bloated compile times
 class wxMouseEvent;
 class wxWebView;
@@ -14,9 +16,15 @@ class wxWebViewEvent;
 class WebViewPanel : public WebViewPanelWx {
    private:
     wxWebView* m_webView = nullptr;
+    wxString m_embeddedUrl;
+    bool m_scriptMessagingAvailable = false;
+    std::function<void()> m_onEscapePressed;
 
+    void EnsureWebView();
     void HandleWebViewLeftDown(wxMouseEvent& event);
     void HandleWebViewNavigation(wxWebViewEvent& event);
+    void HandleWebViewLoaded(wxWebViewEvent& event);
+    void HandleWebViewScriptMessage(wxWebViewEvent& event);
 
    public:
     explicit WebViewPanel(wxWindow* parent);
@@ -35,6 +43,9 @@ class WebViewPanel : public WebViewPanelWx {
     /** Clears the web engine's current match and search highlighting. */
     void ClearSearch();
 
+    /** Sets the callback invoked when Escape is pressed in an embedded page. */
+    void SetEscapePressedCallback(std::function<void()> callback);
+
     /**
      * @brief Shows an HTML page in the webview.
      * HTTP and HTTPS links open in the default browser, including links that
@@ -47,4 +58,10 @@ class WebViewPanel : public WebViewPanelWx {
      *        page to update yet.
      */
     void LoadHtml(const wxString& html, ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop);
+
+    /**
+     * Loads an HTTP or HTTPS page inside the panel. Navigation away from the
+     * requested page continues to open in the system browser.
+     */
+    void LoadUrl(const wxString& url);
 };

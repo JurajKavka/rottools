@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <vector>
 
 class wxMenu;
 class wxMenuItem;
@@ -39,6 +40,18 @@ struct TextSearchOptions {
     bool wholeWord = false;
     bool wrap = true;
 };
+
+namespace rottools {
+
+struct WebGame {
+    wxString name;
+    wxString url;
+};
+
+/** Returns the games exposed by applications through their native menus. */
+[[nodiscard]] const std::vector<WebGame>& GetWebGames();
+
+}  // namespace rottools
 
 namespace detail {
 // Serializes writes so a whole line stays atomic even when worker threads log
