@@ -95,7 +95,7 @@ MainFrame::MainFrame(wxWindow* parent, const wxFileName& initialDirectory) : Mai
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateFindMenuItem, this, wxID_FIND);
     Bind(wxEVT_UPDATE_UI, &MainFrame::HandleUpdateReplaceMenuItem, this, wxID_REPLACE);
     Bind(wxEVT_MENU, &MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick, this, wxID_SOLO_WEB_VIEW_PANEL_MENU_ITEM);
-    Bind(wxEVT_MENU, &MainFrame::HandleToggleFileBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
+    Bind(wxEVT_MENU, &MainFrame::HandleToggleFileTreeBrowserMenuItemClick, this, wxID_TOGGLE_FILE_BROWSER_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleHtmlSourcePanelMenuItemClick, this,
          wxID_TOGGLE_HTML_SOURCE_PANEL_MENU_ITEM);
     Bind(wxEVT_MENU, &MainFrame::HandleToggleMarkdownEditorPanelMenuItemClick, this,
@@ -145,15 +145,15 @@ MainFrame::MainFrame(wxWindow* parent, const wxFileName& initialDirectory) : Mai
     m_fileBrowserPanel = new FileBrowserTreePanel(
         m_mainSplitter,
         {.onFileOpened = std::bind_front(&MainFrame::HandleOpenFile, this),
-         .onDirectoryChanged = std::bind_front(&MainFrame::HandleDirectoryChanged, this),
-         .onHomeRequested = std::bind_front(&MainFrame::HandleFileBrowserHomeRequested, this),
-         .onCloseRequested = std::bind_front(&MainFrame::HandleFileBrowserCloseRequested, this),
-         .selectNewFolderName = std::bind_front(&MainFrame::HandleSelectBrowserFolderName, this),
-         .onCreateFolderError = std::bind_front(&MainFrame::HandleBrowserCreateFolderError, this),
-         .onConfirmMoveToTrash = std::bind_front(&MainFrame::HandleConfirmBrowserMoveToTrash, this),
-         .onConfirmPermanentlyDelete = std::bind_front(&MainFrame::HandleConfirmBrowserPermanentlyDelete, this),
-         .onPathDeleted = std::bind_front(&MainFrame::HandleBrowserPathDeleted, this),
-         .onDeleteError = std::bind_front(&MainFrame::HandleBrowserDeleteError, this),
+         .onDirectoryChanged = std::bind_front(&MainFrame::HandleFileTreeBrowserDirectoryChanged, this),
+         .onHomeRequested = std::bind_front(&MainFrame::HandleFileTreeBrowserHomeRequested, this),
+         .onCloseRequested = std::bind_front(&MainFrame::HandleFileTreeBrowserCloseRequested, this),
+         .selectNewFolderName = std::bind_front(&MainFrame::HandleFileTreeBrowserSelectFolderName, this),
+         .onCreateFolderError = std::bind_front(&MainFrame::HandleFileTreeBrowserCreateFolderError, this),
+         .onConfirmMoveToTrash = std::bind_front(&MainFrame::HandleFileTreeBrowserConfirmMoveToTrash, this),
+         .onConfirmPermanentlyDelete = std::bind_front(&MainFrame::HandleFileTreeBrowserConfirmPermanentlyDelete, this),
+         .onPathDeleted = std::bind_front(&MainFrame::HandleFileTreeBrowserPathDeleted, this),
+         .onDeleteError = std::bind_front(&MainFrame::HandleFileTreeBrowserDeleteError, this),
          .onMoveError = std::bind_front(&MainFrame::HandleFileTreeBrowserMoveError, this),
          .onBeforeMove = std::bind_front(&MainFrame::HandleFileTreeBrowserBeforeMove, this),
          .onPathMoved = std::bind_front(&MainFrame::HandleFileTreeBrowserPathMoved, this),
@@ -211,7 +211,7 @@ MainFrame::MainFrame(wxWindow* parent, const wxFileName& initialDirectory) : Mai
     m_bookmarkStore->Initialize();
 
     // The browser watcher is created lazily by RefreshBrowserWatcher, which
-    // runs once the initial ListDir scan completes (via HandleDirectoryChanged).
+    // runs once the initial ListDir scan completes (via HandleFileTreeBrowserDirectoryChanged).
 
     Layout();
 
@@ -473,7 +473,7 @@ void MainFrame::HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& even
     ApplySourcePanelVisibility(focusedWindow);
 }
 
-void MainFrame::HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event) {
+void MainFrame::HandleToggleFileTreeBrowserMenuItemClick(wxCommandEvent& event) {
     if (!event.IsChecked()) {
         HideFileBrowser();
     } else {
@@ -734,17 +734,17 @@ void MainFrame::ShowReferenceText(const wxFileName& filePath) {
     dialog.ShowModal();
 }
 
-void MainFrame::HandleFileBrowserHomeRequested() {
+void MainFrame::HandleFileTreeBrowserHomeRequested() {
     wxFileName homeDirectory;
     homeDirectory.AssignHomeDir();
     m_fileBrowserPanel->ListDir(homeDirectory);
 }
 
-void MainFrame::HandleFileBrowserCloseRequested() {
+void MainFrame::HandleFileTreeBrowserCloseRequested() {
     HideFileBrowser();
 }
 
-std::optional<wxString> MainFrame::HandleSelectBrowserFolderName(const std::optional<wxString>& previousName) {
+std::optional<wxString> MainFrame::HandleFileTreeBrowserSelectFolderName(const std::optional<wxString>& previousName) {
     wxTextEntryDialog dialog(this, _("Name for the new folder:"), _("New Folder"),
                              previousName.value_or(_("New Folder")));
     if (dialog.ShowModal() != wxID_OK) {
@@ -753,14 +753,14 @@ std::optional<wxString> MainFrame::HandleSelectBrowserFolderName(const std::opti
     return dialog.GetValue();
 }
 
-void MainFrame::HandleBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error) {
+void MainFrame::HandleFileTreeBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error) {
     const wxString detail = wxString::FromUTF8(error.error.message().c_str());
     const wxString message = wxString::Format(_("Could not create folder \"%s\": %s"), error.name.c_str(),
                                               detail.c_str());
     wxMessageBox(message, _("New Folder"), wxOK | wxICON_ERROR, this);
 }
 
-bool MainFrame::HandleConfirmBrowserMoveToTrash(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
+bool MainFrame::HandleFileTreeBrowserConfirmMoveToTrash(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
     const wxString trashName = FileBrowserTreePanel::GetTrashName();
     wxString message;
     if (paths.size() == 1) {
@@ -774,7 +774,7 @@ bool MainFrame::HandleConfirmBrowserMoveToTrash(const std::vector<FileBrowserTre
     return ConfirmBrowserDelete(paths, std::move(message), action);
 }
 
-bool MainFrame::HandleConfirmBrowserPermanentlyDelete(
+bool MainFrame::HandleFileTreeBrowserConfirmPermanentlyDelete(
     const std::vector<FileBrowserTreePanel::DeletePrompt>& paths) {
     wxString message;
     if (paths.size() == 1) {
@@ -813,14 +813,14 @@ bool MainFrame::IsCurrentDocumentAffectedByDelete(const FileBrowserTreePanel::De
            (deleted.isDirectory && IsFileWithinDirectory(m_currentDocument, deleted.path));
 }
 
-void MainFrame::HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted) {
+void MainFrame::HandleFileTreeBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted) {
     if (IsCurrentDocumentAffectedByDelete(deleted)) {
         m_markdownEditorPanel->DiscardDocument();
     }
 }
 
-void MainFrame::HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,
-                                         FileBrowserTreePanel::DeleteMode mode) {
+void MainFrame::HandleFileTreeBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,
+                                                 FileBrowserTreePanel::DeleteMode mode) {
     const bool trash = mode == FileBrowserTreePanel::DeleteMode::Trash;
     const wxString trashName = FileBrowserTreePanel::GetTrashName();
     wxString message;
@@ -1072,13 +1072,13 @@ void MainFrame::HandleOpenBookmarkedDocument(const wxFileName& document) {
     HandleOpenFile(document);
 }
 
-void MainFrame::HandleDirectoryChanged(const wxFileName& filePath) {
+void MainFrame::HandleFileTreeBrowserDirectoryChanged(const wxFileName& filePath) {
     m_browsedDirectory = wxFileName::DirName(filePath.GetFullPath());
     RefreshBrowserWatcher();
     UpdateBookmarkCommands();
 }
 
-void MainFrame::HandleBrowserWatcherChange() {
+void MainFrame::HandleFileTreeBrowserWatcherChange() {
     m_fileBrowserPanel->ReloadCurrentDir();
 }
 
@@ -1086,7 +1086,7 @@ void MainFrame::RefreshBrowserWatcher() {
     m_fileBrowserWatcher.reset();
     if (m_browsedDirectory.IsOk() && m_browsedDirectory.DirExists()) {
         m_fileBrowserWatcher = std::make_unique<FsWatcher>(
-            m_browsedDirectory, std::bind_front(&MainFrame::HandleBrowserWatcherChange, this));
+            m_browsedDirectory, std::bind_front(&MainFrame::HandleFileTreeBrowserWatcherChange, this));
     }
 }
 

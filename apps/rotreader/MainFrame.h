@@ -96,7 +96,7 @@ class MainFrame : public MainFrameWx {
     void HandleUpdateFindMenuItem(wxUpdateUIEvent& event);
     void HandleUpdateReplaceMenuItem(wxUpdateUIEvent& event);
     void HandleSoloMarkdownPreviewPanelMenuItemClick(wxCommandEvent& event);
-    void HandleToggleFileBrowserMenuItemClick(wxCommandEvent& event);
+    void HandleToggleFileTreeBrowserMenuItemClick(wxCommandEvent& event);
     void HandleToggleHtmlSourcePanelMenuItemClick(wxCommandEvent& event);
     void HandleToggleMarkdownEditorPanelMenuItemClick(wxCommandEvent& event);
     void HandleWordWrapMenuItemClick(wxCommandEvent& event);
@@ -119,17 +119,17 @@ class MainFrame : public MainFrameWx {
     void RebuildBookmarksMenu(const std::vector<BookmarkStore::Bookmark>& bookmarks);
     void UpdateBookmarkCommands();
     MarkdownPreviewOptions GetPreviewOptions(ScrollBehavior scrollBehavior = ScrollBehavior::ResetToTop) const;
-    void HandleFileBrowserHomeRequested();
-    void HandleFileBrowserCloseRequested();
-    std::optional<wxString> HandleSelectBrowserFolderName(const std::optional<wxString>& previousName);
-    void HandleBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error);
-    bool HandleConfirmBrowserMoveToTrash(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths);
-    bool HandleConfirmBrowserPermanentlyDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths);
+    void HandleFileTreeBrowserHomeRequested();
+    void HandleFileTreeBrowserCloseRequested();
+    std::optional<wxString> HandleFileTreeBrowserSelectFolderName(const std::optional<wxString>& previousName);
+    void HandleFileTreeBrowserCreateFolderError(const FileBrowserTreePanel::CreateFolderError& error);
+    bool HandleFileTreeBrowserConfirmMoveToTrash(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths);
+    bool HandleFileTreeBrowserConfirmPermanentlyDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths);
     bool ConfirmBrowserDelete(const std::vector<FileBrowserTreePanel::DeletePrompt>& paths, wxString message,
                               const wxString& action);
-    void HandleBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted);
-    void HandleBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,
-                                  FileBrowserTreePanel::DeleteMode mode);
+    void HandleFileTreeBrowserPathDeleted(const FileBrowserTreePanel::DeletePrompt& deleted);
+    void HandleFileTreeBrowserDeleteError(const std::vector<FileBrowserTreePanel::DeleteError>& errors,
+                                          FileBrowserTreePanel::DeleteMode mode);
     void HandleFileTreeBrowserMoveError(const std::vector<FileBrowserTreePanel::MoveError>& errors);
     void HandleFileTreeBrowserCopyError(const std::vector<FileBrowserTreePanel::CopyError>& errors);
     bool HandleFileTreeBrowserConfirmOverwrite(const FileBrowserTreePanel::OverwritePrompt& prompt);
@@ -141,8 +141,8 @@ class MainFrame : public MainFrameWx {
     [[nodiscard]] bool IsCurrentDocumentAffectedByDelete(const FileBrowserTreePanel::DeletePrompt& deleted) const;
     void HandleOpenBookmarkedDirectory(const wxFileName& directory);
     void HandleOpenBookmarkedDocument(const wxFileName& document);
-    void HandleDirectoryChanged(const wxFileName& filePath);
-    void HandleBrowserWatcherChange();
+    void HandleFileTreeBrowserDirectoryChanged(const wxFileName& filePath);
+    void HandleFileTreeBrowserWatcherChange();
     void RefreshBrowserWatcher();
 
     void HandleMarkdownDocumentChanged(const MarkdownEditorPanel::DocumentChange& change);
