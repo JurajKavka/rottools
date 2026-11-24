@@ -42,6 +42,20 @@ bool CheckEditing(TextEditorPanel& editor) {
     passed =
         Check(editor.GetText() == wxString::FromUTF8("Žltý 😀\nlast"), "Unicode and native position mapping") && passed;
 
+    editor.LoadText(wxString::FromUTF8("😀 x tail"));
+    passed = Check(editor.FindText("x") && editor.GetSelectedText() == "x",
+                   "selected text after a non-BMP character") && passed;
+    passed = Check(editor.ReplaceAllText("x", "y") == 1 &&
+                       editor.GetText() == wxString::FromUTF8("😀 y tail"),
+                   "Replace All preserves text after a non-BMP character") && passed;
+    editor.Undo();
+    passed = Check(editor.GetText() == wxString::FromUTF8("😀 x tail") && !editor.HasUnsavedChanges(),
+                   "undo Unicode Replace All restores the saved document") && passed;
+    editor.LoadText(wxString::FromUTF8("😀 x 😀 x"));
+    passed = Check(editor.ReplaceAllText("x", "y") == 2 &&
+                       editor.GetText() == wxString::FromUTF8("😀 y 😀 y"),
+                   "Replace All handles multiple non-BMP characters and a match at the end") && passed;
+
     editor.LoadText("a a");
     passed = Check(editor.ReplaceAllText("a", "aa") == 2 && editor.GetText() == "aa aa",
                    "Replace All does not search its own replacements") &&

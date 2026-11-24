@@ -2,6 +2,9 @@
 
 #include <wx/sizer.h>
 #include <wx/textctrl.h>
+#ifdef __WXOSX__
+#include <wx/ustring.h>
+#endif
 
 #include <algorithm>
 
@@ -9,6 +12,15 @@ namespace {
 long TextEditorStyle(bool wordWrapEnabled) {
     return wxTE_MULTILINE | (wordWrapEnabled ? 0 : wxTE_DONTWRAP);
 }
+#ifdef __WXOSX__
+wxString CocoaTextRange(const wxString& contents, long start, long end) {
+    if (start >= end) {
+        return {};
+    }
+    const auto utf16 = wxUString(contents).utf16_str();
+    return wxUString::FromUTF16(utf16.data() + start, static_cast<size_t>(end - start));
+}
+#endif
 }  // namespace
 
 TextEditorPanel::TextEditorPanel(wxWindow* parent) : TextEditorPanelWx(parent) {
@@ -93,7 +105,14 @@ void TextEditorPanel::SelectAll() {
 }
 
 wxString TextEditorPanel::GetSelectedText() const {
+#ifdef __WXOSX__
+    long start = 0;
+    long end = 0;
+    m_textEditor->GetSelection(&start, &end);
+    return CocoaTextRange(m_textEditor->GetValue(), start, end);
+#else
     return m_textEditor->GetStringSelection();
+#endif
 }
 
 std::optional<std::pair<long, long>> TextEditorPanel::FindMatch(const wxString& text, const TextSearchOptions& options,
@@ -193,13 +212,24 @@ int TextEditorPanel::ReplaceAllText(const wxString& text, const wxString& replac
     wxString updated;
     long position = 0;
     int count = 0;
+#ifdef __WXOSX__
+    const wxString contents = m_textEditor->GetValue();
+#endif
     while (const auto match = FindMatch(text, forward, position)) {
+#ifdef __WXOSX__
+        updated += CocoaTextRange(contents, position, match->first) + replacement;
+#else
         updated += m_textEditor->GetRange(position, match->first) + replacement;
+#endif
         position = match->second;
         ++count;
     }
     if (count > 0) {
+#ifdef __WXOSX__
+        updated += CocoaTextRange(contents, position, m_textEditor->GetLastPosition());
+#else
         updated += m_textEditor->GetRange(position, m_textEditor->GetLastPosition());
+#endif
         // One native replacement preserves Undo instead of loading new text
         // (which would reset the document's save point and undo history).
         m_textEditor->Replace(0, m_textEditor->GetLastPosition(), updated);
