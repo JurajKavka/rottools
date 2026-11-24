@@ -33,7 +33,49 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
 
     // Keep the plain-text defaults visually close to a native text editor.
     // Richer editor features are enabled only when requested by the consumer.
-    m_textEditor->SetLexer(m_options.syntax == Syntax::Markdown ? wxSTC_LEX_MARKDOWN : wxSTC_LEX_NULL);
+    int lexer = wxSTC_LEX_NULL;
+    switch (m_options.syntax) {
+        case Syntax::Markdown: lexer = wxSTC_LEX_MARKDOWN; break;
+        case Syntax::Sql: lexer = wxSTC_LEX_SQL; break;
+        case Syntax::Python: lexer = wxSTC_LEX_PYTHON; break;
+        case Syntax::Shell: lexer = wxSTC_LEX_BASH; break;
+        case Syntax::Cpp:
+        case Syntax::JavaScript:
+        case Syntax::TypeScript: lexer = wxSTC_LEX_CPP; break;
+        case Syntax::None: break;
+    }
+    m_textEditor->SetLexer(lexer);
+    switch (m_options.syntax) {
+        case Syntax::Sql:
+            m_textEditor->SetKeyWords(0, "select from where insert into values update delete create table drop alter join left right inner outer on as and or not null is order by group having limit distinct union all case when then else end primary key references index database default");
+            break;
+        case Syntax::Python:
+            m_textEditor->SetKeyWords(0, "False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case");
+            break;
+        case Syntax::Shell:
+            m_textEditor->SetKeyWords(0, "if then else elif fi for while until do done case esac in function select time coproc break continue return exit export local readonly unset shift source eval exec trap set printf echo read test true false");
+            break;
+        case Syntax::Cpp:
+            m_textEditor->SetKeyWords(0, "alignas alignof auto bool break case catch char class const constexpr continue default delete do double else enum explicit extern false float for friend if inline int long namespace new nullptr operator private protected public return short signed sizeof static struct switch template this throw true try typedef typename union unsigned using virtual void volatile while");
+            break;
+        case Syntax::JavaScript:
+            m_textEditor->SetKeyWords(0, "async await break case catch class const continue debugger default delete do else export extends false finally for function if import in instanceof let new null return static super switch this throw true try typeof var void while with yield");
+#if wxCHECK_VERSION(3, 3, 3)
+            m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "2");
+#else
+            m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "1");
+#endif
+            break;
+        case Syntax::TypeScript:
+            m_textEditor->SetKeyWords(0, "abstract any as asserts async await boolean break case catch class const constructor continue declare default delete do else enum export extends false finally for from function get if implements import in infer instanceof interface is keyof let module namespace never new null number object private protected public readonly return set static string super switch symbol this throw true try type typeof undefined unique unknown var void while yield");
+#if wxCHECK_VERSION(3, 3, 3)
+            m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "2");
+#else
+            m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "1");
+#endif
+            break;
+        default: break;
+    }
     m_textEditor->SetCodePage(wxSTC_CP_UTF8);
     m_textEditor->SetMarginType(0, wxSTC_MARGIN_NUMBER);
     m_textEditor->SetMarginWidth(0, 0);
@@ -71,6 +113,7 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
     m_textEditor->SetSavePoint();
 
     SetWordWrap(m_options.wordWrap);
+    m_textEditor->SetReadOnly(m_options.readOnly);
 }
 
 bool ScintillaTextEditorPanel::NewDocument() {
@@ -232,6 +275,7 @@ bool ScintillaTextEditorPanel::ConfirmOverwriteExternalChanges(const wxFileName&
 }
 
 void ScintillaTextEditorPanel::LoadText(const wxString& text, LoadBehavior loadBehavior) {
+    m_textEditor->SetReadOnly(false);
     UpdateEolModeForText(text);
 
     if (loadBehavior == LoadBehavior::KeepPosition) {
@@ -250,6 +294,7 @@ void ScintillaTextEditorPanel::LoadText(const wxString& text, LoadBehavior loadB
         m_textEditor->SetFirstVisibleLine(firstVisibleLine);
         m_textEditor->SetXOffset(horizontalOffset);
         UpdateLineNumberMarginWidth();
+        m_textEditor->SetReadOnly(m_options.readOnly);
         return;
     }
 
@@ -260,6 +305,7 @@ void ScintillaTextEditorPanel::LoadText(const wxString& text, LoadBehavior loadB
     m_textEditor->SetFirstVisibleLine(0);
     m_textEditor->SetXOffset(0);
     UpdateLineNumberMarginWidth();
+    m_textEditor->SetReadOnly(m_options.readOnly);
 }
 
 wxString ScintillaTextEditorPanel::GetText() const {
@@ -506,10 +552,45 @@ void ScintillaTextEditorPanel::ApplyEditorStyles(const wxFont& font) {
 
     if (m_options.syntax == Syntax::Markdown) {
         ApplyMarkdownStyles();
+    } else if (m_options.syntax != Syntax::None) {
+        ApplySourceStyles();
     }
 
     if (m_options.lineNumbers) {
         m_textEditor->StyleSetForeground(wxSTC_STYLE_LINENUMBER, wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+    }
+}
+
+void ScintillaTextEditorPanel::ApplySourceStyles() {
+    const wxColour background = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+    const bool dark = background.Red() * 299 + background.Green() * 587 + background.Blue() * 114 < 128000;
+    const wxColour keyword = dark ? wxColour(130, 190, 255) : wxColour(0, 60, 170);
+    const wxColour string = dark ? wxColour(255, 180, 140) : wxColour(145, 35, 15);
+    const wxColour comment = dark ? wxColour(145, 205, 145) : wxColour(0, 110, 35);
+    auto style = [this](int id, const wxColour& colour) { m_textEditor->StyleSetForeground(id, colour); };
+    if (m_options.syntax == Syntax::Python) {
+        style(wxSTC_P_WORD, keyword); style(wxSTC_P_STRING, string); style(wxSTC_P_CHARACTER, string);
+        style(wxSTC_P_TRIPLE, string); style(wxSTC_P_TRIPLEDOUBLE, string); style(wxSTC_P_COMMENTLINE, comment);
+    } else if (m_options.syntax == Syntax::Shell) {
+        style(wxSTC_SH_WORD, keyword);
+        style(wxSTC_SH_STRING, string);
+        style(wxSTC_SH_CHARACTER, string);
+        style(wxSTC_SH_BACKTICKS, string);
+        style(wxSTC_SH_HERE_DELIM, string);
+        style(wxSTC_SH_HERE_Q, string);
+        style(wxSTC_SH_COMMENTLINE, comment);
+    } else if (m_options.syntax == Syntax::Sql) {
+        style(wxSTC_SQL_WORD, keyword); style(wxSTC_SQL_STRING, string); style(wxSTC_SQL_CHARACTER, string);
+        style(wxSTC_SQL_COMMENT, comment); style(wxSTC_SQL_COMMENTLINE, comment);
+    } else {
+        style(wxSTC_C_WORD, keyword); style(wxSTC_C_STRING, string); style(wxSTC_C_CHARACTER, string);
+        style(wxSTC_C_COMMENT, comment); style(wxSTC_C_COMMENTLINE, comment); style(wxSTC_C_COMMENTDOC, comment);
+#ifdef wxSTC_C_BACKTICKS
+        style(wxSTC_C_BACKTICKS, string);
+#endif
+#ifdef wxSTC_C_STRINGRAW
+        style(wxSTC_C_STRINGRAW, string);
+#endif
     }
 }
 

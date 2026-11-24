@@ -1,5 +1,6 @@
 add_subdirectory(AppConfigFunctions)
 add_subdirectory(BookmarkStore)
+add_subdirectory(CsvParser)
 add_subdirectory(FileManagerBackend)
 
 # Backend workers (async, non-UI logic).

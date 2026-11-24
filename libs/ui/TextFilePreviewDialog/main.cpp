@@ -21,12 +21,15 @@ class TextFilePreviewDialogApp final : public wxApp {
 wxIMPLEMENT_APP(TextFilePreviewDialogApp);
 
 bool TextFilePreviewDialogApp::OnInit() {
-    auto* frame = new wxFrame(nullptr, wxID_ANY, "Test: Text File Preview", wxDefaultPosition,
-                              wxSize(480, 180));
-    auto* button = new wxButton(frame, wxID_ANY, "Open Preview");
+    auto* frame = new wxFrame(nullptr, wxID_ANY, "Test: Text File Preview", wxDefaultPosition, wxSize(480, 180));
+    auto* button = new wxButton(frame, wxID_ANY, "Plain text");
+    auto* code = new wxButton(frame, wxID_ANY, "Source code");
+    auto* csv = new wxButton(frame, wxID_ANY, "CSV table");
     auto* sizer = new wxBoxSizer(wxVERTICAL);
     sizer->AddStretchSpacer();
     sizer->Add(button, 0, wxALIGN_CENTER | wxALL, frame->FromDIP(12));
+    sizer->Add(code, 0, wxALIGN_CENTER | wxALL, frame->FromDIP(4));
+    sizer->Add(csv, 0, wxALIGN_CENTER | wxALL, frame->FromDIP(4));
     sizer->AddStretchSpacer();
     frame->SetSizer(sizer);
 
@@ -36,6 +39,16 @@ bool TextFilePreviewDialogApp::OnInit() {
         dialog.ShowModal();
     });
 
+    code->Bind(wxEVT_BUTTON, [frame](wxCommandEvent&) {
+        TextFilePreviewDialog dialog(frame, "Sample code");
+        dialog.ShowCode("// Select and copy\nconst char* text = \"hello\";\n", ScintillaTextEditorPanel::Syntax::Cpp);
+        dialog.ShowModal();
+    });
+    csv->Bind(wxEVT_BUTTON, [frame](wxCommandEvent&) {
+        TextFilePreviewDialog dialog(frame, "Sample CSV");
+        dialog.ShowCsv(ParseCsv("00123,\"a,b\",\"two\nlines\"\nshort\nextra,,value,field"));
+        dialog.ShowModal();
+    });
     frame->Show();
     return true;
 }

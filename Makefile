@@ -7,7 +7,7 @@
         rotpad-run rotpad-run-fg rotpad-package rotpad-icons rotpad-clean \
         run-filetree run-flatbuttons run-headerpanel run-icons run-htmlsource run-texteditor run-scintillatexteditor \
         run-textfilepreviewdialog \
-        run-dirscan run-md2html run-helpers run-filemanager \
+        run-dirscan run-md2html run-helpers run-filemanager run-csvparser run-csvtable \
         build-icons build-texteditor build-scintillatexteditor build-textfilepreviewdialog \
         build-webview build-filedrop \
         format check clean _demos
@@ -149,6 +149,14 @@ run-textfilepreviewdialog: build-textfilepreviewdialog ## Run TextFilePreviewDia
 run-dirscan: _demos    ## DirectoryScanner       (rottools::dirscan)
 	cmake --build build --target rottools_dirscan_app
 	./build/libs/backend/DirectoryScanner/rottools_dirscan_app
+
+run-csvparser: _demos ## Run CSV parser smoke app
+	cmake --build build --target rottools_csvparser_app
+	./build/libs/backend/CsvParser/rottools_csvparser_app
+
+run-csvtable: _demos ## Run CSV table smoke app
+	cmake --build build --target rottools_ui_csvtable_app
+	./build/libs/ui/CsvTablePanel/rottools_ui_csvtable_app
 
 run-filemanager: _demos ## FileManagerBackend    (rottools::filemanager)
 	cmake --build build --target rottools_filemanager_app

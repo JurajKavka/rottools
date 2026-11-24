@@ -22,12 +22,19 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     enum class Syntax {
         None,
         Markdown,
+        Sql,
+        JavaScript,
+        TypeScript,
+        Python,
+        Cpp,
+        Shell,
     };
 
     struct Options {
         Syntax syntax = Syntax::None;
         bool lineNumbers = false;
         bool wordWrap = false;
+        bool readOnly = false;
     };
 
     enum class LoadBehavior {
@@ -203,6 +210,7 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     void NotifyError(ErrorCode errorCode, const wxFileName& filePath) const;
     void ApplyEditorStyles(const wxFont& font);
     void ApplyMarkdownStyles();
+    void ApplySourceStyles();
     void ApplySelectionColours();
     void UpdateEolModeForText(const wxString& text);
     void UpdateLineNumberMarginWidth();

@@ -2,6 +2,8 @@
 
 #include <wx/settings.h>
 
+#include "CsvTablePanel.h"
+
 TextFilePreviewDialog::TextFilePreviewDialog(wxWindow* parent, const wxString& title)
     : TextFilePreviewDialogWx(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize,
                               wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
@@ -19,6 +21,27 @@ TextFilePreviewDialog::TextFilePreviewDialog(wxWindow* parent, const wxString& t
 void TextFilePreviewDialog::ShowText(const wxString& text) {
     m_textCtrl2->SetValue(text);
     m_textCtrl2->SetInsertionPoint(0);
+}
+
+void TextFilePreviewDialog::ShowCode(const wxString& text, ScintillaTextEditorPanel::Syntax syntax) {
+    m_code = new ScintillaTextEditorPanel(
+        this, {.syntax = syntax, .lineNumbers = true, .wordWrap = m_wrapCheckBox->GetValue(), .readOnly = true});
+    m_code->LoadText(text);
+    GetSizer()->Replace(m_textCtrl2, m_code);
+    m_textCtrl2->Hide();
+    Layout();
+}
+
+bool TextFilePreviewDialog::ShowCsv(const CsvResult& csv) {
+    if (!CsvTablePanel::Fits(csv)) {
+        return false;
+    }
+    auto* table = new CsvTablePanel(this, csv);
+    GetSizer()->Replace(m_textCtrl2, table);
+    m_textCtrl2->Hide();
+    m_toolBar1->Hide();
+    Layout();
+    return true;
 }
 
 void TextFilePreviewDialog::RecreateTextControl(bool wrap) {
@@ -47,5 +70,9 @@ void TextFilePreviewDialog::RecreateTextControl(bool wrap) {
 }
 
 void TextFilePreviewDialog::HandleWordWrap(wxCommandEvent&) {
-    RecreateTextControl(m_wrapCheckBox->GetValue());
+    if (m_code) {
+        m_code->SetWordWrap(m_wrapCheckBox->GetValue());
+    } else {
+        RecreateTextControl(m_wrapCheckBox->GetValue());
+    }
 }

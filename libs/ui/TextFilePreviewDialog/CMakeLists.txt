@@ -7,7 +7,7 @@ add_library(rottools::ui_textfilepreviewdialog ALIAS rottools_ui_textfilepreview
 
 target_include_directories(rottools_ui_textfilepreviewdialog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(rottools_ui_textfilepreviewdialog PUBLIC cxx_std_20)
-target_link_libraries(rottools_ui_textfilepreviewdialog PUBLIC ${wxWidgets_LIBRARIES})
+target_link_libraries(rottools_ui_textfilepreviewdialog PUBLIC ${wxWidgets_LIBRARIES} rottools::ui_scintillatexteditor rottools::ui_csvtable)
 
 if(ROTTOOLS_BUILD_LIB_APPS)
     add_executable(rottools_ui_textfilepreviewdialog_app main.cpp)
