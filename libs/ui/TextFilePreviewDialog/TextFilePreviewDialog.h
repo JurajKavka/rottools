@@ -10,7 +10,7 @@ class TextFilePreviewDialog final : public TextFilePreviewDialogWx {
     explicit TextFilePreviewDialog(wxWindow* parent, const wxString& title = wxEmptyString);
 
     void ShowText(const wxString& text);
-    void ShowCode(const wxString& text, ScintillaTextEditorPanel::Syntax syntax);
+    void ShowCode(const wxString& text, Syntax syntax);
     bool ShowCsv(const wxString& text, CsvTablePanel::OnErrorCallback onError = {});
 
    private:

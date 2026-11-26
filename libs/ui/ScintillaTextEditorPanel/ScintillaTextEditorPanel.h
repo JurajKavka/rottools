@@ -17,21 +17,22 @@ class wxSysColourChangedEvent;
 class wxMenu;
 class wxMenuEvent;
 
+enum class Syntax {
+    None,
+    Markdown,
+    Sql,
+    JavaScript,
+    TypeScript,
+    Python,
+    Cpp,
+    Shell,
+    Java,
+    Xml,
+};
+
+
 class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
    public:
-    enum class Syntax {
-        None,
-        Markdown,
-        Sql,
-        JavaScript,
-        TypeScript,
-        Python,
-        Cpp,
-        Shell,
-        Java,
-        Xml,
-    };
-
     static Syntax GetReferenceSyntax(ReferenceFormat format);
 
     struct Options {

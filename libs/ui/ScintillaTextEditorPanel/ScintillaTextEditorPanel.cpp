@@ -28,8 +28,7 @@ int GetScintillaSearchFlags(const TextSearchOptions& options) {
 }  // namespace
 
 namespace {
-const char* GetSyntaxKeywords(ScintillaTextEditorPanel::Syntax syntax) {
-    using Syntax = ScintillaTextEditorPanel::Syntax;
+const char* GetSyntaxKeywords(Syntax syntax) {
     switch (syntax) {
         case Syntax::Sql: return "select from where insert into values update delete create table drop alter join left right inner outer on as and or not null is order by group having limit distinct union all case when then else end primary key references index database default";
         case Syntax::Python: return "False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case";
@@ -49,13 +48,13 @@ struct SyntaxStyle {
     wxColour colour;
 };
 
-std::vector<SyntaxStyle> GetSyntaxStyle(ScintillaTextEditorPanel::Syntax syntax) {
+std::vector<SyntaxStyle> GetSyntaxStyle(Syntax syntax) {
     const wxColour background = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
     const bool dark = background.Red() * 299 + background.Green() * 587 + background.Blue() * 114 < 128000;
     const wxColour keyword = dark ? wxColour(130, 190, 255) : wxColour(0, 60, 170);
     const wxColour string = dark ? wxColour(255, 180, 140) : wxColour(145, 35, 15);
     const wxColour comment = dark ? wxColour(145, 205, 145) : wxColour(0, 110, 35);
-    if (syntax == ScintillaTextEditorPanel::Syntax::Python) {
+    if (syntax == Syntax::Python) {
         return {
             {wxSTC_P_WORD, keyword},
             {wxSTC_P_STRING, string},
@@ -64,7 +63,7 @@ std::vector<SyntaxStyle> GetSyntaxStyle(ScintillaTextEditorPanel::Syntax syntax)
             {wxSTC_P_TRIPLEDOUBLE, string},
             {wxSTC_P_COMMENTLINE, comment},
         };
-    } else if (syntax == ScintillaTextEditorPanel::Syntax::Xml) {
+    } else if (syntax == Syntax::Xml) {
         return {
             {wxSTC_H_TAG, keyword},
             {wxSTC_H_TAGUNKNOWN, keyword},
@@ -78,7 +77,7 @@ std::vector<SyntaxStyle> GetSyntaxStyle(ScintillaTextEditorPanel::Syntax syntax)
             {wxSTC_H_COMMENT, comment},
             {wxSTC_H_ENTITY, keyword},
         };
-    } else if (syntax == ScintillaTextEditorPanel::Syntax::Shell) {
+    } else if (syntax == Syntax::Shell) {
         return {
             {wxSTC_SH_WORD, keyword},
             {wxSTC_SH_STRING, string},
@@ -88,7 +87,7 @@ std::vector<SyntaxStyle> GetSyntaxStyle(ScintillaTextEditorPanel::Syntax syntax)
             {wxSTC_SH_HERE_Q, string},
             {wxSTC_SH_COMMENTLINE, comment},
         };
-    } else if (syntax == ScintillaTextEditorPanel::Syntax::Sql) {
+    } else if (syntax == Syntax::Sql) {
         return {
             {wxSTC_SQL_WORD, keyword},
             {wxSTC_SQL_STRING, string},
@@ -115,8 +114,7 @@ std::vector<SyntaxStyle> GetSyntaxStyle(ScintillaTextEditorPanel::Syntax syntax)
 }
 }  // namespace
 
-ScintillaTextEditorPanel::Syntax ScintillaTextEditorPanel::GetReferenceSyntax(ReferenceFormat format) {
-    using Syntax = ScintillaTextEditorPanel::Syntax;
+Syntax ScintillaTextEditorPanel::GetReferenceSyntax(ReferenceFormat format) {
     switch (format) {
         case ReferenceFormat::Sql: return Syntax::Sql;
         case ReferenceFormat::JavaScript: return Syntax::JavaScript;

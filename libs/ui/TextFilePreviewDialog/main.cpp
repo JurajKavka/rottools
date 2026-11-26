@@ -41,7 +41,7 @@ bool TextFilePreviewDialogApp::OnInit() {
 
     code->Bind(wxEVT_BUTTON, [frame](wxCommandEvent&) {
         TextFilePreviewDialog dialog(frame, "Sample code");
-        dialog.ShowCode("// Select and copy\nconst char* text = \"hello\";\n", ScintillaTextEditorPanel::Syntax::Cpp);
+        dialog.ShowCode("// Select and copy\nconst char* text = \"hello\";\n", Syntax::Cpp);
         dialog.ShowModal();
     });
     csv->Bind(wxEVT_BUTTON, [frame](wxCommandEvent&) {

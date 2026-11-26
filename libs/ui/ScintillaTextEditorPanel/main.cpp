@@ -17,7 +17,6 @@ bool ScintillaTextEditorPanelApp::OnInit() {
     auto* editorPanel = new ScintillaTextEditorPanel(notebook);
     editorPanel->LoadText("Editable mode: type here.\n");
     notebook->AddPage(editorPanel, "Editable");
-    using Syntax = ScintillaTextEditorPanel::Syntax;
     const struct {
         const char* title = nullptr;
         Syntax syntax = Syntax::None;

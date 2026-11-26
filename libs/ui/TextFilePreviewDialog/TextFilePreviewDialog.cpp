@@ -36,7 +36,7 @@ void TextFilePreviewDialog::ShowText(const wxString& text) {
     m_textCtrl2->SetInsertionPoint(0);
 }
 
-void TextFilePreviewDialog::ShowCode(const wxString& text, ScintillaTextEditorPanel::Syntax syntax) {
+void TextFilePreviewDialog::ShowCode(const wxString& text, Syntax syntax) {
     m_code = new ScintillaTextEditorPanel(
         this, {.syntax = syntax, .lineNumbers = true, .wordWrap = m_wrapCheckBox->GetValue(), .readOnly = true});
     m_code->LoadText(text);
