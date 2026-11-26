@@ -39,7 +39,7 @@ constexpr std::size_t kMaximumSearchSeedLength = 150;
 constexpr std::size_t kMaximumReferenceBytes = 2 * 1024 * 1024;
 constexpr int kFindDialogMarginDip = 12;
 
-enum class ReferenceFormat { PlainText, Csv, Sql, JavaScript, TypeScript, Python, Cpp, Shell };
+enum class ReferenceFormat { PlainText, Csv, Sql, JavaScript, TypeScript, Python, Cpp, Shell, Java, Xml };
 
 ReferenceFormat GetReferenceFormat(const wxFileName& filePath) {
     struct ExtensionMapping {
@@ -54,12 +54,15 @@ ReferenceFormat GetReferenceFormat(const wxFileName& filePath) {
         ExtensionMapping{"py", ReferenceFormat::Python},
         ExtensionMapping{"cpp", ReferenceFormat::Cpp},
         ExtensionMapping{"sh", ReferenceFormat::Shell},
+        ExtensionMapping{"zsh", ReferenceFormat::Shell},
+        ExtensionMapping{"java", ReferenceFormat::Java},
+        ExtensionMapping{"xml", ReferenceFormat::Xml},
     };
     const wxString extension = filePath.GetExt().Lower();
-    for (const auto& mapping : mappings) {
-        if (extension == mapping.extension) {
-            return mapping.format;
-        }
+    const auto mapping = std::find_if(mappings.begin(), mappings.end(),
+                                      [&extension](const auto& entry) { return extension == entry.extension; });
+    if (mapping != mappings.end()) {
+        return mapping->format;
     }
     return ReferenceFormat::PlainText;
 }
@@ -73,6 +76,8 @@ ScintillaTextEditorPanel::Syntax GetReferenceSyntax(ReferenceFormat format) {
         case ReferenceFormat::Python: return Syntax::Python;
         case ReferenceFormat::Cpp: return Syntax::Cpp;
         case ReferenceFormat::Shell: return Syntax::Shell;
+        case ReferenceFormat::Java: return Syntax::Java;
+        case ReferenceFormat::Xml: return Syntax::Xml;
         case ReferenceFormat::PlainText:
         case ReferenceFormat::Csv: return Syntax::None;
     }

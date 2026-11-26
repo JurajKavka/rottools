@@ -19,9 +19,9 @@ bool ScintillaTextEditorPanelApp::OnInit() {
     notebook->AddPage(editorPanel, "Editable");
     using Syntax = ScintillaTextEditorPanel::Syntax;
     const struct {
-        const char* title;
-        Syntax syntax;
-        const char* text;
+        const char* title = nullptr;
+        Syntax syntax = Syntax::None;
+        const char* text = nullptr;
     } samples[] = {
         {"SQL", Syntax::Sql, "-- comment\nSELECT 'text' FROM documents WHERE id = 1;\n"},
         {"JavaScript", Syntax::JavaScript, "// comment\nconst message = `hello ${name}`;\n"},
@@ -30,6 +30,8 @@ bool ScintillaTextEditorPanelApp::OnInit() {
         {"Python", Syntax::Python, "# comment\ndef greet(name):\n    return 'hello ' + name\n"},
         {"C++", Syntax::Cpp, "// comment\nconst char* greeting = \"hello\";\n"},
         {"Shell", Syntax::Shell, "#!/bin/sh\n# comment\nif test -n \"$USER\"; then\n    printf 'Hello %s\\n' \"$USER\"\nfi\n"},
+        {"Java", Syntax::Java, "// comment\npublic class Example { String text = \"hello\"; }\n"},
+        {"XML", Syntax::Xml, "<?xml version=\"1.0\"?>\n<!-- comment -->\n<message lang=\"en\">Hello &amp; welcome</message>\n"},
     };
     for (const auto& sample : samples) {
         auto* panel = new ScintillaTextEditorPanel(

@@ -28,6 +28,8 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
         Python,
         Cpp,
         Shell,
+        Java,
+        Xml,
     };
 
     struct Options {
@@ -268,6 +270,9 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     [[nodiscard]] bool IsWordWrapEnabled() const;
     void SetEditorFont(const wxFont& font);
     [[nodiscard]] wxFont GetEditorFont() const;
+    // Change the displayed size through zoom while keeping the configured font.
+    void SetEditorPointSize(int pointSize);
+    [[nodiscard]] int GetEditorPointSize() const;
     void FocusEditor();
 
    protected:

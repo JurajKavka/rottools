@@ -19,6 +19,15 @@ TextFilePreviewDialogWx::TextFilePreviewDialogWx( wxWindow* parent, wxWindowID i
 	m_toolBar1 = new wxToolBar( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL );
 	m_wrapCheckBox = new wxCheckBox( m_toolBar1, wxID_ANY, _("Word Wrap"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_toolBar1->AddControl( m_wrapCheckBox );
+	wxStaticText* m_fontSizeLabel;
+	m_fontSizeLabel = new wxStaticText( m_toolBar1, wxID_ANY, _("Text size"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_fontSizeLabel->Wrap( -1 );
+	m_toolBar1->AddControl( m_fontSizeLabel );
+	m_fontSizeSlider = new wxSlider( m_toolBar1, wxID_ANY, 12, 8, 32, wxDefaultPosition, wxSize( 132,-1 ), wxSL_HORIZONTAL );
+	m_toolBar1->AddControl( m_fontSizeSlider );
+	m_fontSizeValue = new wxStaticText( m_toolBar1, wxID_ANY, _("32 pt"), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE );
+	m_fontSizeValue->Wrap( -1 );
+	m_toolBar1->AddControl( m_fontSizeValue );
 	m_toolBar1->Realize();
 
 	bSizer1->Add( m_toolBar1, 0, wxEXPAND, 4 );

@@ -40,3 +40,14 @@ Match extensions case-insensitively. Reference previews remain modal and use the
 4. Verify ROT Reader through **File → Open** and the file browser. Open representative code, CSV, text, and log files while a Markdown document has unsaved edits. Check uppercase extensions, malformed CSV fallback, the existing binary and oversized-file errors, and preservation of the active Markdown document when each preview closes.
 
 Follow the approval rules in `AGENTS.md` before running `make check`, `make rotreader-build`, or the smoke apps. Report the commands actually run and any remaining verification gaps.
+
+## Text size prototype
+
+A horizontal slider lets readers jump directly to a comfortable size and use the arrow keys for one-point adjustments. Magnifier buttons use less toolbar space and suit occasional one-step changes. Use a native `wxSlider` for this prototype because the resizable preview has room for a track and benefits from live feedback.
+
+### Implementation instructions
+
+1. Add **Text size**, a horizontal slider, and a point-size readout beside **Word Wrap** in the reference preview toolbar in wxFormBuilder. Keep them inside the toolbar that already hides for CSV. [wxSlider API](https://raw.githubusercontent.com/wxWidgets/wxWidgets/v3.3.3/interface/wx/slider.h)
+2. Start at the active view's existing point size and offer 8–32 pt in one-point steps. Apply changes as the slider moves and keep keyboard focus on the slider during adjustment. Keep the size local to the preview dialog.
+3. Resize plain text through its native control's font and preserve that font when Word Wrap recreates the control. For code, apply the equivalent Scintilla zoom so syntax styles and line numbers scale together. Sync the slider and readout when Scintilla zoom changes through its own input, expanding the range if needed. [Scintilla zoom](https://www.scintilla.org/ScintillaDoc.html#SCI_SETZOOM)
+4. Use `make run-textfilepreviewdialog` to exercise live resizing with the mouse and keyboard in both text modes. Check wrapping after a size change, selection and copy, line number width, and that CSV has no text controls in its toolbar. Follow the repository approval rules before running the demo or `make check`.

@@ -4,6 +4,7 @@
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stc/stc.h>
+#include <wx/version.h>
 #include <wx/window.h>
 
 #include <algorithm>
@@ -39,7 +40,9 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
         case Syntax::Sql: lexer = wxSTC_LEX_SQL; break;
         case Syntax::Python: lexer = wxSTC_LEX_PYTHON; break;
         case Syntax::Shell: lexer = wxSTC_LEX_BASH; break;
+        case Syntax::Xml: lexer = wxSTC_LEX_XML; break;
         case Syntax::Cpp:
+        case Syntax::Java:
         case Syntax::JavaScript:
         case Syntax::TypeScript: lexer = wxSTC_LEX_CPP; break;
         case Syntax::None: break;
@@ -58,9 +61,13 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
         case Syntax::Cpp:
             m_textEditor->SetKeyWords(0, "alignas alignof auto bool break case catch char class const constexpr continue default delete do double else enum explicit extern false float for friend if inline int long namespace new nullptr operator private protected public return short signed sizeof static struct switch template this throw true try typedef typename union unsigned using virtual void volatile while");
             break;
+        case Syntax::Java:
+            m_textEditor->SetKeyWords(0, "abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for if implements import instanceof int interface long native new package private protected public return short static strictfp super switch synchronized this throw throws transient try void volatile while true false null var record sealed permits yield");
+            break;
         case Syntax::JavaScript:
             m_textEditor->SetKeyWords(0, "async await break case catch class const continue debugger default delete do else export extends false finally for function if import in instanceof let new null return static super switch this throw true try typeof var void while with yield");
-#if wxCHECK_VERSION(3, 3, 3)
+#if wxMAJOR_VERSION > 3 || (wxMAJOR_VERSION == 3 && wxMINOR_VERSION > 3) || \
+    (wxMAJOR_VERSION == 3 && wxMINOR_VERSION == 3 && wxRELEASE_NUMBER >= 3)
             m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "2");
 #else
             m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "1");
@@ -68,7 +75,8 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
             break;
         case Syntax::TypeScript:
             m_textEditor->SetKeyWords(0, "abstract any as asserts async await boolean break case catch class const constructor continue declare default delete do else enum export extends false finally for from function get if implements import in infer instanceof interface is keyof let module namespace never new null number object private protected public readonly return set static string super switch symbol this throw true try type typeof undefined unique unknown var void while yield");
-#if wxCHECK_VERSION(3, 3, 3)
+#if wxMAJOR_VERSION > 3 || (wxMAJOR_VERSION == 3 && wxMINOR_VERSION > 3) || \
+    (wxMAJOR_VERSION == 3 && wxMINOR_VERSION == 3 && wxRELEASE_NUMBER >= 3)
             m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "2");
 #else
             m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "1");
@@ -81,6 +89,10 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
     m_textEditor->SetMarginWidth(0, 0);
     m_textEditor->SetMarginWidth(1, 0);
     m_textEditor->SetMarginWidth(2, 0);
+#ifdef __WXOSX__
+    // Work around the reverse-arrow cursor leak (wxWidgets PR #27419).
+    m_textEditor->SetMarginCursor(0, wxSTC_CURSORARROW);
+#endif
     m_textEditor->SetIndentationGuides(false);
     m_textEditor->SetViewEOL(false);
     m_textEditor->SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
@@ -478,6 +490,14 @@ wxFont ScintillaTextEditorPanel::GetEditorFont() const {
     return m_textEditor->StyleGetFont(wxSTC_STYLE_DEFAULT);
 }
 
+void ScintillaTextEditorPanel::SetEditorPointSize(int pointSize) {
+    m_textEditor->SetZoom(pointSize - m_textEditor->StyleGetSize(wxSTC_STYLE_DEFAULT));
+}
+
+int ScintillaTextEditorPanel::GetEditorPointSize() const {
+    return m_textEditor->StyleGetSize(wxSTC_STYLE_DEFAULT) + m_textEditor->GetZoom();
+}
+
 void ScintillaTextEditorPanel::FocusEditor() {
     m_textEditor->SetFocus();
 }
@@ -571,6 +591,18 @@ void ScintillaTextEditorPanel::ApplySourceStyles() {
     if (m_options.syntax == Syntax::Python) {
         style(wxSTC_P_WORD, keyword); style(wxSTC_P_STRING, string); style(wxSTC_P_CHARACTER, string);
         style(wxSTC_P_TRIPLE, string); style(wxSTC_P_TRIPLEDOUBLE, string); style(wxSTC_P_COMMENTLINE, comment);
+    } else if (m_options.syntax == Syntax::Xml) {
+        style(wxSTC_H_TAG, keyword);
+        style(wxSTC_H_TAGUNKNOWN, keyword);
+        style(wxSTC_H_TAGEND, keyword);
+        style(wxSTC_H_XMLSTART, keyword);
+        style(wxSTC_H_XMLEND, keyword);
+        style(wxSTC_H_ATTRIBUTE, keyword);
+        style(wxSTC_H_ATTRIBUTEUNKNOWN, keyword);
+        style(wxSTC_H_DOUBLESTRING, string);
+        style(wxSTC_H_SINGLESTRING, string);
+        style(wxSTC_H_COMMENT, comment);
+        style(wxSTC_H_ENTITY, keyword);
     } else if (m_options.syntax == Syntax::Shell) {
         style(wxSTC_SH_WORD, keyword);
         style(wxSTC_SH_STRING, string);

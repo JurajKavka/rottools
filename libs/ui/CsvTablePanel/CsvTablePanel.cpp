@@ -4,14 +4,12 @@
 #include <wx/sizer.h>
 
 #include <algorithm>
+#include <numeric>
 
 namespace {
 std::size_t ColumnCount(const CsvResult& csv) {
-    std::size_t count = 0;
-    for (const auto& row : csv.rows) {
-        count = std::max(count, row.size());
-    }
-    return count;
+    return std::accumulate(csv.rows.begin(), csv.rows.end(), std::size_t{0},
+                           [](std::size_t count, const auto& row) { return std::max(count, row.size()); });
 }
 }  // namespace
 
