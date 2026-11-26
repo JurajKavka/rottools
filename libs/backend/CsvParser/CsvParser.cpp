@@ -3,14 +3,17 @@
 #include <algorithm>
 #include <utility>
 
-CsvResult ParseCsv(std::string_view text, bool limitForDisplay) {
+CsvParser::CsvParser() = default;
+
+CsvParser::CsvParser(Options options) : m_options(options) {}
+
+CsvResult CsvParser::Parse(std::string_view text) const {
     CsvResult result;
     std::vector<std::string> row;
     std::string field;
     enum class State { Start, Unquoted, Quoted, Closed };
     State state = State::Start;
     bool pending = false;
-    std::size_t maxColumns = 0;
     for (std::size_t i = 0; i < text.size(); ++i) {
         const char c = text[i];
         pending = true;
@@ -27,9 +30,9 @@ CsvResult ParseCsv(std::string_view text, bool limitForDisplay) {
             }
         } else if (c == ',' || c == '\n' || (c == '\r' && i + 1 < text.size() && text[i + 1] == '\n')) {
             row.push_back(std::move(field));
-            maxColumns = std::max(maxColumns, row.size());
-            if (limitForDisplay && (maxColumns > 256 || result.rows.size() >= 10000 ||
-                                    result.rows.size() + 1 > 200000 / maxColumns)) {
+            result.columnCount = std::max(result.columnCount, row.size());
+            if (m_options.limitForDisplay && (result.columnCount > m_options.maxColumns || result.rows.size() >= m_options.maxRows ||
+                                    result.rows.size() + 1 > m_options.maxCells / result.columnCount)) {
                 result.displayLimitExceeded = true;
                 return result;
             }
@@ -57,9 +60,9 @@ CsvResult ParseCsv(std::string_view text, bool limitForDisplay) {
         result.errorRecord = result.rows.size() + 1;
     } else if (pending) {
         row.push_back(std::move(field));
-        maxColumns = std::max(maxColumns, row.size());
-        if (limitForDisplay && (maxColumns > 256 || result.rows.size() >= 10000 ||
-                                result.rows.size() + 1 > 200000 / maxColumns)) {
+        result.columnCount = std::max(result.columnCount, row.size());
+        if (m_options.limitForDisplay && (result.columnCount > m_options.maxColumns || result.rows.size() >= m_options.maxRows ||
+                                result.rows.size() + 1 > m_options.maxCells / result.columnCount)) {
             result.displayLimitExceeded = true;
             return result;
         }

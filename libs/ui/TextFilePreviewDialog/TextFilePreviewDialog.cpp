@@ -6,6 +6,7 @@
 #include <wx/stc/stc.h>
 
 #include <algorithm>
+#include <utility>
 
 #include "CsvTablePanel.h"
 
@@ -46,11 +47,13 @@ void TextFilePreviewDialog::ShowCode(const wxString& text, ScintillaTextEditorPa
     Layout();
 }
 
-bool TextFilePreviewDialog::ShowCsv(const CsvResult& csv) {
-    if (!CsvTablePanel::Fits(csv)) {
+bool TextFilePreviewDialog::ShowCsv(const wxString& text, CsvTablePanel::OnErrorCallback onError) {
+    const auto utf8 = text.ToUTF8();
+    auto* table = new CsvTablePanel(this, std::string_view(utf8.data(), utf8.length()), std::move(onError));
+    if (!table->IsLoaded()) {
+        table->Destroy();
         return false;
     }
-    auto* table = new CsvTablePanel(this, csv);
     GetSizer()->Replace(m_textCtrl2, table);
     m_textCtrl2->Hide();
     m_toolBar1->Hide();

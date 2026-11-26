@@ -3,25 +3,17 @@
 #include <wx/dataview.h>
 #include <wx/sizer.h>
 
-#include <algorithm>
-#include <numeric>
-
-namespace {
-std::size_t ColumnCount(const CsvResult& csv) {
-    return std::accumulate(csv.rows.begin(), csv.rows.end(), std::size_t{0},
-                           [](std::size_t count, const auto& row) { return std::max(count, row.size()); });
-}
-}  // namespace
-
-bool CsvTablePanel::Fits(const CsvResult& csv) {
-    const std::size_t columns = ColumnCount(csv);
-    return !csv.displayLimitExceeded && columns <= 256 && csv.rows.size() <= 10000 &&
-           (columns == 0 || csv.rows.size() <= 200000 / columns);
-}
-
-CsvTablePanel::CsvTablePanel(wxWindow* parent, const CsvResult& csv) : wxPanel(parent) {
+CsvTablePanel::CsvTablePanel(wxWindow* parent, std::string_view text, OnErrorCallback onError) : wxPanel(parent) {
+    const CsvResult csv = CsvParser({.limitForDisplay = true}).Parse(text);
+    if (csv.errorRecord || csv.displayLimitExceeded) {
+        if (onError) {
+            onError(csv);
+        }
+        return;
+    }
+    m_loaded = true;
     auto* table = new wxDataViewListCtrl(this, wxID_ANY);
-    const auto columns = ColumnCount(csv);
+    const auto columns = csv.columnCount;
     for (std::size_t i = 0; i < columns; ++i) {
         table->AppendTextColumn(wxString::Format("%zu", i + 1), wxDATAVIEW_CELL_INERT, 120);
     }

@@ -32,6 +32,8 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
         Xml,
     };
 
+    static Syntax GetReferenceSyntax(ReferenceFormat format);
+
     struct Options {
         Syntax syntax = Syntax::None;
         bool lineNumbers = false;

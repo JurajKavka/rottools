@@ -8,6 +8,7 @@
 #include <wx/window.h>
 
 #include <algorithm>
+#include <vector>
 #include <utility>
 
 #include "HelperFunctions.h"
@@ -25,6 +26,111 @@ int GetScintillaSearchFlags(const TextSearchOptions& options) {
     return flags;
 }
 }  // namespace
+
+namespace {
+const char* GetSyntaxKeywords(ScintillaTextEditorPanel::Syntax syntax) {
+    using Syntax = ScintillaTextEditorPanel::Syntax;
+    switch (syntax) {
+        case Syntax::Sql: return "select from where insert into values update delete create table drop alter join left right inner outer on as and or not null is order by group having limit distinct union all case when then else end primary key references index database default";
+        case Syntax::Python: return "False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case";
+        case Syntax::Shell: return "if then else elif fi for while until do done case esac in function select time coproc break continue return exit export local readonly unset shift source eval exec trap set printf echo read test true false";
+        case Syntax::Cpp: return "alignas alignof auto bool break case catch char class const constexpr continue default delete do double else enum explicit extern false float for friend if inline int long namespace new nullptr operator private protected public return short signed sizeof static struct switch template this throw true try typedef typename union unsigned using virtual void volatile while";
+        case Syntax::Java: return "abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for if implements import instanceof int interface long native new package private protected public return short static strictfp super switch synchronized this throw throws transient try void volatile while true false null var record sealed permits yield";
+        case Syntax::JavaScript: return "async await break case catch class const continue debugger default delete do else export extends false finally for function if import in instanceof let new null return static super switch this throw true try typeof var void while with yield";
+        case Syntax::TypeScript: return "abstract any as asserts async await boolean break case catch class const constructor continue declare default delete do else enum export extends false finally for from function get if implements import in infer instanceof interface is keyof let module namespace never new null number object private protected public readonly return set static string super switch symbol this throw true try type typeof undefined unique unknown var void while yield";
+        default: return "";
+    }
+}
+}  // namespace
+
+namespace {
+struct SyntaxStyle {
+    int id;
+    wxColour colour;
+};
+
+std::vector<SyntaxStyle> GetSyntaxStyle(ScintillaTextEditorPanel::Syntax syntax) {
+    const wxColour background = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+    const bool dark = background.Red() * 299 + background.Green() * 587 + background.Blue() * 114 < 128000;
+    const wxColour keyword = dark ? wxColour(130, 190, 255) : wxColour(0, 60, 170);
+    const wxColour string = dark ? wxColour(255, 180, 140) : wxColour(145, 35, 15);
+    const wxColour comment = dark ? wxColour(145, 205, 145) : wxColour(0, 110, 35);
+    if (syntax == ScintillaTextEditorPanel::Syntax::Python) {
+        return {
+            {wxSTC_P_WORD, keyword},
+            {wxSTC_P_STRING, string},
+            {wxSTC_P_CHARACTER, string},
+            {wxSTC_P_TRIPLE, string},
+            {wxSTC_P_TRIPLEDOUBLE, string},
+            {wxSTC_P_COMMENTLINE, comment},
+        };
+    } else if (syntax == ScintillaTextEditorPanel::Syntax::Xml) {
+        return {
+            {wxSTC_H_TAG, keyword},
+            {wxSTC_H_TAGUNKNOWN, keyword},
+            {wxSTC_H_TAGEND, keyword},
+            {wxSTC_H_XMLSTART, keyword},
+            {wxSTC_H_XMLEND, keyword},
+            {wxSTC_H_ATTRIBUTE, keyword},
+            {wxSTC_H_ATTRIBUTEUNKNOWN, keyword},
+            {wxSTC_H_DOUBLESTRING, string},
+            {wxSTC_H_SINGLESTRING, string},
+            {wxSTC_H_COMMENT, comment},
+            {wxSTC_H_ENTITY, keyword},
+        };
+    } else if (syntax == ScintillaTextEditorPanel::Syntax::Shell) {
+        return {
+            {wxSTC_SH_WORD, keyword},
+            {wxSTC_SH_STRING, string},
+            {wxSTC_SH_CHARACTER, string},
+            {wxSTC_SH_BACKTICKS, string},
+            {wxSTC_SH_HERE_DELIM, string},
+            {wxSTC_SH_HERE_Q, string},
+            {wxSTC_SH_COMMENTLINE, comment},
+        };
+    } else if (syntax == ScintillaTextEditorPanel::Syntax::Sql) {
+        return {
+            {wxSTC_SQL_WORD, keyword},
+            {wxSTC_SQL_STRING, string},
+            {wxSTC_SQL_CHARACTER, string},
+            {wxSTC_SQL_COMMENT, comment},
+            {wxSTC_SQL_COMMENTLINE, comment},
+        };
+    } else {
+        return {
+            {wxSTC_C_WORD, keyword},
+            {wxSTC_C_STRING, string},
+            {wxSTC_C_CHARACTER, string},
+            {wxSTC_C_COMMENT, comment},
+            {wxSTC_C_COMMENTLINE, comment},
+            {wxSTC_C_COMMENTDOC, comment},
+#ifdef wxSTC_C_BACKTICKS
+            {wxSTC_C_BACKTICKS, string},
+#endif
+#ifdef wxSTC_C_STRINGRAW
+            {wxSTC_C_STRINGRAW, string},
+#endif
+        };
+    }
+}
+}  // namespace
+
+ScintillaTextEditorPanel::Syntax ScintillaTextEditorPanel::GetReferenceSyntax(ReferenceFormat format) {
+    using Syntax = ScintillaTextEditorPanel::Syntax;
+    switch (format) {
+        case ReferenceFormat::Sql: return Syntax::Sql;
+        case ReferenceFormat::JavaScript: return Syntax::JavaScript;
+        case ReferenceFormat::TypeScript: return Syntax::TypeScript;
+        case ReferenceFormat::Python: return Syntax::Python;
+        case ReferenceFormat::Cpp: return Syntax::Cpp;
+        case ReferenceFormat::Shell: return Syntax::Shell;
+        case ReferenceFormat::Java: return Syntax::Java;
+        case ReferenceFormat::Xml: return Syntax::Xml;
+        case ReferenceFormat::PlainText:
+        case ReferenceFormat::Csv: return Syntax::None;
+    }
+    return Syntax::None;
+}
 
 ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent) : ScintillaTextEditorPanel(parent, {}, {}) {}
 
@@ -48,41 +154,14 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
         case Syntax::None: break;
     }
     m_textEditor->SetLexer(lexer);
-    switch (m_options.syntax) {
-        case Syntax::Sql:
-            m_textEditor->SetKeyWords(0, "select from where insert into values update delete create table drop alter join left right inner outer on as and or not null is order by group having limit distinct union all case when then else end primary key references index database default");
-            break;
-        case Syntax::Python:
-            m_textEditor->SetKeyWords(0, "False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case");
-            break;
-        case Syntax::Shell:
-            m_textEditor->SetKeyWords(0, "if then else elif fi for while until do done case esac in function select time coproc break continue return exit export local readonly unset shift source eval exec trap set printf echo read test true false");
-            break;
-        case Syntax::Cpp:
-            m_textEditor->SetKeyWords(0, "alignas alignof auto bool break case catch char class const constexpr continue default delete do double else enum explicit extern false float for friend if inline int long namespace new nullptr operator private protected public return short signed sizeof static struct switch template this throw true try typedef typename union unsigned using virtual void volatile while");
-            break;
-        case Syntax::Java:
-            m_textEditor->SetKeyWords(0, "abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for if implements import instanceof int interface long native new package private protected public return short static strictfp super switch synchronized this throw throws transient try void volatile while true false null var record sealed permits yield");
-            break;
-        case Syntax::JavaScript:
-            m_textEditor->SetKeyWords(0, "async await break case catch class const continue debugger default delete do else export extends false finally for function if import in instanceof let new null return static super switch this throw true try typeof var void while with yield");
+    m_textEditor->SetKeyWords(0, GetSyntaxKeywords(m_options.syntax));
+    if (m_options.syntax == Syntax::JavaScript || m_options.syntax == Syntax::TypeScript) {
 #if wxMAJOR_VERSION > 3 || (wxMAJOR_VERSION == 3 && wxMINOR_VERSION > 3) || \
     (wxMAJOR_VERSION == 3 && wxMINOR_VERSION == 3 && wxRELEASE_NUMBER >= 3)
-            m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "2");
+        m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "2");
 #else
-            m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "1");
+        m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "1");
 #endif
-            break;
-        case Syntax::TypeScript:
-            m_textEditor->SetKeyWords(0, "abstract any as asserts async await boolean break case catch class const constructor continue declare default delete do else enum export extends false finally for from function get if implements import in infer instanceof interface is keyof let module namespace never new null number object private protected public readonly return set static string super switch symbol this throw true try type typeof undefined unique unknown var void while yield");
-#if wxMAJOR_VERSION > 3 || (wxMAJOR_VERSION == 3 && wxMINOR_VERSION > 3) || \
-    (wxMAJOR_VERSION == 3 && wxMINOR_VERSION == 3 && wxRELEASE_NUMBER >= 3)
-            m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "2");
-#else
-            m_textEditor->SetProperty("lexer.cpp.backquoted.strings", "1");
-#endif
-            break;
-        default: break;
     }
     m_textEditor->SetCodePage(wxSTC_CP_UTF8);
     m_textEditor->SetMarginType(0, wxSTC_MARGIN_NUMBER);
@@ -582,48 +661,12 @@ void ScintillaTextEditorPanel::ApplyEditorStyles(const wxFont& font) {
 }
 
 void ScintillaTextEditorPanel::ApplySourceStyles() {
-    const wxColour background = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
-    const bool dark = background.Red() * 299 + background.Green() * 587 + background.Blue() * 114 < 128000;
-    const wxColour keyword = dark ? wxColour(130, 190, 255) : wxColour(0, 60, 170);
-    const wxColour string = dark ? wxColour(255, 180, 140) : wxColour(145, 35, 15);
-    const wxColour comment = dark ? wxColour(145, 205, 145) : wxColour(0, 110, 35);
-    auto style = [this](int id, const wxColour& colour) { m_textEditor->StyleSetForeground(id, colour); };
-    if (m_options.syntax == Syntax::Python) {
-        style(wxSTC_P_WORD, keyword); style(wxSTC_P_STRING, string); style(wxSTC_P_CHARACTER, string);
-        style(wxSTC_P_TRIPLE, string); style(wxSTC_P_TRIPLEDOUBLE, string); style(wxSTC_P_COMMENTLINE, comment);
-    } else if (m_options.syntax == Syntax::Xml) {
-        style(wxSTC_H_TAG, keyword);
-        style(wxSTC_H_TAGUNKNOWN, keyword);
-        style(wxSTC_H_TAGEND, keyword);
-        style(wxSTC_H_XMLSTART, keyword);
-        style(wxSTC_H_XMLEND, keyword);
-        style(wxSTC_H_ATTRIBUTE, keyword);
-        style(wxSTC_H_ATTRIBUTEUNKNOWN, keyword);
-        style(wxSTC_H_DOUBLESTRING, string);
-        style(wxSTC_H_SINGLESTRING, string);
-        style(wxSTC_H_COMMENT, comment);
-        style(wxSTC_H_ENTITY, keyword);
-    } else if (m_options.syntax == Syntax::Shell) {
-        style(wxSTC_SH_WORD, keyword);
-        style(wxSTC_SH_STRING, string);
-        style(wxSTC_SH_CHARACTER, string);
-        style(wxSTC_SH_BACKTICKS, string);
-        style(wxSTC_SH_HERE_DELIM, string);
-        style(wxSTC_SH_HERE_Q, string);
-        style(wxSTC_SH_COMMENTLINE, comment);
-    } else if (m_options.syntax == Syntax::Sql) {
-        style(wxSTC_SQL_WORD, keyword); style(wxSTC_SQL_STRING, string); style(wxSTC_SQL_CHARACTER, string);
-        style(wxSTC_SQL_COMMENT, comment); style(wxSTC_SQL_COMMENTLINE, comment);
-    } else {
-        style(wxSTC_C_WORD, keyword); style(wxSTC_C_STRING, string); style(wxSTC_C_CHARACTER, string);
-        style(wxSTC_C_COMMENT, comment); style(wxSTC_C_COMMENTLINE, comment); style(wxSTC_C_COMMENTDOC, comment);
-#ifdef wxSTC_C_BACKTICKS
-        style(wxSTC_C_BACKTICKS, string);
-#endif
-#ifdef wxSTC_C_STRINGRAW
-        style(wxSTC_C_STRINGRAW, string);
-#endif
-    }
+    const auto apply = [this](const std::vector<SyntaxStyle>& styles) {
+        for (const auto& style : styles) {
+            m_textEditor->StyleSetForeground(style.id, style.colour);
+        }
+    };
+    apply(GetSyntaxStyle(m_options.syntax));
 }
 
 void ScintillaTextEditorPanel::ApplyMarkdownStyles() {

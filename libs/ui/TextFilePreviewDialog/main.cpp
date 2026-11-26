@@ -46,7 +46,7 @@ bool TextFilePreviewDialogApp::OnInit() {
     });
     csv->Bind(wxEVT_BUTTON, [frame](wxCommandEvent&) {
         TextFilePreviewDialog dialog(frame, "Sample CSV");
-        dialog.ShowCsv(ParseCsv("00123,\"a,b\",\"two\nlines\"\nshort\nextra,,value,field"));
+        dialog.ShowCsv("00123,\"a,b\",\"two\nlines\"\nshort\nextra,,value,field");
         dialog.ShowModal();
     });
     frame->Show();

@@ -39,51 +39,6 @@ constexpr std::size_t kMaximumSearchSeedLength = 150;
 constexpr std::size_t kMaximumReferenceBytes = 2 * 1024 * 1024;
 constexpr int kFindDialogMarginDip = 12;
 
-enum class ReferenceFormat { PlainText, Csv, Sql, JavaScript, TypeScript, Python, Cpp, Shell, Java, Xml };
-
-ReferenceFormat GetReferenceFormat(const wxFileName& filePath) {
-    struct ExtensionMapping {
-        const char* extension;
-        ReferenceFormat format;
-    };
-    static constexpr std::array mappings = {
-        ExtensionMapping{"csv", ReferenceFormat::Csv},
-        ExtensionMapping{"sql", ReferenceFormat::Sql},
-        ExtensionMapping{"js", ReferenceFormat::JavaScript},
-        ExtensionMapping{"ts", ReferenceFormat::TypeScript},
-        ExtensionMapping{"py", ReferenceFormat::Python},
-        ExtensionMapping{"cpp", ReferenceFormat::Cpp},
-        ExtensionMapping{"sh", ReferenceFormat::Shell},
-        ExtensionMapping{"zsh", ReferenceFormat::Shell},
-        ExtensionMapping{"java", ReferenceFormat::Java},
-        ExtensionMapping{"xml", ReferenceFormat::Xml},
-    };
-    const wxString extension = filePath.GetExt().Lower();
-    const auto mapping = std::find_if(mappings.begin(), mappings.end(),
-                                      [&extension](const auto& entry) { return extension == entry.extension; });
-    if (mapping != mappings.end()) {
-        return mapping->format;
-    }
-    return ReferenceFormat::PlainText;
-}
-
-ScintillaTextEditorPanel::Syntax GetReferenceSyntax(ReferenceFormat format) {
-    using Syntax = ScintillaTextEditorPanel::Syntax;
-    switch (format) {
-        case ReferenceFormat::Sql: return Syntax::Sql;
-        case ReferenceFormat::JavaScript: return Syntax::JavaScript;
-        case ReferenceFormat::TypeScript: return Syntax::TypeScript;
-        case ReferenceFormat::Python: return Syntax::Python;
-        case ReferenceFormat::Cpp: return Syntax::Cpp;
-        case ReferenceFormat::Shell: return Syntax::Shell;
-        case ReferenceFormat::Java: return Syntax::Java;
-        case ReferenceFormat::Xml: return Syntax::Xml;
-        case ReferenceFormat::PlainText:
-        case ReferenceFormat::Csv: return Syntax::None;
-    }
-    return Syntax::None;
-}
-
 TextSearchOptions GetTextSearchOptions(const wxFindDialogEvent& event) {
     const int flags = event.GetFlags();
     return {
@@ -778,21 +733,21 @@ void MainFrame::ShowReferenceText(const wxFileName& filePath) {
     TextFilePreviewDialog dialog(this, filePath.GetFullName());
     const ReferenceFormat format = GetReferenceFormat(filePath);
     if (format == ReferenceFormat::Csv) {
-        const auto utf8 = text.ToUTF8();
-        const CsvResult csv = ParseCsv(std::string_view(utf8.data(), utf8.length()), true);
-        if (csv.errorRecord) {
-            wxMessageBox(wxString::Format(_("CSV parsing failed at record %zu. Showing the original text."), *csv.errorRecord),
-                         _("Cannot Preview Table"), wxOK | wxICON_INFORMATION, this);
-            dialog.ShowText(text);
-        } else if (!dialog.ShowCsv(csv)) {
-            wxMessageBox(_("This table exceeds the display limit (256 columns, 10,000 rows, or 200,000 cells). Showing the original text."),
-                         _("Table Too Large"), wxOK | wxICON_INFORMATION, this);
+        if (!dialog.ShowCsv(text, [this](const CsvResult& csv) {
+                if (csv.errorRecord) {
+                    wxMessageBox(wxString::Format(_("CSV parsing failed at record %zu. Showing the original text."), *csv.errorRecord),
+                                 _("Cannot Preview Table"), wxOK | wxICON_INFORMATION, this);
+                } else {
+                    wxMessageBox(_("This table exceeds the display limit (256 columns, 10,000 rows, or 200,000 cells). Showing the original text."),
+                                 _("Table Too Large"), wxOK | wxICON_INFORMATION, this);
+                }
+            })) {
             dialog.ShowText(text);
         }
     } else if (format == ReferenceFormat::PlainText) {
         dialog.ShowText(text);
     } else {
-        dialog.ShowCode(text, GetReferenceSyntax(format));
+        dialog.ShowCode(text, ScintillaTextEditorPanel::GetReferenceSyntax(format));
     }
     dialog.ShowModal();
 }
