@@ -15,12 +15,14 @@ target_link_libraries(rotreader PRIVATE
     rottools::ui_markdownpreview
     rottools::ui_htmlsource
     rottools::ui_textfilepreviewdialog
+    rottools::ui_csvfilepreviewdialog
     rottools::ui_markdowneditor
     rottools::ui_filetree
     rottools::ui_filedrop
     rottools::md2html
     rottools::fswatcher
     rottools::appconfig
+    rottools::syntaxhighlighter
     rottools::helpers
     ${wxWidgets_LIBRARIES}
 )

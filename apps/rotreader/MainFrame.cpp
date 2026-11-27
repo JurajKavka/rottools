@@ -14,6 +14,7 @@
 #include <wx/utils.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <functional>
 #include <utility>
@@ -24,9 +25,11 @@
 #include "AppIcon.h"
 #include "AppIconData.h"  // generated: the icon PNGs compiled into the binary
 #include "BookmarkStore.h"
+#include "CsvFilePreviewDialog.h"
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
+#include "SyntaxHighlighter.h"
 #include "TextFilePreviewDialog.h"
 #include "version.h"
 
@@ -729,9 +732,37 @@ void MainFrame::ShowReferenceText(const wxFileName& filePath) {
             break;
     }
 
-    TextFilePreviewDialog dialog(this, filePath.GetFullName());
-    dialog.ShowText(text);
-    dialog.ShowModal();
+    const wxString title = filePath.GetFullName();
+    const ReferenceFormat format = SyntaxHighlighter::GetReferenceFormat(filePath);
+    if (format == ReferenceFormat::Csv) {
+        CsvFilePreviewDialog csvDialog(this, title);
+        csvDialog.ShowCsvModal(text,
+                               std::bind_front(&MainFrame::HandleCsvError, this, std::cref(title), std::cref(text)));
+    } else {
+        TextFilePreviewDialog dialog(this, title);
+        if (format == ReferenceFormat::PlainText) {
+            dialog.ShowText(text);
+        } else {
+            dialog.ShowCode(text, SyntaxHighlighter::GetReferenceSyntax(format));
+        }
+        dialog.ShowModal();
+    }
+}
+
+void MainFrame::HandleCsvError(const wxString& title, const wxString& text, const CsvError& error) {
+    if (error.code == CsvError::Code::InvalidSyntax) {
+        wxMessageBox(
+            wxString::Format(_("CSV parsing failed at record %zu. Showing the original text."), error.recordNumber),
+            _("Cannot Preview Table"), wxOK | wxICON_INFORMATION, this);
+    } else {
+        wxMessageBox(_("This table exceeds the display limit (256 columns, 10,000 rows, or 200,000 cells). "
+                       "Showing the original text."),
+                     _("Table Too Large"), wxOK | wxICON_INFORMATION, this);
+    }
+
+    TextFilePreviewDialog textDialog(this, title);
+    textDialog.ShowText(text);
+    textDialog.ShowModal();
 }
 
 void MainFrame::HandleFileTreeBrowserHomeRequested() {

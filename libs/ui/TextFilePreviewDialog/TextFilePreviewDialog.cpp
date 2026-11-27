@@ -1,6 +1,11 @@
 #include "TextFilePreviewDialog.h"
 
 #include <wx/settings.h>
+#include <wx/slider.h>
+#include <wx/stattext.h>
+#include <wx/stc/stc.h>
+
+#include <algorithm>
 
 TextFilePreviewDialog::TextFilePreviewDialog(wxWindow* parent, const wxString& title)
     : TextFilePreviewDialogWx(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize,
@@ -12,13 +17,31 @@ TextFilePreviewDialog::TextFilePreviewDialog(wxWindow* parent, const wxString& t
 
     m_wrapCheckBox->SetValue(false);
     m_wrapCheckBox->Bind(wxEVT_CHECKBOX, &TextFilePreviewDialog::HandleWordWrap, this);
+
+    const int pointSize = m_textCtrl2->GetFont().GetPointSize();
+    m_fontSizeSlider->SetName(_("Text size"));
+    UpdateFontSizeControls(pointSize);
+    m_fontSizeSlider->Bind(wxEVT_SLIDER, &TextFilePreviewDialog::HandleFontSizeChanged, this);
+
     SetSize(FromDIP(wxSize(983, 610)));
+    Layout();
     CentreOnParent();
 }
 
 void TextFilePreviewDialog::ShowText(const wxString& text) {
     m_textCtrl2->SetValue(text);
     m_textCtrl2->SetInsertionPoint(0);
+}
+
+void TextFilePreviewDialog::ShowCode(const wxString& text, Syntax syntax) {
+    m_code = new ScintillaTextEditorPanel(
+        this, {.syntax = syntax, .lineNumbers = true, .wordWrap = m_wrapCheckBox->GetValue(), .readOnly = true});
+    m_code->LoadText(text);
+    m_code->Bind(wxEVT_STC_ZOOM, &TextFilePreviewDialog::HandleCodeZoom, this);
+    UpdateFontSizeControls(m_code->GetEditorPointSize());
+    GetSizer()->Replace(m_textCtrl2, m_code);
+    m_textCtrl2->Hide();
+    Layout();
 }
 
 void TextFilePreviewDialog::RecreateTextControl(bool wrap) {
@@ -47,5 +70,39 @@ void TextFilePreviewDialog::RecreateTextControl(bool wrap) {
 }
 
 void TextFilePreviewDialog::HandleWordWrap(wxCommandEvent&) {
-    RecreateTextControl(m_wrapCheckBox->GetValue());
+    if (m_code) {
+        m_code->SetWordWrap(m_wrapCheckBox->GetValue());
+    } else {
+        RecreateTextControl(m_wrapCheckBox->GetValue());
+    }
+}
+
+void TextFilePreviewDialog::UpdateFontSizeControls(int pointSize) {
+    // Scintilla's built-in zoom can extend beyond the slider's initial range.
+    const int min = m_fontSizeSlider->GetMin();
+    const int max = m_fontSizeSlider->GetMax();
+    if (pointSize < min || pointSize > max) {
+        m_fontSizeSlider->SetRange(std::min(min, pointSize), std::max(max, pointSize));
+    }
+    if (m_fontSizeSlider->GetValue() != pointSize) {
+        m_fontSizeSlider->SetValue(pointSize);
+    }
+    m_fontSizeValue->SetLabel(wxString::Format(_("%d pt"), pointSize));
+}
+
+void TextFilePreviewDialog::HandleFontSizeChanged(wxCommandEvent& event) {
+    const int pointSize = event.GetInt();
+    if (m_code) {
+        m_code->SetEditorPointSize(pointSize);
+    } else {
+        wxFont font = m_textCtrl2->GetFont();
+        font.SetPointSize(pointSize);
+        m_textCtrl2->SetFont(font);
+        UpdateFontSizeControls(m_textCtrl2->GetFont().GetPointSize());
+    }
+}
+
+void TextFilePreviewDialog::HandleCodeZoom(wxStyledTextEvent& event) {
+    UpdateFontSizeControls(m_code->GetEditorPointSize());
+    event.Skip();
 }

@@ -33,12 +33,21 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
 
     // Keep the plain-text defaults visually close to a native text editor.
     // Richer editor features are enabled only when requested by the consumer.
-    m_textEditor->SetLexer(m_options.syntax == Syntax::Markdown ? wxSTC_LEX_MARKDOWN : wxSTC_LEX_NULL);
+    const auto lexer = SyntaxHighlighter::GetLexer(m_options.syntax);
+    m_textEditor->SetLexer(lexer.id);
+    m_textEditor->SetKeyWords(0, lexer.keywords);
+    if (lexer.property) {
+        m_textEditor->SetProperty(lexer.property->name, lexer.property->value);
+    }
     m_textEditor->SetCodePage(wxSTC_CP_UTF8);
     m_textEditor->SetMarginType(0, wxSTC_MARGIN_NUMBER);
     m_textEditor->SetMarginWidth(0, 0);
     m_textEditor->SetMarginWidth(1, 0);
     m_textEditor->SetMarginWidth(2, 0);
+#ifdef __WXOSX__
+    // Work around the reverse-arrow cursor leak (wxWidgets PR #27419).
+    m_textEditor->SetMarginCursor(0, wxSTC_CURSORARROW);
+#endif
     m_textEditor->SetIndentationGuides(false);
     m_textEditor->SetViewEOL(false);
     m_textEditor->SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
@@ -71,6 +80,7 @@ ScintillaTextEditorPanel::ScintillaTextEditorPanel(wxWindow* parent, Options opt
     m_textEditor->SetSavePoint();
 
     SetWordWrap(m_options.wordWrap);
+    m_textEditor->SetReadOnly(m_options.readOnly);
 }
 
 bool ScintillaTextEditorPanel::NewDocument() {
@@ -232,6 +242,7 @@ bool ScintillaTextEditorPanel::ConfirmOverwriteExternalChanges(const wxFileName&
 }
 
 void ScintillaTextEditorPanel::LoadText(const wxString& text, LoadBehavior loadBehavior) {
+    m_textEditor->SetReadOnly(false);
     UpdateEolModeForText(text);
 
     if (loadBehavior == LoadBehavior::KeepPosition) {
@@ -250,6 +261,7 @@ void ScintillaTextEditorPanel::LoadText(const wxString& text, LoadBehavior loadB
         m_textEditor->SetFirstVisibleLine(firstVisibleLine);
         m_textEditor->SetXOffset(horizontalOffset);
         UpdateLineNumberMarginWidth();
+        m_textEditor->SetReadOnly(m_options.readOnly);
         return;
     }
 
@@ -260,6 +272,7 @@ void ScintillaTextEditorPanel::LoadText(const wxString& text, LoadBehavior loadB
     m_textEditor->SetFirstVisibleLine(0);
     m_textEditor->SetXOffset(0);
     UpdateLineNumberMarginWidth();
+    m_textEditor->SetReadOnly(m_options.readOnly);
 }
 
 wxString ScintillaTextEditorPanel::GetText() const {
@@ -432,6 +445,14 @@ wxFont ScintillaTextEditorPanel::GetEditorFont() const {
     return m_textEditor->StyleGetFont(wxSTC_STYLE_DEFAULT);
 }
 
+void ScintillaTextEditorPanel::SetEditorPointSize(int pointSize) {
+    m_textEditor->SetZoom(pointSize - m_textEditor->StyleGetSize(wxSTC_STYLE_DEFAULT));
+}
+
+int ScintillaTextEditorPanel::GetEditorPointSize() const {
+    return m_textEditor->StyleGetSize(wxSTC_STYLE_DEFAULT) + m_textEditor->GetZoom();
+}
+
 void ScintillaTextEditorPanel::FocusEditor() {
     m_textEditor->SetFocus();
 }
@@ -504,41 +525,25 @@ void ScintillaTextEditorPanel::ApplyEditorStyles(const wxFont& font) {
     m_textEditor->StyleClearAll();
     m_textEditor->SetCaretForeground(foreground);
 
-    if (m_options.syntax == Syntax::Markdown) {
-        ApplyMarkdownStyles();
+    const wxColour mutedColour = wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT);
+    for (const auto& style : SyntaxHighlighter::GetStyles(m_options.syntax, background, mutedColour)) {
+        if (style.foreground) {
+            m_textEditor->StyleSetForeground(style.id, *style.foreground);
+        }
+        if (style.bold) {
+            m_textEditor->StyleSetBold(style.id, true);
+        }
+        if (style.italic) {
+            m_textEditor->StyleSetItalic(style.id, true);
+        }
+        if (style.underline) {
+            m_textEditor->StyleSetUnderline(style.id, true);
+        }
     }
 
     if (m_options.lineNumbers) {
-        m_textEditor->StyleSetForeground(wxSTC_STYLE_LINENUMBER, wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+        m_textEditor->StyleSetForeground(wxSTC_STYLE_LINENUMBER, mutedColour);
     }
-}
-
-void ScintillaTextEditorPanel::ApplyMarkdownStyles() {
-    const wxColour mutedColour = wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT);
-    const wxColour headerColour(0, 0, 200);
-    const wxColour codeColour(160, 30, 30);
-    const wxColour linkColour(0, 100, 200);
-    const wxColour listColour(200, 100, 0);
-
-    for (int style = wxSTC_MARKDOWN_HEADER1; style <= wxSTC_MARKDOWN_HEADER6; ++style) {
-        m_textEditor->StyleSetForeground(style, headerColour);
-        m_textEditor->StyleSetBold(style, true);
-    }
-
-    m_textEditor->StyleSetBold(wxSTC_MARKDOWN_STRONG1, true);
-    m_textEditor->StyleSetBold(wxSTC_MARKDOWN_STRONG2, true);
-    m_textEditor->StyleSetItalic(wxSTC_MARKDOWN_EM1, true);
-    m_textEditor->StyleSetItalic(wxSTC_MARKDOWN_EM2, true);
-    m_textEditor->StyleSetForeground(wxSTC_MARKDOWN_CODE, codeColour);
-    m_textEditor->StyleSetForeground(wxSTC_MARKDOWN_CODE2, codeColour);
-    m_textEditor->StyleSetForeground(wxSTC_MARKDOWN_CODEBK, codeColour);
-    m_textEditor->StyleSetForeground(wxSTC_MARKDOWN_BLOCKQUOTE, mutedColour);
-    m_textEditor->StyleSetForeground(wxSTC_MARKDOWN_LINK, linkColour);
-    m_textEditor->StyleSetUnderline(wxSTC_MARKDOWN_LINK, true);
-    m_textEditor->StyleSetForeground(wxSTC_MARKDOWN_ULIST_ITEM, listColour);
-    m_textEditor->StyleSetForeground(wxSTC_MARKDOWN_OLIST_ITEM, listColour);
-    m_textEditor->StyleSetForeground(wxSTC_MARKDOWN_HRULE, mutedColour);
-    m_textEditor->StyleSetForeground(wxSTC_MARKDOWN_STRIKEOUT, mutedColour);
 }
 
 void ScintillaTextEditorPanel::ApplySelectionColours() {

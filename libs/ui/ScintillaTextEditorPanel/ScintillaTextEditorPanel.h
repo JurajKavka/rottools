@@ -9,6 +9,7 @@
 
 #include "HelperFunctions.h"
 #include "ScintillaTextEditorPanelWx.h"
+#include "SyntaxHighlighter.h"
 
 // Forward declarations keep the Scintilla headers out of consumers.
 class wxStyledTextCtrl;
@@ -19,15 +20,11 @@ class wxMenuEvent;
 
 class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
    public:
-    enum class Syntax {
-        None,
-        Markdown,
-    };
-
     struct Options {
         Syntax syntax = Syntax::None;
         bool lineNumbers = false;
         bool wordWrap = false;
+        bool readOnly = false;
     };
 
     enum class LoadBehavior {
@@ -202,7 +199,6 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     void NotifyStatusChanged(Status status) const;
     void NotifyError(ErrorCode errorCode, const wxFileName& filePath) const;
     void ApplyEditorStyles(const wxFont& font);
-    void ApplyMarkdownStyles();
     void ApplySelectionColours();
     void UpdateEolModeForText(const wxString& text);
     void UpdateLineNumberMarginWidth();
@@ -260,6 +256,9 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     [[nodiscard]] bool IsWordWrapEnabled() const;
     void SetEditorFont(const wxFont& font);
     [[nodiscard]] wxFont GetEditorFont() const;
+    // Change the displayed size through zoom while keeping the configured font.
+    void SetEditorPointSize(int pointSize);
+    [[nodiscard]] int GetEditorPointSize() const;
     void FocusEditor();
 
    protected:

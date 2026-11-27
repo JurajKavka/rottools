@@ -16,6 +16,8 @@
 #include <wx/font.h>
 #include <wx/colour.h>
 #include <wx/settings.h>
+#include <wx/stattext.h>
+#include <wx/slider.h>
 #include <wx/toolbar.h>
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
@@ -33,6 +35,8 @@ class TextFilePreviewDialogWx : public wxDialog
 	protected:
 		wxToolBar* m_toolBar1;
 		wxCheckBox* m_wrapCheckBox;
+		wxSlider* m_fontSizeSlider;
+		wxStaticText* m_fontSizeValue;
 		wxTextCtrl* m_textCtrl2;
 
 	public:

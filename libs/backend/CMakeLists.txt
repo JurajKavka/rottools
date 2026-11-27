@@ -1,5 +1,6 @@
 add_subdirectory(AppConfigFunctions)
 add_subdirectory(BookmarkStore)
+add_subdirectory(CsvParser)
 add_subdirectory(FileManagerBackend)
 
 # Backend workers (async, non-UI logic).
@@ -10,3 +11,4 @@ if(ROTTOOLS_BUILD_ROTREADER OR ROTTOOLS_BUILD_LIB_APPS)
 endif()
 add_subdirectory(DirectoryScanner)
 add_subdirectory(FsWatcher)
+add_subdirectory(SyntaxHighlighter)
