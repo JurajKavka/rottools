@@ -173,7 +173,3 @@ template <typename... Args>
 void printError(std::format_string<Args...> fmt, Args&&... args) {
     detail::WriteLogLine(std::cerr, std::format(fmt, std::forward<Args>(args)...));
 }
-
-enum class ReferenceFormat { PlainText, Csv, Sql, JavaScript, TypeScript, Python, Cpp, Shell, Java, Xml };
-
-[[nodiscard]] ReferenceFormat GetReferenceFormat(const wxFileName& filePath);

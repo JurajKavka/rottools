@@ -28,6 +28,7 @@
 #include "FileDropTarget.h"
 #include "HelperFunctions.h"
 #include "HtmlSourcePanel.h"
+#include "SyntaxHighlighter.h"
 #include "TextFilePreviewDialog.h"
 #include "version.h"
 
@@ -731,7 +732,7 @@ void MainFrame::ShowReferenceText(const wxFileName& filePath) {
     }
 
     TextFilePreviewDialog dialog(this, filePath.GetFullName());
-    const ReferenceFormat format = GetReferenceFormat(filePath);
+    const ReferenceFormat format = SyntaxHighlighter::GetReferenceFormat(filePath);
     if (format == ReferenceFormat::Csv) {
         if (!dialog.ShowCsv(text, [this](const CsvResult& csv) {
                 if (csv.errorRecord) {
@@ -747,7 +748,7 @@ void MainFrame::ShowReferenceText(const wxFileName& filePath) {
     } else if (format == ReferenceFormat::PlainText) {
         dialog.ShowText(text);
     } else {
-        dialog.ShowCode(text, ScintillaTextEditorPanel::GetReferenceSyntax(format));
+        dialog.ShowCode(text, SyntaxHighlighter::GetReferenceSyntax(format));
     }
     dialog.ShowModal();
 }

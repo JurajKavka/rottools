@@ -22,7 +22,7 @@ class CsvParser {
     };
 
     CsvParser();
-    explicit CsvParser(Options options);
+    explicit CsvParser(const Options& options);
     CsvResult Parse(std::string_view text) const;
 
    private:

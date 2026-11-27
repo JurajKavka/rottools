@@ -176,29 +176,3 @@ wxMenuItem* PrependCloseMenuItem(wxMenu& menu) {
 }
 
 }  // namespace rottools::ui
-
-ReferenceFormat GetReferenceFormat(const wxFileName& filePath) {
-    struct ExtensionMapping {
-        const char* extension;
-        ReferenceFormat format;
-    };
-    static constexpr std::array mappings = {
-        ExtensionMapping{"csv", ReferenceFormat::Csv},
-        ExtensionMapping{"sql", ReferenceFormat::Sql},
-        ExtensionMapping{"js", ReferenceFormat::JavaScript},
-        ExtensionMapping{"ts", ReferenceFormat::TypeScript},
-        ExtensionMapping{"py", ReferenceFormat::Python},
-        ExtensionMapping{"cpp", ReferenceFormat::Cpp},
-        ExtensionMapping{"sh", ReferenceFormat::Shell},
-        ExtensionMapping{"zsh", ReferenceFormat::Shell},
-        ExtensionMapping{"java", ReferenceFormat::Java},
-        ExtensionMapping{"xml", ReferenceFormat::Xml},
-    };
-    const wxString extension = filePath.GetExt().Lower();
-    const auto mapping = std::find_if(mappings.begin(), mappings.end(),
-                                      [&extension](const auto& entry) { return extension == entry.extension; });
-    if (mapping != mappings.end()) {
-        return mapping->format;
-    }
-    return ReferenceFormat::PlainText;
-}

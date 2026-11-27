@@ -21,6 +21,7 @@ target_link_libraries(rotreader PRIVATE
     rottools::md2html
     rottools::fswatcher
     rottools::appconfig
+    rottools::syntaxhighlighter
     rottools::helpers
     ${wxWidgets_LIBRARIES}
 )

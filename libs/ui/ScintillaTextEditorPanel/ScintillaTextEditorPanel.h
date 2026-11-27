@@ -9,6 +9,7 @@
 
 #include "HelperFunctions.h"
 #include "ScintillaTextEditorPanelWx.h"
+#include "SyntaxHighlighter.h"
 
 // Forward declarations keep the Scintilla headers out of consumers.
 class wxStyledTextCtrl;
@@ -17,24 +18,8 @@ class wxSysColourChangedEvent;
 class wxMenu;
 class wxMenuEvent;
 
-enum class Syntax {
-    None,
-    Markdown,
-    Sql,
-    JavaScript,
-    TypeScript,
-    Python,
-    Cpp,
-    Shell,
-    Java,
-    Xml,
-};
-
-
 class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
    public:
-    static Syntax GetReferenceSyntax(ReferenceFormat format);
-
     struct Options {
         Syntax syntax = Syntax::None;
         bool lineNumbers = false;
@@ -214,8 +199,6 @@ class ScintillaTextEditorPanel : public ScintillaTextEditorPanelWx {
     void NotifyStatusChanged(Status status) const;
     void NotifyError(ErrorCode errorCode, const wxFileName& filePath) const;
     void ApplyEditorStyles(const wxFont& font);
-    void ApplyMarkdownStyles();
-    void ApplySourceStyles();
     void ApplySelectionColours();
     void UpdateEolModeForText(const wxString& text);
     void UpdateLineNumberMarginWidth();

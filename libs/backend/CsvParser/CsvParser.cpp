@@ -5,7 +5,7 @@
 
 CsvParser::CsvParser() = default;
 
-CsvParser::CsvParser(Options options) : m_options(options) {}
+CsvParser::CsvParser(const Options& options) : m_options(options) {}
 
 CsvResult CsvParser::Parse(std::string_view text) const {
     CsvResult result;
