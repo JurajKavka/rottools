@@ -1,6 +1,5 @@
 #pragma once
 
-#include "CsvTablePanel.h"
 #include "ScintillaTextEditorPanel.h"
 #include "TextFilePreviewDialogWx.h"
 
@@ -11,7 +10,6 @@ class TextFilePreviewDialog final : public TextFilePreviewDialogWx {
 
     void ShowText(const wxString& text);
     void ShowCode(const wxString& text, Syntax syntax);
-    bool ShowCsv(const wxString& text, CsvTablePanel::OnErrorCallback onError = {});
 
    private:
     void RecreateTextControl(bool wrap);

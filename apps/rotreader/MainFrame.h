@@ -17,6 +17,7 @@
 #include "MarkdownPreviewPanel.h"
 
 // Forward declarations
+struct CsvError;
 class HtmlSourcePanel;
 
 class MainFrame : public MainFrameWx {
@@ -154,6 +155,7 @@ class MainFrame : public MainFrameWx {
     void HandleMarkdownEditorError(const MarkdownEditorPanel::ErrorMessage& message);
     std::optional<wxFileName> HandleSelectOpenFile();
     void ShowReferenceText(const wxFileName& filePath);
+    void HandleCsvError(const wxString& title, const wxString& text, const CsvError& error);
     std::optional<wxFileName> HandleSelectSaveFile(const wxFileName& currentFile);
     void HandleMarkdownReady(const MarkdownPreviewData& markdownPreviewData);
     void HandleMarkdownError(const wxString& error);

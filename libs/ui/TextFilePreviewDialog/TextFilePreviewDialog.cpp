@@ -6,9 +6,6 @@
 #include <wx/stc/stc.h>
 
 #include <algorithm>
-#include <utility>
-
-#include "CsvTablePanel.h"
 
 TextFilePreviewDialog::TextFilePreviewDialog(wxWindow* parent, const wxString& title)
     : TextFilePreviewDialogWx(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize,
@@ -45,20 +42,6 @@ void TextFilePreviewDialog::ShowCode(const wxString& text, Syntax syntax) {
     GetSizer()->Replace(m_textCtrl2, m_code);
     m_textCtrl2->Hide();
     Layout();
-}
-
-bool TextFilePreviewDialog::ShowCsv(const wxString& text, CsvTablePanel::OnErrorCallback onError) {
-    const auto utf8 = text.ToUTF8();
-    auto* table = new CsvTablePanel(this, std::string_view(utf8.data(), utf8.length()), std::move(onError));
-    if (!table->IsLoaded()) {
-        table->Destroy();
-        return false;
-    }
-    GetSizer()->Replace(m_textCtrl2, table);
-    m_textCtrl2->Hide();
-    m_toolBar1->Hide();
-    Layout();
-    return true;
 }
 
 void TextFilePreviewDialog::RecreateTextControl(bool wrap) {
